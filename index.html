@@ -113,8 +113,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .k:active,.k.dn{background:#DAD2BC;transform:translateY(1px)}
 .k.z{flex:0 0 calc((100% - 35px)/8);font-size:20px}
 .k.bk{font-size:17px}
-.k.t{height:50px;background:var(--redbg);border-color:#DDB9AE;flex-direction:column;line-height:1.1;font-size:20px}
-.k.t small{font-size:11px;color:var(--ink2);font-weight:400}
+.k.t{height:50px;background:var(--redbg);border-color:#DDB9AE;font-size:26px}
 .k.t:active,.k.t.dn{background:#E8C4B9}
 .pad{flex:0 0 5%}
 
@@ -370,6 +369,7 @@ var TXT = {
   tone:['打完字母或注音，按聲調鍵送出（一聲按 ˉ）','打完字母或注音，按声调键送出（一声按 ˉ）','Al terminar las letras, pulsa la tecla del tono para enviar (1.º tono: ˉ)','After the letters, press a tone key to submit (1st tone: ˉ)'],
   how2:['答對：往上走一階','答对：往上走一阶','Acierto: subes un escalón','Right: climb one step'],
   how3:['答錯或時間到：被雷劈一次，但還是往上走一階','答错或时间到：被雷劈一次，但还是往上走一阶','Error o se acaba el tiempo: te cae un rayo, pero igual subes','Wrong or time up: you get struck but still climb'],
+  kbhint:['電腦可以直接用鍵盤打：拼音＝字母＋數字 1～4（聲調，空白鍵＝一聲）；注音＝標準鍵位，聲調按 空白／6／3／4','电脑可以直接用键盘打：拼音＝字母＋数字 1～4（声调，空白键＝一声）；注音＝标准键位，声调按 空白／6／3／4','En el ordenador puedes usar el teclado: pinyin = letras + números 1–4 (tono; espacio = 1.º tono); zhuyin = distribución estándar, tonos: espacio / 6 / 3 / 4','On a computer you can type directly: pinyin = letters + digits 1–4 for tone (space = 1st tone); zhuyin = standard layout, tones: space / 6 / 3 / 4'],
   how4:['爬完 10 階，看你被劈幾次','爬完 10 阶，看你被劈几次','Al llegar a los 10 escalones se cuentan tus rayos','After 10 steps we count your strikes'],
   secGender:['選角色','选角色','Elige tu personaje','Choose your character'],
   boy:['男生','男生','Chico','Boy'], girl:['女生','女生','Chica','Girl'], roll:['換一個','换一个','Otro','Another'],
@@ -429,7 +429,7 @@ function secLabel(k,sec){ var t=tl(k); return zh(k)+'<span class="tl">'+(t?t+' �
 function renderStart(){
   document.documentElement.lang = Settings.script==='simp'?'zh-Hans':'zh-Hant';
   $('tTitle').innerHTML=H('title'); $('tSub').innerHTML=Settings.lang==='zh'?zh('sub'):zh('sub')+'<span class="tl">'+tl('sub')+'</span>';
-  $('tHow').innerHTML='<div>'+H('how1')+'</div><div>'+H('tone')+'</div><div>'+H('how2')+'</div><div>'+H('how3')+'</div><div>'+H('how4')+'</div>';
+  $('tHow').innerHTML='<div>'+H('how1')+'</div><div>'+H('tone')+'</div><div>'+H('how2')+'</div><div>'+H('how3')+'</div><div>'+H('how4')+'</div><div>'+H('kbhint')+'</div>';
   $('lGender').innerHTML=plain('secGender'); $('lScript').innerHTML=plain('secScript'); $('lLang').innerHTML=plain('secLang'); $('lKb').innerHTML=plain('secKb'); $('lLevel').innerHTML=plain('secLevel');
   seg('segGender',[{v:'m',h:H('boy')},{v:'f',h:H('girl')}],cfg.g,function(v){ if(v!==cfg.g){ cfg.g=v; ci=Math.floor(Math.random()*5); saveCfg(); } renderStart(); });
   seg('segScript',[{v:'trad',h:'繁體'},{v:'simp',h:'简体'}],Settings.script,function(v){ Settings.script=v; writeSettings(Settings); renderStart(); });
@@ -460,14 +460,14 @@ function renderKb(){
     p=document.createElement('div'); p.className='pad'; r2.appendChild(p);
     'zxcvbnm'.split('').forEach(function(c){ r3.appendChild(mkKey(c==='v'?'ü':c,c)); });
     var bk=mkKey('⌫','BK','bk'); bk.style.flex='1.6 1 0'; r3.appendChild(bk);
-    [['ā','1'],['á','2'],['ǎ','3'],['à','4']].forEach(function(t){ r4.appendChild(mkKey(t[0]+'<small>'+t[1]+'</small>','T'+t[1],'t')); });
+    [['ā','1'],['á','2'],['ǎ','3'],['à','4']].forEach(function(t){ r4.appendChild(mkKey(t[0],'T'+t[1],'t')); });
     kb.appendChild(r1);kb.appendChild(r2);kb.appendChild(r3);kb.appendChild(r4);
   }else{
     ZY_ROWS.forEach(function(s){ var r=row(); s.split('').forEach(function(c){ r.appendChild(mkKey(c,c,'z')); }); kb.appendChild(r); });
     var r5=row(); ZY_LAST.split('').forEach(function(c){ r5.appendChild(mkKey(c,c,'z')); });
     var bk2=mkKey('⌫','BK','bk'); bk2.style.flex='1 1 0'; r5.appendChild(bk2); kb.appendChild(r5);
     var r6=row();
-    [['ˉ','1'],['ˊ','2'],['ˇ','3'],['ˋ','4']].forEach(function(t){ r6.appendChild(mkKey(t[0]+'<small>'+t[1]+'</small>','T'+t[1],'t')); });
+    [['ˉ','1'],['ˊ','2'],['ˇ','3'],['ˋ','4']].forEach(function(t){ r6.appendChild(mkKey(t[0],'T'+t[1],'t')); });
     kb.appendChild(r6);
   }
   Array.prototype.forEach.call($('kbSw').children,function(b){ b.classList.toggle('on',b.getAttribute('data-kb')===cfg.kb); });
@@ -482,22 +482,33 @@ $('kbSw').addEventListener('click',function(e){ var b=e.target.closest('button')
 
 /* 電腦鍵盤：拼音模式打字母，1–4 當聲調（空白＝一聲）；注音模式用標準注音鍵位 */
 var ZYMAP={'1':'ㄅ','q':'ㄆ','a':'ㄇ','z':'ㄈ','2':'ㄉ','w':'ㄊ','s':'ㄋ','x':'ㄌ','e':'ㄍ','d':'ㄎ','c':'ㄏ','r':'ㄐ','f':'ㄑ','v':'ㄒ','5':'ㄓ','t':'ㄔ','g':'ㄕ','b':'ㄖ','y':'ㄗ','h':'ㄘ','n':'ㄙ','u':'ㄧ','j':'ㄨ','m':'ㄩ','8':'ㄚ','i':'ㄛ','k':'ㄜ',',':'ㄝ','9':'ㄞ','o':'ㄟ','l':'ㄠ','.':'ㄡ','0':'ㄢ','p':'ㄣ',';':'ㄤ','/':'ㄥ','-':'ㄦ'};
+var CODECH={Comma:',',Period:'.',Semicolon:';',Slash:'/',Minus:'-',Space:' ',Enter:' ',NumpadEnter:' ',NumpadSubtract:'-',NumpadDecimal:'.'};
+function keyChar(e){   // 先看實體鍵位（開著中文輸入法也一樣），沒有才看 e.key
+  var c=e.code||'', m;
+  if((m=/^Key([A-Z])$/.exec(c))) return m[1].toLowerCase();
+  if((m=/^(?:Digit|Numpad)([0-9])$/.exec(c))) return m[1];
+  if(CODECH[c]) return CODECH[c];
+  var k=e.key; return (k&&k.length===1)?k.toLowerCase():(k==='Backspace'?'Backspace':'');
+}
+function flashKey(v){
+  var b=document.querySelector('#kb .k[data-k="'+v+'"]'); if(!b) return;
+  b.classList.add('dn'); setTimeout(function(){ b.classList.remove('dn'); },120);
+}
 document.addEventListener('keydown',function(e){
   if(!S.running||S.paused||S.over||e.ctrlKey||e.metaKey||e.altKey) return;
-  var k=e.key;
-  if(k==='Backspace'){ keyPress('BK'); e.preventDefault(); return; }
-  if(cfg.kb==='pinyin'){
-    if(/^[a-z]$/i.test(k)){ keyPress(k.toLowerCase()); e.preventDefault(); }
-    else if(/^[1-4]$/.test(k)){ keyPress('T'+k); e.preventDefault(); }
-    else if(k===' '||k==='Enter'){ keyPress('T1'); e.preventDefault(); }
+  var ch=keyChar(e), v=null;
+  if(ch==='Backspace'||e.code==='Backspace') v='BK';
+  else if(cfg.kb==='pinyin'){
+    if(/^[a-z]$/.test(ch)) v=ch;
+    else if(/^[1-4]$/.test(ch)) v='T'+ch;
+    else if(ch===' ') v='T1';
   }else{
-    var kk=k.toLowerCase();
-    if(kk==='3'){ keyPress('T3'); e.preventDefault(); }
-    else if(kk==='4'){ keyPress('T4'); e.preventDefault(); }
-    else if(kk==='6'){ keyPress('T2'); e.preventDefault(); }
-    else if(k===' '||k==='Enter'){ keyPress('T1'); e.preventDefault(); }
-    else if(ZYMAP[kk]){ keyPress(ZYMAP[kk]); e.preventDefault(); }
+    if(ch==='3') v='T3'; else if(ch==='4') v='T4'; else if(ch==='6') v='T2'; else if(ch===' ') v='T1';
+    else if(ZYMAP[ch]) v=ZYMAP[ch];
   }
+  if(!v) return;
+  e.preventDefault();
+  if(S.phase==='ask'&&!S.locked&&!e.repeat){ flashKey(v); keyPress(v); }
 });
 
 /* ---------- 聲音 ---------- */

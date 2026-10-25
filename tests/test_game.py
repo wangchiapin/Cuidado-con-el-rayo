@@ -184,10 +184,36 @@ with sync_playwright() as p:
     check('新紀錄' in pg.inner_text('#ov') and pg.evaluate("()=>localStorage.getItem('typingRayo.best.normal.pinyin')") == '0', '比上次少被劈 → 新紀錄')
     pg.click('#bHome'); pg.wait_for_timeout(200)
 
+    print('== 實體鍵盤')
+    check('鍵盤' in pg.inner_text('#tHow') and '1～4' in pg.inner_text('#tHow'), '首頁有「可以用實體鍵盤」的提示')
+    pg.click('#segKb button:nth-child(1)'); pg.click('#btnStart'); pg.wait_for_timeout(300)
+    check(pg.locator('.k[data-k="T3"]').inner_text().strip() == 'ǎ' and pg.locator('.k[data-k="T1"]').inner_text().strip() == 'ā', '拼音聲調鍵只顯示聲調符號（ā á ǎ à）')
+    r = S(pg, 'S.q.r')[0]
+    pg.keyboard.type(r[:-1]); pg.wait_for_timeout(50)
+    check(pg.inner_text('#typedTxt') == r[:-1].replace('v', 'ü'), '實體鍵盤打字母會進輸入列')
+    pg.keyboard.down('Backspace'); pg.keyboard.up('Backspace'); pg.keyboard.type(r[-2]); pg.wait_for_timeout(50)
+    check(pg.inner_text('#typedTxt') == r[:-1].replace('v', 'ü'), '實體鍵盤 Backspace 有效')
+    pg.keyboard.press('Digit' + r[-1]); pg.wait_for_timeout(100)
+    check(S(pg, 'S.phase') == 'reveal' and S(pg, 'S.correct') == 1, '實體鍵盤按數字鍵送出聲調 → 判定正確')
+    to_next_q(pg)
+    r = S(pg, 'S.q.r')[0]
+    # 模擬電腦開著中文輸入法：key 變成 Process，但實體鍵位 code 還在
+    pg.evaluate("""c=>{for(const ch of c) document.dispatchEvent(new KeyboardEvent('keydown',{key:'Process',code:'Key'+ch.toUpperCase(),keyCode:229,bubbles:true,cancelable:true}));}""", r[:-1])
+    check(pg.inner_text('#typedTxt') == r[:-1].replace('v', 'ü'), '開著中文輸入法（key=Process）也能用實體鍵位打字')
+    pg.evaluate("""()=>document.dispatchEvent(new KeyboardEvent('keydown',{key:'Process',code:'Space',keyCode:229,bubbles:true,cancelable:true}))""")
+    pg.wait_for_timeout(100)
+    check(S(pg, 'S.phase') == 'reveal', '空白鍵（一聲）送出')
+    to_next_q(pg)
+    pg.keyboard.down('KeyA'); 
+    pg.keyboard.press('KeyA'); pg.wait_for_timeout(30)
+    check(pg.evaluate("()=>document.querySelector('#kb .k[data-k=\"a\"]').classList.contains('dn')"), '按實體鍵時，畫面上對應的鍵會亮一下')
+    pg.click('#btnPause'); pg.click('#bHome'); pg.wait_for_timeout(200)
+
     print('== 注音鍵盤')
     pg.click('#segKb button:nth-child(2)'); pg.click('#btnStart'); pg.wait_for_timeout(300)
     n = pg.locator('#kb .k').count()
     check(n == 37 + 1 + 4, f'注音鍵盤：37 符號＋⌫＋4 聲調 = 42，實際 {n}')
+    check(pg.locator('.k[data-k="T2"]').inner_text().strip() == 'ˊ' and pg.locator('.k[data-k="T1"]').inner_text().strip() == 'ˉ', '注音聲調鍵只顯示聲調符號（ˉ ˊ ˇ ˋ）')
     r = S(pg, 'S.q.r'); type_code(pg, r[0], 'zhuyin'); pg.wait_for_timeout(100)
     check(S(pg, 'S.correct') == 1 and S(pg, 'S.strikes') == 0, '注音輸入 ' + S(pg, 'S.q.c') + ' 判定正確')
     pg.screenshot(path=SHOTS + '/4_play_zhuyin.png')
