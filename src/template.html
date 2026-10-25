@@ -215,10 +215,10 @@ var TXT = {
   title:['別被雷劈到','别被雷劈到','¡Cuidado con el rayo!','Don’t get struck!'],
   sub:['打對讀音往上爬，打錯就被雷劈','打对读音往上爬，打错就被雷劈','Escribe la pronunciación para subir. Si fallas, ¡te cae un rayo!','Type the reading to climb. Get it wrong and lightning strikes!'],
   how1:['看到字，在時間內打出它的讀音（要打聲調）','看到字，在时间内打出它的读音（要打声调）','Mira el carácter y escribe su pronunciación a tiempo (con tono)','See the character and type its reading in time (with tone)'],
-  tone:['打完字母或注音，按聲調鍵送出（一聲按 ˉ）','打完字母或注音，按声调键送出（一声按 ˉ）','Al terminar las letras, pulsa la tecla del tono para enviar (1.º tono: ˉ)','After the letters, press a tone key to submit (1st tone: ˉ)'],
+  tone:['打完字母或注音，按聲調鍵送出（一聲按 ˉ，輕聲按 ˙）','打完字母或注音，按声调键送出（一声按 ˉ，轻声按 ˙）','Al terminar las letras, pulsa la tecla del tono para enviar (1.º tono: ˉ, tono neutro: ˙)','After the letters, press a tone key to submit (1st tone: ˉ, neutral: ˙)'],
   how2:['答對：往上走一階','答对：往上走一阶','Acierto: subes un escalón','Right: climb one step'],
   how3:['答錯或時間到：被雷劈一次，但還是往上走一階','答错或时间到：被雷劈一次，但还是往上走一阶','Error o se acaba el tiempo: te cae un rayo, pero igual subes','Wrong or time up: you get struck but still climb'],
-  kbhint:['電腦可以直接用鍵盤打：拼音＝字母＋數字 1～4（聲調，空白鍵＝一聲）；注音＝標準鍵位，聲調按 空白／6／3／4','电脑可以直接用键盘打：拼音＝字母＋数字 1～4（声调，空白键＝一声）；注音＝标准键位，声调按 空白／6／3／4','En el ordenador puedes usar el teclado: pinyin = letras + números 1–4 (tono; espacio = 1.º tono); zhuyin = distribución estándar, tonos: espacio / 6 / 3 / 4','On a computer you can type directly: pinyin = letters + digits 1–4 for tone (space = 1st tone); zhuyin = standard layout, tones: space / 6 / 3 / 4'],
+  kbhint:['電腦可以直接用鍵盤打：拼音＝字母＋數字 1～5（聲調，空白鍵＝一聲，5＝輕聲）；注音＝標準鍵位，聲調按 空白／6／3／4／7（7＝輕聲）','电脑可以直接用键盘打：拼音＝字母＋数字 1～5（声调，空白键＝一声，5＝轻声）；注音＝标准键位，声调按 空白／6／3／4／7（7＝轻声）','En el ordenador puedes usar el teclado: pinyin = letras + números 1–5 (tono; espacio = 1.º, 5 = neutro); zhuyin = distribución estándar, tonos: espacio / 6 / 3 / 4 / 7 (7 = neutro)','On a computer you can type directly: pinyin = letters + digits 1–5 for tone (space = 1st, 5 = neutral); zhuyin = standard layout, tones: space / 6 / 3 / 4 / 7 (7 = neutral)'],
   how4:['爬完 10 階，看你被劈幾次','爬完 10 阶，看你被劈几次','Al llegar a los 10 escalones se cuentan tus rayos','After 10 steps we count your strikes'],
   secGender:['選角色','选角色','Elige tu personaje','Choose your character'],
   boy:['男生','男生','Chico','Boy'], girl:['女生','女生','Chica','Girl'], roll:['換一個','换一个','Otro','Another'],
@@ -292,7 +292,7 @@ function renderStart(){
 $('btnRoll').addEventListener('click',function(){ var n; do{ n=Math.floor(Math.random()*5); }while(n===ci); ci=n; $('heroChar').innerHTML=CHARS[cfg.g][ci]; });
 
 /* ---------- 鍵盤 ---------- */
-var TONEMARK={1:'',2:'ˊ',3:'ˇ',4:'ˋ'};
+var TONEMARK={1:'',2:'ˊ',3:'ˇ',4:'ˋ',5:''}, TONESYM={1:'ˉ',2:'ˊ',3:'ˇ',4:'ˋ',5:'˙'};
 var ZY_ROWS=['ㄅㄆㄇㄈㄉㄊㄋㄌ','ㄍㄎㄏㄐㄑㄒㄓㄔ','ㄕㄖㄗㄘㄙㄧㄨㄩ','ㄚㄛㄜㄝㄞㄟㄠㄡ'];
 var ZY_LAST='ㄢㄣㄤㄥㄦ';
 function mkKey(label,val,cls){
@@ -309,14 +309,14 @@ function renderKb(){
     p=document.createElement('div'); p.className='pad'; r2.appendChild(p);
     'zxcvbnm'.split('').forEach(function(c){ r3.appendChild(mkKey(c==='v'?'ü':c,c)); });
     var bk=mkKey('⌫','BK','bk'); bk.style.flex='1.6 1 0'; r3.appendChild(bk);
-    [['ā','1'],['á','2'],['ǎ','3'],['à','4']].forEach(function(t){ r4.appendChild(mkKey(t[0],'T'+t[1],'t')); });
+    [['ˉ','1'],['ˊ','2'],['ˇ','3'],['ˋ','4'],['˙','5']].forEach(function(t){ r4.appendChild(mkKey(t[0],'T'+t[1],'t')); });
     kb.appendChild(r1);kb.appendChild(r2);kb.appendChild(r3);kb.appendChild(r4);
   }else{
     ZY_ROWS.forEach(function(s){ var r=row(); s.split('').forEach(function(c){ r.appendChild(mkKey(c,c,'z')); }); kb.appendChild(r); });
     var r5=row(); ZY_LAST.split('').forEach(function(c){ r5.appendChild(mkKey(c,c,'z')); });
     var bk2=mkKey('⌫','BK','bk'); bk2.style.flex='1 1 0'; r5.appendChild(bk2); kb.appendChild(r5);
     var r6=row();
-    [['ˉ','1'],['ˊ','2'],['ˇ','3'],['ˋ','4']].forEach(function(t){ r6.appendChild(mkKey(t[0],'T'+t[1],'t')); });
+    [['ˉ','1'],['ˊ','2'],['ˇ','3'],['ˋ','4'],['˙','5']].forEach(function(t){ r6.appendChild(mkKey(t[0],'T'+t[1],'t')); });
     kb.appendChild(r6);
   }
   Array.prototype.forEach.call($('kbSw').children,function(b){ b.classList.toggle('on',b.getAttribute('data-kb')===cfg.kb); });
@@ -350,9 +350,10 @@ document.addEventListener('keydown',function(e){
   else if(cfg.kb==='pinyin'){
     if(/^[a-z]$/.test(ch)) v=ch;
     else if(/^[1-4]$/.test(ch)) v='T'+ch;
+    else if(ch==='5'||ch==='0') v='T5';
     else if(ch===' ') v='T1';
   }else{
-    if(ch==='3') v='T3'; else if(ch==='4') v='T4'; else if(ch==='6') v='T2'; else if(ch===' ') v='T1';
+    if(ch==='3') v='T3'; else if(ch==='4') v='T4'; else if(ch==='7') v='T5'; else if(ch==='6') v='T2'; else if(ch===' ') v='T1';
     else if(ZYMAP[ch]) v=ZYMAP[ch];
   }
   if(!v) return;
@@ -401,7 +402,7 @@ $('spk').addEventListener('click',function(){ if(S.q) speak(S.q.c); });
 /* ---------- 出題（每局 10 題，不重複）---------- */
 function buildPool(){
   var set={}; P.pool.forEach(function(l){ set[l]=1; });
-  S.pool=WORDS.filter(function(w){ return set[w.lv]; });
+  S.pool=WORDS.filter(function(w){ return w.n ? cfg.lv==='hard' : set[w.lv]; });
 }
 function pickWord(){
   var w,tries=0;
@@ -424,7 +425,7 @@ function readingText(code){
 function renderTyped(tn){
   var t=$('typedTxt');
   var base = cfg.kb==='pinyin' ? S.buf.replace(/v/g,'ü') : S.buf;
-  if(tn) t.innerHTML = base + (cfg.kb==='pinyin' ? '<b>'+tn+'</b>' : TONEMARK[tn]);
+  if(tn) t.innerHTML = cfg.kb==='pinyin' ? base+'<b>'+TONESYM[tn]+'</b>' : (tn===5?'˙':'')+base+TONEMARK[tn];
   else t.textContent = base;
 }
 function setInfo(html){ $('info').innerHTML=html||''; }
@@ -434,7 +435,7 @@ function keyPress(k){
   if(!S.running||S.paused||S.over||S.phase!=='ask'||S.locked) return;
   ac();
   if(k==='BK'){ S.buf=S.buf.slice(0,-1); renderTyped(); return; }
-  if(/^T[1-4]$/.test(k)){ submit(+k.charAt(1)); return; }
+  if(/^T[1-5]$/.test(k)){ submit(+k.charAt(1)); return; }
   if(S.buf.length < (cfg.kb==='pinyin'?6:4)){ S.buf+=k; renderTyped(); }
 }
 function submit(tn){
@@ -442,7 +443,7 @@ function submit(tn){
   S.locked=true;
   var q=S.q, hit=null;
   if(cfg.kb==='pinyin'){ var code=S.buf+tn; if(q.r.indexOf(code)>=0) hit=code; }
-  else { var z=S.buf+TONEMARK[tn]; for(var i=0;i<q.r.length;i++){ if(LABELS[q.r[i]][1]===z){ hit=q.r[i]; break; } } }
+  else { var z=(tn===5?'˙':'')+S.buf+TONEMARK[tn]; for(var i=0;i<q.r.length;i++){ if(LABELS[q.r[i]][1]===z){ hit=q.r[i]; break; } } }
   renderTyped(tn);
   reveal(!!hit,hit,false);
 }

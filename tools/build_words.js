@@ -36,14 +36,16 @@ for (const [w, lv] of Object.entries(vocab)) {
   let codes;
   if (C[w]) { const sl = usedSlots[w] || new Set(); codes = C[w].filter((x, i) => i === 0 || sl.has(i)); }
   else codes = [pinyin(w, { toneType: 'num', v: true, type: 'array' })[0]];
-  // 第一個是基本讀音；輕聲開頭的字（的、了、嗎…）第一版不出
-  if (!codes[0] || !toZhuyin(codes[0]) || /5$/.test(codes[0])) { skipped.push(w + ':' + (codes[0] || '?')); continue; }
+  // 第一個是基本讀音；輕聲開頭的字（的、了、嗎…）標 n:1，只在困難等級出現
+  if (!codes[0] || !toZhuyin(codes[0])) { skipped.push(w + ':' + (codes[0] || '?')); continue; }
+  const neutral = /5$/.test(codes[0]);
   const acc = [];
-  for (const c of codes) { if (toZhuyin(c) && /[1-4]$/.test(c) && !acc.includes(c)) acc.push(c); if (acc.length >= 3) break; }
+  for (const c of codes) { if (toZhuyin(c) && /[1-5]$/.test(c) && !acc.includes(c)) acc.push(c); if (acc.length >= 3) break; }
   for (const c of (EXTRA[w] || [])) if (toZhuyin(c) && !acc.includes(c)) acc.push(c);
   acc.forEach(c => usedCodes.add(c));
   const s = toCn(w);
   const e = { c: w, lv, r: acc };
+  if (neutral) e.n = 1;
   if (s !== w) e.s = s;
   out.push(e);
 }
