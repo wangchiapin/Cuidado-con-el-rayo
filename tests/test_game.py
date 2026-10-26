@@ -283,8 +283,14 @@ with sync_playwright() as p:
         same = same and pg.evaluate("()=>window.__nian.bgIdx()") == a_[0]
     check(same, '首頁預覽的背景 = 接著開始的那一局的背景')
     check(all(seq[i] != seq[i+1] for i in range(len(seq)-1)) and len(set(seq)) >= 3, f'每一局都換背景（連兩局不會一樣）：{seq}')
-    check(all(pg.evaluate("(i)=>{window.__nian.setBg(i);return getComputedStyle(document.getElementById('world')).backgroundImage.length>200}", i) for i in range(7)), '7 個背景都能顯示')
-    texts = pg.evaluate("()=>window.__nian.BGS.map(u=>atob(u.split(',')[1]).split('<text').length-1)")
+    urls = pg.evaluate("()=>window.__nian.BGS")
+    check(all(u.startswith('bg/') and u.endswith('.svg') and os.path.isfile(os.path.join(ROOT, u)) for u in urls), '7 個背景都是 bg/ 資料夾裡真的存在的圖片檔')
+    check(all(os.path.getsize(os.path.join(ROOT, u)) > 10000 for u in urls), '圖片檔都不是空的')
+    def loads(i):
+        return pg.evaluate("""(i)=>new Promise(res=>{window.__nian.setBg(i);var im=new Image();im.onload=()=>res(im.naturalWidth>0);im.onerror=()=>res(false);im.src=window.__nian.BGS[i];})""", i)
+    check(all(loads(i) for i in range(7)), '7 個背景圖片都能讀進來並顯示')
+    check(all('url(' in pg.evaluate("(i)=>{window.__nian.setBg(i);return document.getElementById('world').style.backgroundImage}", i) for i in range(7)), '背景有套用到畫面上')
+    texts = [open(os.path.join(ROOT, u), encoding='utf-8').read().count('<text') for u in urls]
     check(texts[:6] == [0]*6 and texts[6] > 0, f'只有夜市（最後一個）有文字，其他都沒有：{texts}')
     print('== 各尺寸版面')
     for (w_, h_) in [(320, 568), (360, 640), (375, 667), (390, 844), (768, 1024), (1280, 800)]:

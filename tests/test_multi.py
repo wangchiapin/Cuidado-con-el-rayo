@@ -260,7 +260,7 @@ with sync_playwright() as p:
     check(A.locator('#crowd .fig').count() == 2 and C.locator('#crowd .fig').count() == 2, '街上有 2 個小人（觀賽的人不在街上）')
     check(A.locator('#crowd .fig .nm').all_inner_texts() == ['阿明', '小美'], '小人頭上有名字：%s' % A.locator('#crowd .fig .nm').all_inner_texts())
     check(A.locator('#crowd .fig.me').count() == 1 and B.locator('#crowd .fig.me .nm').inner_text() == '小美', '自己的小人有標記')
-    bgs = [pg.evaluate("()=>[window.__nian.bgIdx(),getComputedStyle(document.getElementById('world')).backgroundImage.length>200]") for pg in (A, B, C)]
+    bgs = [pg.evaluate("()=>[window.__nian.bgIdx(),document.getElementById('world').style.backgroundImage.indexOf('bg/bg'+window.__nian.bgIdx()+'-')>=0]") for pg in (A, B, C)]
     check(len(set(b_[0] for b_ in bgs)) == 1 and all(b_[1] for b_ in bgs) and bgs[0][0] == (int(code) + 0) % 7, '連線：三個人（含觀賽）看到同一個背景，由房號算出來（第 %d 號）' % bgs[0][0])
     check(A.locator('#mpStrip .sc').count() == 2, '下方名字列')
     A.screenshot(path=SHOTS + '/mp_ready.png')

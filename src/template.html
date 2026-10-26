@@ -754,6 +754,8 @@ function setBg(i){
   $('world').style.backgroundImage=u;
   var h=document.querySelector('#heroWrap>.streetBg'); if(h) h.style.backgroundImage=u;
 }
+function preloadBgs(){ BGS.forEach(function(u,k){ if(k!==bgIdx){ var im=new Image(); im.src=u; } }); }
+window.addEventListener('load',function(){ setTimeout(preloadBgs,1500); });
 function pickBg(){ var n; do{ n=Math.floor(Math.random()*BGS.length); }while(n===bgIdx&&BGS.length>1); setBg(n); }
 function mpBgIdx(r){ return ((parseInt(MP.code,10)||0)+(+r.n||0))%BGS.length; }
 var geo={W:360,H:200,s:1,ox:0,oy:0,hC:52,wC:30};
