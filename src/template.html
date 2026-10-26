@@ -59,7 +59,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #hud .sp{flex:1}
 #btnPause{width:40px;height:40px;border-radius:50%;border:1px solid var(--keyb);background:var(--key);font-size:15px;line-height:1;cursor:pointer;padding:0}
 
-#scene{flex:6 1 160px;min-height:110px;max-height:440px;position:relative;margin:0 8px;background:#CDBFA8;border:1px solid var(--line);border-radius:8px;overflow:hidden;--storm:0}
+#scene{flex:1 1 160px;min-height:110px;max-height:620px;position:relative;margin:0 8px;background:#CDBFA8;border:1px solid var(--line);border-radius:8px;overflow:hidden;--storm:0}
 #world{position:absolute;inset:0;pointer-events:none}
 #world{background-color:transparent}
 #player{position:absolute;left:0;top:0;pointer-events:none;transform-origin:50% 95.6%}
@@ -90,7 +90,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #scene.shake{animation:shk .3s linear}
 @keyframes shk{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
 
-#qa{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 12px 4px;gap:6px}
+#qa{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:8px 12px 6px;gap:6px}
 #board{position:relative;align-self:stretch;margin:0 4px;display:flex;align-items:center;justify-content:center;gap:14px;padding:2px 0 8px;background:var(--paper2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 #ch{font-size:clamp(44px,min(17vw,9dvh),72px);line-height:1.08;font-weight:500}
 #spk{width:44px;height:44px;border-radius:50%;border:1px solid var(--keyb);background:var(--key);font-size:19px;cursor:pointer;padding:0}
@@ -106,7 +106,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .kbsw button{width:34px;height:36px;border:0;background:var(--key);font-size:15px;padding:0;cursor:pointer}
 .kbsw button.on{background:var(--ink);color:var(--paper2)}
 #info .tag{font-size:14px;color:var(--red);font-weight:700;margin-bottom:1px}
-#info{min-height:44px;font-size:16px;color:var(--ink2);text-align:center;line-height:1.3}
+#info{order:-1;min-height:44px;font-size:16px;color:var(--ink2);text-align:center;line-height:1.3}
 #info .good{color:var(--ok);font-weight:700}
 #info .ans{color:var(--red);font-weight:700}
 
