@@ -61,9 +61,10 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #player.mv{transition:transform .75s cubic-bezier(.4,.1,.25,1)}
 #player svg{height:100%;width:100%;display:block;transform-origin:50% 100%}
 #player.hop svg{animation:hop .4s ease-out}
-#player.zap svg{animation:zap .45s linear}
+#player.zap svg{animation:zap .6s linear forwards}
+#player.hit svg{transform:rotate(24deg) translateX(2px)}
 @keyframes hop{0%{transform:translateY(0)}40%{transform:translateY(-12px)}100%{transform:translateY(0)}}
-@keyframes zap{0%,100%{transform:translateX(0)}15%{transform:translateX(-3px)}30%{transform:translateX(3px)}45%{transform:translateX(-2px)}60%{transform:translateX(2px)}}
+@keyframes zap{0%{transform:translateX(0)}12%{transform:translateX(-3px)}24%{transform:translateX(3px)}36%{transform:translateX(-2px)}48%{transform:translateX(2px)}100%{transform:rotate(24deg) translateX(2px)}}
 .ex,.mx,.soot{display:none}
 .hit .en,.hit .mn{display:none}
 .hit .ex,.hit .mx{display:inline}
@@ -188,7 +189,9 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .fig.mv{transition:transform .7s cubic-bezier(.4,.1,.25,1)}
 .fig svg{display:block;width:100%;height:100%;transform-origin:50% 100%}
 .fig.hop svg{animation:hop .4s ease-out}
-.fig.zap svg{animation:zap .45s linear}
+.fig.zap svg{animation:zap .6s linear forwards}
+.fig.hit svg{transform:rotate(24deg) translateX(2px)}
+.fig.hit:nth-child(even) svg{transform:rotate(-24deg) translateX(-2px)}
 .fig .nm{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);white-space:nowrap;font-size:var(--nf,10px);line-height:1;color:var(--ink);background:rgba(251,248,240,.85);padding:1px 3px;border-radius:3px;margin-bottom:1px}
 .fig.me .nm{background:var(--red);color:#fff;font-weight:700}
 .fig.out .nm{color:var(--ink3)}
