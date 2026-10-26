@@ -125,6 +125,8 @@ const part = n => rd(path.join(GK, 'parts', n));
 html = html.replace('/*__WORDS__*/', () => words)
   .replace('/*__CHARS__*/', () => JSON.stringify(CHARS))
   .replace('/*__SETTINGS__*/', () => part('settings.js'))
+  .replace('/*__MULTI__*/', () => rd(path.join(root, 'src/multi.js')))
+  .replace('/*__MULTIFB__*/', () => rd(path.join(root, 'src/multi_fb.js')))
   .replace('/*__MUTE__*/', () => part('mute.js').replace(/__GAME__/g, GAME).replace(/__POS__/g, 'right:10px;top:10px').replace(/__MOUNT__/g, ''))
   .replace('/*__COPY__*/', () => part('copyright.js'))
   .replace('/*__VOICEHINT__*/', () => part('voicehint.js'))

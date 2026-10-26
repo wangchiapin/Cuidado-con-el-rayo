@@ -148,7 +148,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .nameIn::placeholder{color:var(--ink3)}
 #startBar{display:flex;gap:8px}
 #startBar .big{flex:1}
-#btnLb{flex:0 0 auto;width:auto;min-width:64px;min-height:54px;padding:0 14px;border-radius:10px;font-size:22px}
+#btnLb{flex:0 0 auto;width:auto;min-width:54px;min-height:54px;padding:0 8px;border-radius:10px;font-size:22px}
 .lbBox{margin-top:12px;text-align:left}
 .lbBox .lbSt{font-size:13px;color:var(--ink2);text-align:center;margin:6px 0;line-height:1.4}
 .lbBox .lbSt b{color:var(--red)}
@@ -166,6 +166,40 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .lbAsk{display:flex;gap:6px;margin-top:6px}
 .lbAsk .nameIn{flex:1}
 .lbAsk .ghost{flex:0 0 auto}
+
+/* ---------- 連線 ---------- */
+#btnMulti{flex:0 0 auto;min-width:54px;min-height:54px;padding:0 8px;border-radius:10px;font-size:22px;line-height:1.1}
+#btnMulti .tl{font-size:11px;margin-top:0}
+.mpBox{margin-top:12px;padding:10px;background:var(--paper);border:1px solid var(--line);border-radius:8px;text-align:left}
+.mpBox h3{margin:0 0 8px;font-size:14px;color:var(--ink2);font-weight:600}
+.mpBox .btns{margin-top:10px}
+.mpChk{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:14px;color:var(--ink2)}
+.mpChk input{width:18px;height:18px}
+.codeBig{font-size:46px;font-weight:700;letter-spacing:.2em;margin:2px 0 8px;padding-left:.2em}
+.lab{font-size:12px;color:var(--ink3)}
+.plList{display:flex;flex-direction:column;gap:4px;max-height:34vh;overflow-y:auto}
+.plRow{display:flex;align-items:center;gap:8px;padding:3px 8px;background:var(--paper);border:1px solid var(--line);border-radius:8px;font-size:15px}
+.plRow.me{background:var(--redbg);border-color:var(--red)}
+.plFig{flex:0 0 22px;height:34px;display:block}
+.plFig svg{width:100%;height:100%;display:block}
+.plTag{flex:0 0 auto;font-size:11px;padding:1px 6px;border-radius:9px;background:var(--ink);color:var(--paper2)}
+.plTag.w{background:var(--keyb);color:var(--ink)}
+#crowd{position:absolute;inset:0;pointer-events:none}
+#scene.mp #player{display:none}
+.fig{position:absolute;left:0;top:0;transform-origin:50% 95.6%}
+.fig.mv{transition:transform .7s cubic-bezier(.4,.1,.25,1)}
+.fig svg{display:block;width:100%;height:100%;transform-origin:50% 100%}
+.fig.hop svg{animation:hop .4s ease-out}
+.fig.zap svg{animation:zap .45s linear}
+.fig .nm{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);white-space:nowrap;font-size:var(--nf,10px);line-height:1;color:var(--ink);background:rgba(251,248,240,.85);padding:1px 3px;border-radius:3px;margin-bottom:1px}
+.fig.me .nm{background:var(--red);color:#fff;font-weight:700}
+.fig.out .nm{color:var(--ink3)}
+.fig.out{opacity:.85}
+#mpStrip{flex:0 0 auto;display:flex;flex-wrap:wrap;gap:3px;padding:3px 10px 0;margin:0 0 -2px}
+#mpStrip .sc{max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;line-height:1.5;padding:0 5px;border-radius:9px;background:var(--key);color:var(--ink2)}
+#mpStrip .sc.me{background:var(--red);color:#fff}
+#mpStrip .sc.out{background:transparent;color:var(--ink3);text-decoration:line-through}
+#info .wt{color:var(--ink2)}
 </style>
 </head>
 <body>
@@ -190,7 +224,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
     <div class="grp"><div class="lab" id="lLevel"></div><div class="seg" id="segLevel"></div></div>
     <div class="grp"><div class="lab" id="lName"></div><input class="nameIn" id="inName" type="text" maxlength="14" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
   </div>
-  <div id="startBar"><button class="big" id="btnStart"></button><button class="ghost" id="btnLb" type="button"></button></div>
+  <div id="startBar"><button class="big" id="btnStart"></button><button class="ghost" id="btnMulti" type="button"></button><button class="ghost" id="btnLb" type="button"></button></div>
 </section>
 
 <!-- 遊戲 -->
@@ -205,12 +239,14 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
   <div id="scene">
     <div id="world"><!--WORLD--></div>
     <div id="player"></div>
+    <div id="crowd"></div>
     <div id="veil"></div>
     <div id="clouds"><!--CLOUDS--></div>
     <svg id="bolt" xmlns="http://www.w3.org/2000/svg"></svg>
     <div id="fx"></div>
     <div id="flash"></div>
   </div>
+  <div id="mpStrip" hidden></div>
   <div id="qa">
     <div id="board"><div id="ch">你</div><button id="spk" aria-label="speak">🔊</button><div id="timer"><i id="timerBar"></i></div></div>
     <div id="typed"><div id="typedTxt"></div></div>
@@ -275,7 +311,48 @@ var TXT = {
   lbNotBetter:['沒有超過你的最佳成績，排行榜保留最好的一次','没有超过你的最佳成绩，排行榜保留最好的一次','No superaste tu mejor marca; se guarda la mejor','Not better than your best; the best one stays'],
   lbNeedName:['輸入暱稱才能上排行榜','输入昵称才能上排行榜','Escribe un apodo para entrar en la clasificación','Enter a nickname to join the leaderboard'],
   lbSubmit:['上榜','上榜','Subir','Submit'],
-  lbBack:['返回','返回','Volver','Back']
+  lbBack:['返回','返回','Volver','Back'],
+  mpBtn:['連線','联机','En línea','Online'],
+  mpTitle:['連線對戰','联机对战','Partida en línea','Online match'],
+  mpIntro:['最多 15 人同題比賽，一條命：打錯或時間到就被雷劈、出局。','最多 15 人同题比赛，一条命：打错或时间到就被雷劈、出局。','Hasta 15 jugadores con las mismas preguntas. Una sola vida: si fallas o se acaba el tiempo, te cae un rayo y quedas fuera.','Up to 15 players, same questions, one life: a wrong answer or timeout gets you struck and out.'],
+  mpNeedName:['請先輸入暱稱','请先输入昵称','Escribe primero tu apodo','Enter a nickname first'],
+  mpMake:['開一間房','开一间房','Crear una sala','Create a room'],
+  mpMakeGo:['建立房間','建立房间','Crear','Create'],
+  mpJoinT:['加入房間','加入房间','Unirse a una sala','Join a room'],
+  mpCodePh:['輸入 4 位數房號','输入 4 位数房号','Código de 4 cifras','4-digit room code'],
+  mpWatch:['我只觀賽','我只观赛','Solo mirar','Just watch'],
+  mpJoinGo:['加入','加入','Entrar','Join'],
+  mpRoom:['房號','房号','Sala','Room'],
+  mpCopy:['複製邀請連結','复制邀请链接','Copiar enlace','Copy invite link'],
+  mpCopied:['已複製！','已复制！','¡Copiado!','Copied!'],
+  mpPlayers:['玩家','玩家','Jugadores','Players'],
+  mpHostTag:['房主','房主','Anfitrión','Host'],
+  mpWatcherTag:['觀賽','观赛','Espectador','Watching'],
+  mpLevelIs:['難度','难度','Nivel','Level'],
+  mpStartGo:['開始比賽','开始比赛','Empezar partida','Start match'],
+  mpNeed2:['至少要 2 位玩家才能開始','至少要 2 位玩家才能开始','Se necesitan al menos 2 jugadores','At least 2 players needed'],
+  mpWaitHost:['等房主開始…','等房主开始…','Esperando al anfitrión…','Waiting for the host…'],
+  mpFull:['房間滿了（最多 15 人）','房间满了（最多 15 人）','La sala está llena (máx. 15)','Room is full (max 15)'],
+  mpNone:['找不到這個房間','找不到这个房间','No se encontró la sala','Room not found'],
+  mpClosedMsg:['房主已關閉房間','房主已关闭房间','El anfitrión cerró la sala','The host closed the room'],
+  mpErr:['連線失敗，請稍後再試','连线失败，请稍后再试','Error de conexión. Inténtalo de nuevo.','Connection failed. Please try again.'],
+  mpLeave:['離開房間','离开房间','Salir de la sala','Leave room'],
+  mpLeaveAsk:['要離開房間嗎？','要离开房间吗？','¿Salir de la sala?','Leave the room?'],
+  mpLeaveHost:['你是房主，離開會關閉整間房。','你是房主，离开会关闭整间房。','Eres el anfitrión: al salir se cierra la sala.','You are the host: leaving closes the room.'],
+  mpStay:['繼續留下','继续留下','Quedarme','Stay'],
+  mpReady:['準備！','准备！','¡Prepárate!','Get ready!'],
+  mpSent:['已送出，等其他人…','已送出，等其他人…','Enviado. Esperando a los demás…','Sent. Waiting for the others…'],
+  mpOut:['你出局了，留下來看比賽吧','你出局了，留下来看比赛吧','Estás fuera. Quédate a mirar.','You are out. Stay and watch.'],
+  mpWatching:['觀賽中','观赛中','Mirando','Watching'],
+  mpAlive:['還在爬','还在爬','Siguen','Alive'],
+  mpStall:['房主好像斷線了，可以離開房間','房主好像断线了，可以离开房间','El anfitrión parece desconectado. Puedes salir.','The host seems disconnected. You can leave.'],
+  mpResult:['比賽結果','比赛结果','Resultados','Results'],
+  mpTop:['登頂！','登顶！','¡Arriba!','Top!'],
+  mpSteps:['爬了 %n 階','爬了 %n 阶','Escalones: %n','Steps: %n'],
+  mpAgain:['再來一局','再来一局','Otra partida','Play again'],
+  mpWaitAgain:['等房主再開一局…','等房主再开一局…','Esperando al anfitrión…','Waiting for the host…'],
+  mpKb:['我的鍵盤','我的键盘','Mi teclado','My keyboard'],
+  mpOk:['好','好','OK','OK']
 };
 function idxLang(){ return Settings.lang==='es'?2:Settings.lang==='en'?3:0; }
 function zh(k){ var a=TXT[k]; return Settings.script==='simp'?a[1]:a[0]; }
@@ -414,6 +491,7 @@ function renderStart(){
   $('btnStart').innerHTML=H('start');
   $('lName').innerHTML=plain('secName'); $('inName').placeholder=zh('namePh'); if($('inName').value!==getName()) $('inName').value=getName();
   $('btnLb').innerHTML='🏆'; $('btnLb').setAttribute('aria-label',plain('lbTitle'));
+  $('btnMulti').innerHTML='👥<span class="tl">'+(tl('mpBtn')||zh('mpBtn'))+'</span>'; $('btnMulti').setAttribute('aria-label',plain('mpTitle'));
   $('btnRoll').setAttribute('aria-label',plain('roll'));
   $('heroChar').innerHTML=CHARS[cfg.g][ci];
 }
@@ -573,6 +651,7 @@ function submit(tn){
   if(cfg.kb==='pinyin'){ var code=S.buf+tn; if(q.r.indexOf(code)>=0) hit=code; }
   else { var z=(tn===5?'˙':'')+S.buf+TONEMARK[tn]; for(var i=0;i<q.r.length;i++){ if(LABELS[q.r[i]][1]===z){ hit=q.r[i]; break; } } }
   renderTyped(tn);
+  if(MP.on){ mpSubmitted(!!hit); return; }
   reveal(!!hit,hit,false);
 }
 function timeUp(){
@@ -655,6 +734,7 @@ var last=0;
 function tick(ts){
   if(!S.running) return;
   var dt=Math.min(.05,(ts-last)/1000); last=ts; if(dt<0)dt=0;
+  if(MP.on){ if(MP.inGame) mpFrame(dt*S.timeScale); requestAnimationFrame(tick); return; }
   if(!S.paused && !S.over){
     dt*=S.timeScale;
     if(S.phase==='ask'){
@@ -694,6 +774,7 @@ function startGame(){
   try{ HGPlays.start(cfg.lv+'-'+cfg.kb,getName()); }catch(e){}
 }
 function pauseGame(){
+  if(MP.on){ if(MP.inGame) mpLeaveAsk(); return; }
   if(!S.running||S.over||S.paused) return; S.paused=true;
   var ov=$('ov'); ov.hidden=false;
   ov.innerHTML='<div class="panel"><h2>'+zh('pause')+(tl('pause')?'<span class="tl">'+tl('pause')+'</span>':'')+'</h2><div class="btns"><button class="big" id="bResume">'+H('resume')+'</button><button class="ghost" id="bHome">'+H('home')+'</button></div></div>';
@@ -704,7 +785,7 @@ function goHome(){
   S.running=false; S.paused=false; $('ov').hidden=true; $('play').hidden=true; $('start').hidden=false; renderStart();
 }
 $('btnPause').addEventListener('click',pauseGame);
-document.addEventListener('visibilitychange',function(){ if(document.hidden) pauseGame(); });
+document.addEventListener('visibilitychange',function(){ if(document.hidden&&!MP.on) pauseGame(); });
 $('btnStart').addEventListener('click',function(){ ac(); startGame(); });
 
 function bestKey(){ return 'typingRayo.best.'+cfg.lv+'.'+cfg.kb; }
@@ -731,9 +812,13 @@ function finish(){
   $('bAgain').addEventListener('click',function(){ ci=Math.floor(Math.random()*5); startGame(); }); $('bHome').addEventListener('click',goHome);
 }
 
+/*__MULTI__*/
+
 /* ---------- 啟動 ---------- */
 renderStart();
-if(TEST){ window.__nian={S:S,LABELS:LABELS,cfg:cfg,BYCH:BYCH,geo:geo,placePlayer:placePlayer,footPos:footPos,startGame:startGame,timeUp:timeUp,keyPress:keyPress,advance:advance}; }
+$('btnMulti').addEventListener('click',function(){ mpOpen(); });
+(function(){ var m=/[?&]room=(\d{4})/.exec(location.search); if(m) mpOpen(m[1]); })();
+if(TEST){ window.__nian={S:S,LABELS:LABELS,cfg:cfg,BYCH:BYCH,geo:geo,placePlayer:placePlayer,footPos:footPos,startGame:startGame,timeUp:timeUp,keyPress:keyPress,advance:advance,MP:function(){ return MP; }}; }
 })();
 </script>
 <script type="module">
@@ -742,7 +827,7 @@ if(TEST){ window.__nian={S:S,LABELS:LABELS,cfg:cfg,BYCH:BYCH,geo:geo,placePlayer
 // 排名數字 rank = (10 - 被雷劈次數) × 100000 + (99999 - 用時秒數)：越大越前面。規則見 firestore.rules.txt。
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,collection,query,orderBy,limit,getDocs,getDoc,doc,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,collection,query,orderBy,limit,getDocs,getDoc,doc,setDoc,updateDoc,deleteDoc,onSnapshot,Timestamp,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const firebaseConfig = {
   apiKey: "AIzaSyC_YSDn2OH6_GKKwCq0d8QFNl3fYXzTC60",
   authDomain: "memorma-24dab.firebaseapp.com",
@@ -787,6 +872,7 @@ try{
       return { saved:true };
     }
   };
+/*__MULTIFB__*/
 }catch(e){ console.error('Firebase 初始化失敗', e); }
 </script>
 <script>/*__MUTE__*/</script>

@@ -32,6 +32,9 @@ export const query=(c,...m)=>({...c,m});
 export async function setDoc(r,d){op('set',r.path,JSON.parse(JSON.stringify(d)));W().__store[r.path]=d}
 export async function addDoc(c,d){op('add',c.path,d);return {id:'P'+W().__ops.length}}
 export async function updateDoc(r,d){op('update',r.path,d)}
+export async function deleteDoc(r){op('delete',r.path)}
+export const onSnapshot=()=>()=>{};
+export const Timestamp={fromMillis:ms=>({toMillis:()=>ms})};
 export const getDoc=async r=>{const d=W().__store[r.path];return {exists:()=>!!d,data:()=>d}};
 export const getDocs=async c=>{
   if(W().__failTop) throw new Error('boom');
