@@ -51,6 +51,7 @@ with sync_playwright() as p:
     b = p.chromium.launch(executable_path='/opt/pw-browsers/chromium', args=['--no-sandbox'])
     ctx = b.new_context(viewport={'width': 390, 'height': 844}, has_touch=False, device_scale_factor=2)
     ctx.add_init_script(FAKE_SPEECH)
+    ctx.add_init_script("try{if(localStorage.getItem('typingRayo.name')===null)localStorage.setItem('typingRayo.name','測試')}catch(e){}")
     pg = ctx.new_page(); errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)[:200]))
     pg.on('console', lambda m: errs.append('console:' + m.text[:200]) if m.type == 'error' and 'Failed to load resource' not in m.text and 'ERR_FAILED' not in m.text else None)
@@ -297,7 +298,7 @@ with sync_playwright() as p:
         pg2 = ctx.new_page(); pg2.set_viewport_size({'width': w_, 'height': h_}); pg2.route('**/*', route)
         errs2 = []; pg2.on('pageerror', lambda e: errs2.append(str(e)[:200]))
         pg2.goto(URL); pg2.wait_for_timeout(300)
-        pg2.evaluate("()=>localStorage.clear()")
+        pg2.evaluate("()=>{localStorage.clear();localStorage.setItem('typingRayo.name','測試')}"); pg2.reload(); pg2.wait_for_timeout(300)
         pg2.click('#btnStart'); pg2.wait_for_timeout(500)
         g = pg2.evaluate("""()=>{const r=id=>document.getElementById(id).getBoundingClientRect();
           return {scene:r('scene'),kb:r('kb'),player:r('player'),board:r('board'),typed:r('typed'),hud:r('hud'),ih:innerHeight,iw:innerWidth,sw:document.documentElement.scrollWidth}}""")

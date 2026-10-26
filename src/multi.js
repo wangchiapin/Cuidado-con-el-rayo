@@ -384,7 +384,7 @@ function mpHostFrame(dt){
     return;
   }
   if(r.ph==='reveal'){
-    if(H.t<3.2) return;
+    if(H.t<2.2) return;
     var left=ro.filter(function(u){ return e[u]===undefined; });
     if(rd>=NSTEP-1||!left.length){
       var fin=ro.map(function(u){ var p=MP.pl[u]||{name:'?',g:'m',ci:0}; return {uid:u,name:p.name,g:p.g,ci:p.ci,r:e[u]!==undefined?+e[u]:NSTEP}; }).sort(function(a,b){ return b.r-a.r; });

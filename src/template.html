@@ -59,7 +59,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #hud .sp{flex:1}
 #btnPause{width:40px;height:40px;border-radius:50%;border:1px solid var(--keyb);background:var(--key);font-size:15px;line-height:1;cursor:pointer;padding:0}
 
-#scene{flex:2 1 160px;min-height:110px;max-height:440px;position:relative;margin:0 8px;background:#CDBFA8;border:1px solid var(--line);border-radius:8px;overflow:hidden;--storm:0}
+#scene{flex:6 1 160px;min-height:110px;max-height:440px;position:relative;margin:0 8px;background:#CDBFA8;border:1px solid var(--line);border-radius:8px;overflow:hidden;--storm:0}
 #world{position:absolute;inset:0;pointer-events:none}
 #world{background-color:transparent}
 #player{position:absolute;left:0;top:0;pointer-events:none;transform-origin:50% 95.6%}
@@ -92,7 +92,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 
 #qa{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 12px 4px;gap:6px}
 #board{position:relative;align-self:stretch;margin:0 4px;display:flex;align-items:center;justify-content:center;gap:14px;padding:2px 0 8px;background:var(--paper2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-#ch{font-size:clamp(60px,min(24vw,13dvh),110px);line-height:1.08;font-weight:500}
+#ch{font-size:clamp(44px,min(17vw,9dvh),72px);line-height:1.08;font-weight:500}
 #spk{width:44px;height:44px;border-radius:50%;border:1px solid var(--keyb);background:var(--key);font-size:19px;cursor:pointer;padding:0}
 #timer{position:absolute;left:0;right:0;bottom:0;height:5px;background:#E6E0D0}
 #timerBar{display:block;height:100%;width:100%;background:var(--ink);transform-origin:0 50%}
@@ -123,12 +123,17 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 
 @media (max-height:720px){
   .k{height:40px}.k.t{height:44px}.kr{gap:4px}#kb{gap:5px;padding-top:4px}
-  #ch{font-size:clamp(50px,16vw,64px)}#typed{min-height:38px}#typedTxt{font-size:26px;line-height:32px;min-height:32px}
+  #ch{font-size:clamp(40px,13vw,52px)}#typed{min-height:38px}#typedTxt{font-size:26px;line-height:32px;min-height:32px}
   #hud{min-height:42px;padding-top:6px}#info{min-height:40px;font-size:15px}#qa{gap:4px;padding-top:4px}#board{padding-bottom:7px}
 }
 @media (max-height:600px){
-  .k{height:35px;font-size:17px}.k.t{height:40px}#ch{font-size:46px}#scene{min-height:96px}#spk{width:38px;height:38px}
+  .k{height:35px;font-size:17px}.k.t{height:40px}#ch{font-size:38px}#scene{min-height:96px}#spk{width:38px;height:38px}
 }
+#kb.zy{gap:5px}
+#kb.zy .k{height:38px}#kb.zy .k.t{height:42px}
+@media (max-height:720px){#kb.zy .k{height:34px}#kb.zy .k.t{height:38px}}
+@media (max-height:600px){#kb.zy .k{height:32px;font-size:16px}#kb.zy .k.t{height:36px}
+  #qa{gap:2px;padding-top:2px;padding-bottom:0}#typed{min-height:30px}#typedTxt{font-size:24px;line-height:28px;min-height:28px}#board{padding-bottom:4px}}
 /* ---------- 浮層 ---------- */
 #ov{position:absolute;inset:0;background:rgba(244,240,230,.94);display:flex;align-items:flex-start;justify-content:center;padding:18px;z-index:5;overflow-y:auto}
 .panel{margin:auto;width:min(100%,380px);background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:18px 16px;text-align:center}
@@ -150,6 +155,8 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 /* ---------- 暱稱、排行榜 ---------- */
 .nameIn{width:100%;min-height:44px;padding:6px 12px;border-radius:8px;border:1px solid var(--keyb);background:var(--paper2);font-size:16px;font-family:inherit;color:var(--ink);-webkit-user-select:text;user-select:text}
 .nameIn::placeholder{color:var(--ink3)}
+.nameIn.need{border-color:var(--red);animation:shk .3s linear}
+.nameHint{margin:6px 0 0;font-size:13px;color:var(--red);text-align:center}
 #startBar{display:flex;gap:8px}
 #startBar .big{flex:1}
 #btnLb{flex:0 0 auto;width:auto;min-width:54px;min-height:54px;padding:0 8px;border-radius:10px;font-size:22px}
@@ -231,6 +238,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
       <div id="heroChar"></div>
     </div>
     <input class="nameIn" id="inName" type="text" maxlength="14" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <p class="nameHint" id="nameHint" hidden></p>
   </div>
   <div id="holder" hidden>
     <div id="setBody">
@@ -445,19 +453,7 @@ function lbAfterGame(strikes,secs,gid){
       });
     }).catch(fail);
   }
-  if(getName()){ submit(); return; }
-  /* 還沒有暱稱：先看榜，旁邊問暱稱 */
-  area.innerHTML='<p class="lbSt">'+plain('lbLoading')+'</p>';
-  show('').then(function(){
-    if(!here()) return;
-    var ask=document.createElement('div');
-    ask.innerHTML='<p class="lbSt"><b>'+plain('lbNeedName')+'</b></p><div class="lbAsk"><input class="nameIn" id="lbName" type="text" maxlength="14" autocomplete="off" placeholder="'+zh('namePh')+'"><button class="ghost" id="lbGo" type="button">'+zh('lbSubmit')+'</button></div>';
-    area.insertBefore(ask,area.firstChild);
-    $('lbGo').addEventListener('click',function(){
-      var v=cleanName($('lbName').value); if(!v) return;
-      setName(v); if($('inName')) $('inName').value=v; submit();
-    });
-  }).catch(fail);
+  submit();
 }
 /* 首頁的排行榜（簡單／普通／進階三個榜） */
 var lbTab='normal';
@@ -560,6 +556,7 @@ function renderKb(){
     [['ˉ','1'],['ˊ','2'],['ˇ','3'],['ˋ','4'],['˙','5']].forEach(function(t){ r6.appendChild(mkKey(t[0],'T'+t[1],'t')); });
     kb.appendChild(r6);
   }
+  kb.classList.toggle('zy',cfg.kb!=='pinyin');
   Array.prototype.forEach.call($('kbSw').children,function(b){ b.classList.toggle('on',b.getAttribute('data-kb')===cfg.kb); });
 }
 $('kb').addEventListener('pointerdown',function(e){
@@ -834,7 +831,15 @@ function goHome(){
 }
 $('btnPause').addEventListener('click',pauseGame);
 document.addEventListener('visibilitychange',function(){ if(document.hidden&&!MP.on) pauseGame(); });
-$('btnStart').addEventListener('click',function(){ ac(); startGame(); });
+$('btnStart').addEventListener('click',function(){
+  if(!getName()){ needName(); return; }
+  ac(); startGame();
+});
+function needName(){
+  var i=$('inName'); i.focus(); i.classList.remove('need'); void i.offsetWidth; i.classList.add('need');
+  var m=$('nameHint'); m.textContent=plain('mpNeedName'); m.hidden=false;
+}
+$('inName').addEventListener('input',function(){ $('nameHint').hidden=true; this.classList.remove('need'); });
 
 function bestKey(){ return 'typingRayo.best.'+cfg.lv+'.'+cfg.kb; }
 function starsOf(n){ return n===0?3:n<=2?2:n<=5?1:0; }
