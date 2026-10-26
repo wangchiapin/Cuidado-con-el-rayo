@@ -77,9 +77,12 @@ const world = idp => worldFn(idp, { INK, WV, HV, YB, SPC });
 const CLOUDS = `<svg viewBox="0 0 360 64" preserveAspectRatio="xMidYMin slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 <g fill="#7C8386">${[[30, 10, 30], [88, 4, 34], [150, 12, 30], [212, 2, 36], [276, 10, 32], [338, 4, 34]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join('')}</g>
 <g fill="#9AA0A0">${[[56, 28, 22], [120, 26, 24], [186, 30, 22], [250, 28, 24], [318, 28, 22]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join('')}</g></svg>`;
-const STREETIMG = 'data:image/svg+xml;base64,' + Buffer.from(world('s')).toString('base64');
+// 7 個背景（九份＋6 個台灣場景），每個都是 480x288 的一張圖，遊戲裡只畫一次、當背景貼著
+const toURI = svg => 'data:image/svg+xml;base64,' + Buffer.from(svg).toString('base64');
+const SC = { INK, WV, HV, YB, SPC, CX };
+const BGS = [world('s')].concat(['xiangshan', 'zhongzheng', 'longshan', 'alishan', 'houtong', 'nightmarket'].map(n => require('./scenes/' + n + '.js')(SC))).map(toURI);
 
-html = html.replace('__STREETIMG__', () => STREETIMG).replace(/<!--CLOUDS-->/g, CLOUDS)
+html = html.replace('__BGS__', () => JSON.stringify(BGS)).replace(/<!--CLOUDS-->/g, CLOUDS)
   .replace(/__YB__/g, String(YB)).replace(/__SPC__/g, String(SPC)).replace(/__CX__/g, String(CX)).replace(/__WV__/g, String(WV)).replace(/__HV__/g, String(HV));
 
 // ---- 資料與共用零件 ----

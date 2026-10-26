@@ -32,20 +32,19 @@ module.exports = function world(idp, C) {
   const lanternRow = (xs, y, k, txt) => xs.map((x, i) => lantern(x, y + (i % 2) * 3.5, k, txt)).join('');
   // 直式紅布條（一字一格）
   const banner = (x, y, w, chars) => {
-    const fs = w * .66, h = chars.length * fs * 1.12 + 5;
+    const h = chars.length * w * .74 + 5;
     return `<line x1="${n1(x + w / 2)}" y1="${n1(y - 4)}" x2="${n1(x + w / 2)}" y2="${n1(y)}" stroke="${INK}" stroke-width=".5"/>
 <rect x="${n1(x)}" y="${n1(y)}" width="${n1(w)}" height="${n1(h)}" fill="#B8352B" stroke="#7C2018" stroke-width=".5"/>
 <rect x="${n1(x + .9)}" y="${n1(y + .9)}" width="${n1(w - 1.8)}" height="${n1(h - 1.8)}" fill="none" stroke="#E6C27A" stroke-width=".35" opacity=".8"/>` +
-      chars.split('').map((c, i) => `<text x="${n1(x + w / 2)}" y="${n1(y + 3.2 + fs * .85 + i * fs * 1.12)}" ${FONT} font-size="${n1(fs)}" font-weight="700" fill="#FBF3DC" text-anchor="middle">${c}</text>`).join('');
+      Array.from({ length: chars.length }, (_, i) => `<circle cx="${n1(x + w / 2)}" cy="${n1(y + 4 + i * w * .74 + w * .3)}" r="${n1(w * .22)}" fill="#E6C27A" opacity=".85"/>`).join('');
   };
   const ovalSign = (x, y, w, t1) => `<line x1="${n1(x)}" y1="${n1(y - 5)}" x2="${n1(x)}" y2="${n1(y - 3.5)}" stroke="${INK}" stroke-width=".5"/>
 <ellipse cx="${n1(x)}" cy="${n1(y)}" rx="${n1(w)}" ry="${n1(w * .52)}" fill="#E7BA3C" stroke="#6B4A12" stroke-width=".6"/>
 <ellipse cx="${n1(x)}" cy="${n1(y)}" rx="${n1(w - 1.6)}" ry="${n1(w * .52 - 1.6)}" fill="none" stroke="#8A5A12" stroke-width=".4"/>
-<text x="${n1(x)}" y="${n1(y + w * .2)}" ${FONT} font-size="${n1(w * .62)}" font-weight="700" fill="#7A1F16" text-anchor="middle">${t1}</text>`;
+<circle cx="${n1(x - w * .35)}" cy="${n1(y)}" r="${n1(w * .13)}" fill="#7A1F16"/><circle cx="${n1(x)}" cy="${n1(y)}" r="${n1(w * .13)}" fill="#7A1F16"/><circle cx="${n1(x + w * .35)}" cy="${n1(y)}" r="${n1(w * .13)}" fill="#7A1F16"/>`;
   const plaque = (x, y, w, t) => `<ellipse cx="${n1(x)}" cy="${n1(y)}" rx="${n1(w)}" ry="${n1(w * .55)}" fill="#F1ECDD" stroke="#55504A" stroke-width=".6"/>
-<text x="${n1(x)}" y="${n1(y + w * .2)}" ${FONT} font-size="${n1(w * .6)}" font-weight="700" fill="#3B3B38" text-anchor="middle">${t}</text>`;
-  const boardSign = (x, y, w, h, t) => `<rect x="${n1(x)}" y="${n1(y)}" width="${w}" height="${h}" fill="#2F3A38" stroke="#171C1B" stroke-width=".5"/>` +
-    t.split('').map((c, i) => `<text x="${n1(x + w / 2)}" y="${n1(y + 1.5 + (i + 1) * (h - 3) / t.length - 1)}" ${FONT} font-size="${n1(w * .62)}" font-weight="700" fill="#F1ECDD" text-anchor="middle">${c}</text>`).join('');
+<circle cx="${n1(x)}" cy="${n1(y)}" r="${n1(w * .22)}" fill="#B8352B"/>`;
+  const boardSign = (x, y, w, h, t) => `<rect x="${n1(x)}" y="${n1(y)}" width="${w}" height="${h}" fill="#2F3A38" stroke="#171C1B" stroke-width=".5"/><path d="M${n1(x + w / 2)} ${y + 3}v${h - 6}" stroke="#F1ECDD" stroke-width=".8" stroke-dasharray="2 1.6" opacity=".8"/>`;
   const plant = (x, y, w, drop) => {
     let s = '';
     for (let i = 0; i < 9; i++) {
@@ -130,7 +129,7 @@ module.exports = function world(idp, C) {
     g += `<rect x="${fx(40 + (j % 2) * 14, 2.4)}" y="${y0 + 8}" width="2.4" height="${h - 8}" fill="#7B756A"/><rect x="${fx(40 + (j % 2) * 14, 3.4) - 0}" y="${y0 + h * .55}" width="3.4" height="1.4" fill="#5E5A52"/>`;
     // 屋簷下的燈籠
     const lx = L ? [xe - 4, xe - 20, xe - 36] : [xe + 4, xe + 20, xe + 36];
-    g += lanternRow(lx, y0 + 7.5, 1, j % 2 === 0);
+    g += lanternRow(lx, y0 + 7.5, 1, false);
     // 招牌（突出到街上的）
     if (type === 2) g += banner(L ? xe - 14 : xe + 6, y0 + 22, 8, L ? '茶樓' : '芋圓');
     if (type === 3) g += ovalSign(L ? xe - 12 : xe + 12, y0 + 30, 9, '小吃');
@@ -158,9 +157,9 @@ module.exports = function world(idp, C) {
 <path d="M178 58 Q240 42 302 58 L298 63 Q240 50 182 63Z" fill="url(#${id('tile')})"/>
 ${latticeWin(176, 62, 16, 18, true)}${latticeWin(288, 62, 16, 18, true)}
 <rect x="218" y="60" width="44" height="22" fill="#3A2C22"/><rect x="222" y="63" width="36" height="19" fill="#E8CF9E" opacity=".8"/><path d="M240 63V82M231 63V82M249 63V82" stroke="#3A2C22" stroke-width=".8"/>
-<rect x="216" y="50" width="48" height="8" fill="${INK}" stroke="#D9A441" stroke-width=".6"/><text x="240" y="56.6" ${FONT} font-size="6.6" font-weight="700" fill="#E6C27A" text-anchor="middle" letter-spacing="3">茶　樓</text>
+<rect x="216" y="50" width="48" height="8" fill="${INK}" stroke="#D9A441" stroke-width=".6"/>
 ${banner(196, 62, 7, '茶')}${banner(277, 62, 7, '點')}
-${lanternRow([188, 212, 268, 292], 59, 1, true)}`;
+${lanternRow([188, 212, 268, 292], 59, 1, false)}`;
   // 石階面
   seed = 11;
   for (let i = 0; i <= 10; i++) {
@@ -183,7 +182,7 @@ ${lanternRow([188, 212, 268, 292], 59, 1, true)}`;
   s += `<rect x="332" y="${ly - 2}" width="11" height="16" fill="#9C9584" stroke="#6F6859" stroke-width=".5"/><rect x="330.5" y="${ly - 4}" width="14" height="3" fill="#B2AB9A" stroke="#6F6859" stroke-width=".5"/>
 <ellipse cx="337.5" cy="${ly - 8}" rx="5.2" ry="4" fill="#A8A190" stroke="#6F6859" stroke-width=".5"/><circle cx="335" cy="${ly - 12}" r="3.4" fill="#A8A190" stroke="#6F6859" stroke-width=".5"/><path d="M332.6 ${ly - 13}q-2 1 -1 3.6" stroke="#6F6859" stroke-width=".6" fill="none"/><circle cx="334.2" cy="${ly - 12.6}" r=".5" fill="#3B3B38"/>`;
   const my = YB - 1 * SPC - 28;
-  s += `<rect x="338" y="${my}" width="15" height="30" fill="#F4F0E4" stroke="#8F866F" stroke-width=".5"/><rect x="338" y="${my}" width="15" height="5" fill="#B8352B"/><text x="345.5" y="${my + 4}" ${FONT} font-size="3.6" font-weight="700" fill="#FBF3DC" text-anchor="middle">九份小吃</text>` +
+  s += `<rect x="338" y="${my}" width="15" height="30" fill="#F4F0E4" stroke="#8F866F" stroke-width=".5"/><rect x="338" y="${my}" width="15" height="5" fill="#B8352B"/>` +
     [0, 1, 2].map(q => `<rect x="340" y="${my + 7 + q * 7.6}" width="5" height="5.4" fill="${['#D3A98E', '#B9A16A', '#A9B48C'][q]}"/><path d="M${347} ${my + 9 + q * 7.6}h4M347 ${my + 11.4 + q * 7.6}h3" stroke="#8F866F" stroke-width=".6"/>`).join('');
   // 路邊的花盆
   s += bush(144, YB + 9, 5) + bush(336, YB - 5 * SPC + 9, 4.6);

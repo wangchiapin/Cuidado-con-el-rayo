@@ -271,6 +271,21 @@ with sync_playwright() as p:
     pg.evaluate("()=>{window.__nian.S.step=5;window.__nian.placePlayer(false);window.__nian.S.tLeft=.05}"); pg.wait_for_timeout(300)
     pg.screenshot(path=SHOTS + '/7_mid.png')
 
+    print('== 背景（7 個台灣場景，每一局隨機換）')
+    nb = pg.evaluate("()=>window.__nian.BGS.length")
+    check(nb == 7, f'一共 {nb} 個背景')
+    seq = []; same = True
+    for _ in range(12):
+        pg.click('#btnPause'); pg.click('#bHome'); pg.wait_for_timeout(80)
+        a_ = pg.evaluate("()=>[window.__nian.bgIdx(),document.querySelector('#heroWrap>.streetBg').style.backgroundImage===document.getElementById('world').style.backgroundImage]")
+        seq.append(a_[0]); same = same and a_[1]
+        pg.click('#btnStart'); pg.wait_for_timeout(80)
+        same = same and pg.evaluate("()=>window.__nian.bgIdx()") == a_[0]
+    check(same, '首頁預覽的背景 = 接著開始的那一局的背景')
+    check(all(seq[i] != seq[i+1] for i in range(len(seq)-1)) and len(set(seq)) >= 3, f'每一局都換背景（連兩局不會一樣）：{seq}')
+    check(all(pg.evaluate("(i)=>{window.__nian.setBg(i);return getComputedStyle(document.getElementById('world')).backgroundImage.length>200}", i) for i in range(7)), '7 個背景都能顯示')
+    texts = pg.evaluate("()=>window.__nian.BGS.map(u=>atob(u.split(',')[1]).split('<text').length-1)")
+    check(texts[:6] == [0]*6 and texts[6] > 0, f'只有夜市（最後一個）有文字，其他都沒有：{texts}')
     print('== 各尺寸版面')
     for (w_, h_) in [(320, 568), (360, 640), (375, 667), (390, 844), (768, 1024), (1280, 800)]:
         pg2 = ctx.new_page(); pg2.set_viewport_size({'width': w_, 'height': h_}); pg2.route('**/*', route)

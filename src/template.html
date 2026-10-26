@@ -24,7 +24,7 @@ button{font-family:inherit;color:inherit}
 #start .inner{flex:1 0 auto;padding:50px 18px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 #heroWrap{position:relative;width:min(100%,360px);aspect-ratio:360/205;background:var(--paper2);border:1px solid var(--line);border-radius:8px;margin-top:6px;overflow:hidden}
 /* 街景只畫一次：整張當成背景圖（手機不用一直重畫上百個向量圖形，避免 iPhone 記憶體不夠、整頁被系統重開） */
-.streetBg{background-image:url(__STREETIMG__);background-repeat:no-repeat;background-position:50% 100%;background-size:cover}
+.streetBg{background-repeat:no-repeat;background-position:50% 100%;background-size:cover}
 #heroWrap>.streetBg{position:absolute;inset:0}
 #heroWrap .clouds{position:absolute;left:0;right:0;top:-8px;height:34%;opacity:.7}
 #heroWrap .clouds svg{width:100%;height:100%;display:block}
@@ -746,6 +746,16 @@ function renderTimer(){
   $('timer').classList.toggle('low',S.tLeft<=3);
 }
 /* ---------- 場景位置（整條街固定不動，人物沿著 10 階往上走）---------- */
+/* ---------- 背景（7 個台灣場景，每一局隨機換；連線時用房號＋第幾局算出來，全員一樣）---------- */
+var BGS = __BGS__;
+var bgIdx = -1;
+function setBg(i){
+  bgIdx=i; var u='url("'+BGS[i]+'")';
+  $('world').style.backgroundImage=u;
+  var h=document.querySelector('#heroWrap>.streetBg'); if(h) h.style.backgroundImage=u;
+}
+function pickBg(){ var n; do{ n=Math.floor(Math.random()*BGS.length); }while(n===bgIdx&&BGS.length>1); setBg(n); }
+function mpBgIdx(r){ return ((parseInt(MP.code,10)||0)+(+r.n||0))%BGS.length; }
 var geo={W:360,H:200,s:1,ox:0,oy:0,hC:52,wC:30};
 function measure(){
   var sc=$('scene'), W=sc.clientWidth||360, Hh=sc.clientHeight||200;
@@ -817,7 +827,7 @@ function pauseGame(){
 }
 function resumeGame(){ if(!S.paused) return; S.paused=false; $('ov').hidden=true; last=performance.now(); }
 function goHome(){
-  ci=Math.floor(Math.random()*5);
+  ci=Math.floor(Math.random()*5); pickBg();
   S.running=false; S.paused=false; $('ov').hidden=true; $('play').hidden=true; $('start').hidden=false; renderStart();
 }
 $('btnPause').addEventListener('click',pauseGame);
@@ -845,16 +855,17 @@ function finish(){
     (chips?'<div class="rev"><div class="lab">'+plain('review')+'</div><div class="chips">'+chips+'</div></div>':'')+
     '<div class="btns"><button class="big" id="bAgain">'+H('again')+'</button><button class="ghost" id="bHome">'+H('home')+'</button></div></div>';
   lbAfterGame(S.strikes,secs,S.gid);
-  $('bAgain').addEventListener('click',function(){ ci=Math.floor(Math.random()*5); startGame(); }); $('bHome').addEventListener('click',goHome);
+  $('bAgain').addEventListener('click',function(){ ci=Math.floor(Math.random()*5); pickBg(); startGame(); }); $('bHome').addEventListener('click',goHome);
 }
 
 /*__MULTI__*/
 
 /* ---------- 啟動 ---------- */
+pickBg();
 renderStart();
 $('btnMulti').addEventListener('click',function(){ mpOpen(); });
 (function(){ var m=/[?&]room=(\d{4})/.exec(location.search); if(m) mpOpen(m[1]); })();
-if(TEST){ window.__nian={S:S,LABELS:LABELS,cfg:cfg,BYCH:BYCH,geo:geo,placePlayer:placePlayer,footPos:footPos,startGame:startGame,timeUp:timeUp,keyPress:keyPress,advance:advance,MP:function(){ return MP; }}; }
+if(TEST){ window.__nian={S:S,LABELS:LABELS,cfg:cfg,BYCH:BYCH,geo:geo,placePlayer:placePlayer,footPos:footPos,startGame:startGame,setBg:setBg,BGS:BGS,bgIdx:function(){ return bgIdx; },timeUp:timeUp,keyPress:keyPress,advance:advance,MP:function(){ return MP; }}; }
 })();
 </script>
 <script type="module">

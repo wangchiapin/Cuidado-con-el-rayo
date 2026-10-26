@@ -93,7 +93,7 @@ function mpExit(msgKey){
   $('crowd').innerHTML=''; $('mpStrip').hidden=true; $('player').hidden=false; $('btnPause').textContent='❚❚';
   $('scene').classList.remove('mp'); $('play').hidden=true; $('start').hidden=false; $('kb').classList.remove('locked'); setStorm(0);
   try{ history.replaceState(null,'',location.pathname+location.hash); }catch(e){}
-  ci=Math.floor(Math.random()*5); renderStart();
+  ci=Math.floor(Math.random()*5); pickBg(); renderStart();
   var ov=$('ov');
   if(msgKey&&was){ ov.hidden=false; ov.innerHTML='<div class="panel"><p class="lbSt"><b>'+plain(msgKey)+'</b></p><div class="btns"><button class="big" id="mpOk" type="button">'+H('mpOk')+'</button></div></div>'; $('mpOk').addEventListener('click',function(){ ov.hidden=true; ov.innerHTML=''; }); }
   else { ov.hidden=true; ov.innerHTML=''; }
@@ -184,7 +184,7 @@ function mpBackToLobby(){
   $('play').hidden=true; $('start').hidden=false; setStorm(0);
 }
 function mpSetup(){
-  MP.inGame=true; var r=MP.room;
+  MP.inGame=true; var r=MP.room; setBg(mpBgIdx(r));
   P=LEVELS[r.level]; S.running=true; S.paused=false; S.over=false; S.locked=true; S.q=null; S.buf=''; S.phase='wait'; S.step=0; S.strikes=0; S.correct=0; S.T=P.T; S.tLeft=P.T;
   $('start').hidden=true; $('play').hidden=false; $('ov').hidden=true;
   $('player').hidden=true; $('scene').classList.add('mp'); $('btnPause').textContent='✕'; $('mpStrip').hidden=false;
