@@ -192,6 +192,8 @@ def wait_q(pg, rd, t=20000):    # 這一題的字已經顯示（不管能不能�
     pg.wait_for_function("(rd)=>{const M=window.__nian.MP();return M.room&&M.room.rd===rd&&M.room.ph==='ask'&&window.__nian.S.phase==='ask'}", arg=rd, timeout=t)
 def wait_ph(pg, ph, rd=None, t=20000):
     pg.wait_for_function("([ph,rd])=>{const M=window.__nian.MP();return M.room&&M.room.ph===ph&&(rd===null||M.room.rd===rd)&&window.__nian.S.phase==='reveal'}", arg=[ph, rd], timeout=t)
+def sname(pg, v):
+    pg.click('#btnSet'); pg.wait_for_selector('#bSetOk'); pg.fill('#inName', v); pg.click('#bSetOk'); pg.wait_for_timeout(60)
 def open_page(ctx, i, name, scale=8, vp=None, poll=100):
     ctx = ctx.browser.new_context(viewport=vp or {'width': 390, 'height': 844}); ctx.add_init_script(FAKE_SPEECH)
     pg = ctx.new_page(); pg.add_init_script(f"window.__uid='U{i}';window.__poll={poll}")
@@ -200,7 +202,7 @@ def open_page(ctx, i, name, scale=8, vp=None, poll=100):
     pg.on('console', lambda m: errs.append(f'U{i} console: ' + m.text[:200]) if m.type == 'error' and 'Failed to load resource' not in m.text and 'ERR_FAILED' not in m.text else None)
     pg.route('**/*', route); pg.goto(URL); pg.wait_for_timeout(500)
     pg.evaluate("s=>{window.__nian.S.timeScale=s}", scale)
-    pg.fill('#inName', name)
+    sname(pg, name)
     return pg
 def make_room(pg, level=None):
     pg.click('#btnMulti'); pg.wait_for_selector('#mpMake')

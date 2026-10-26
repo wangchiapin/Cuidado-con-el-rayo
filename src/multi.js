@@ -93,7 +93,7 @@ function mpExit(msgKey){
   $('crowd').innerHTML=''; $('mpStrip').hidden=true; $('player').hidden=false; $('btnPause').textContent='❚❚';
   $('scene').classList.remove('mp'); $('play').hidden=true; $('start').hidden=false; $('kb').classList.remove('locked'); setStorm(0);
   try{ history.replaceState(null,'',location.pathname+location.hash); }catch(e){}
-  renderStart();
+  ci=Math.floor(Math.random()*5); renderStart();
   var ov=$('ov');
   if(msgKey&&was){ ov.hidden=false; ov.innerHTML='<div class="panel"><p class="lbSt"><b>'+plain(msgKey)+'</b></p><div class="btns"><button class="big" id="mpOk" type="button">'+H('mpOk')+'</button></div></div>'; $('mpOk').addEventListener('click',function(){ ov.hidden=true; ov.innerHTML=''; }); }
   else { ov.hidden=true; ov.innerHTML=''; }

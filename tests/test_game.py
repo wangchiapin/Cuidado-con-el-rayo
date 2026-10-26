@@ -6,6 +6,14 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 URL = 'file://' + ROOT + '/index.html?test'
 SHOTS = os.path.join(ROOT, 'shots'); os.makedirs(SHOTS, exist_ok=True)
 fails = 0
+def sset(pg, *sels):
+    """設定都收進首頁右上角的 ⚙：打開 → 點選項 → 按完成"""
+    pg.click('#btnSet'); pg.wait_for_selector('#bSetOk')
+    for x in sels: pg.click(x)
+    pg.click('#bSetOk'); pg.wait_for_timeout(60)
+def sname(pg, v):
+    pg.click('#btnSet'); pg.wait_for_selector('#bSetOk'); pg.fill('#inName', v); pg.click('#bSetOk'); pg.wait_for_timeout(60)
+
 def check(c, msg):
     global fails
     print(('  ok  ' if c else '  FAIL'), msg)
@@ -52,6 +60,7 @@ with sync_playwright() as p:
     pg.goto(URL); pg.wait_for_timeout(500)
     check(pg.is_visible('#start') and not pg.is_visible('#play'), '首頁顯示、遊戲畫面隱藏')
     check('雷' in pg.inner_text('#tTitle'), '標題有「雷」')
+    pg.click('#btnSet'); pg.wait_for_selector('#bSetOk')
     check(pg.locator('#segGender button').count() == 2, '性別兩個選項（男生／女生）')
     check(pg.locator('#segScript button').count() == 2 and pg.locator('#segLang button').count() == 3 and pg.locator('#segKb button').count() == 2 and pg.locator('#segLevel button').count() == 3, '其他選項的按鈕數量')
     check(pg.is_visible('#btnStart'), '開始鈕在首頁可見（不用捲動）')
@@ -64,14 +73,16 @@ with sync_playwright() as p:
     pg.click('#segGender button:nth-child(1)'); pg.wait_for_timeout(100)
     m_html = pg.inner_html('#heroChar')
     check(m_html in chars['m'], '選男生：首頁預覽是男生人物')
-    pg.click('#btnRoll'); pg.wait_for_timeout(100)
-    check(pg.inner_html('#heroChar') != m_html and pg.inner_html('#heroChar') in chars['m'], '按骰子：換成另一個男生人物')
+    check(pg.locator('#btnRoll').count() == 0, '骰子鈕已拿掉')
     pg.click('#segGender button:nth-child(2)'); pg.wait_for_timeout(100)
     check(pg.inner_html('#heroChar') in chars['f'], '選女生：預覽換成女生人物')
+    pg.screenshot(path=SHOTS + '/1_settings.png'); pg.click('#bSetOk'); pg.wait_for_timeout(100)
+    check(pg.locator('#btnSet').is_visible() and pg.locator('#btnHelp').is_visible() and pg.locator('#hgMute').is_visible(), '右上角有 ⚙ ❓ 🔊')
+    check(pg.locator('#segKb').is_hidden() and pg.locator('#inName').is_hidden(), '首頁不再直接顯示設定')
     pg.screenshot(path=SHOTS + '/1_start.png')
 
     print('== 拼音鍵盤、開局')
-    pg.click('#segKb button:nth-child(1)'); pg.click('#segLevel button:nth-child(2)')
+    sset(pg, '#segKb button:nth-child(1)', '#segLevel button:nth-child(2)')
     pg.click('#btnStart'); pg.wait_for_timeout(400)
     check(pg.is_visible('#play') and pg.locator('#kb .k').count() == 32, f'拼音鍵盤 32 鍵，實際 {pg.locator("#kb .k").count()}')
     check(S(pg, 'S.step') == 0 and S(pg, 'S.strikes') == 0 and S(pg, 'S.q.c'), '開局：第 0 階、0 次雷劈、有題目')
@@ -185,8 +196,9 @@ with sync_playwright() as p:
     pg.click('#bHome'); pg.wait_for_timeout(200)
 
     print('== 實體鍵盤')
-    check('鍵盤' in pg.inner_text('#tHow') and '1～5' in pg.inner_text('#tHow'), '首頁有「可以用實體鍵盤」的提示')
-    pg.click('#segKb button:nth-child(1)'); pg.click('#btnStart'); pg.wait_for_timeout(300)
+    pg.click('#btnHelp'); pg.wait_for_selector('#bSetOk')
+    check('鍵盤' in pg.inner_text('#tHow') and '1～5' in pg.inner_text('#tHow'), '說明裡有「可以用實體鍵盤」的提示'); pg.click('#bSetOk')
+    sset(pg, '#segKb button:nth-child(1)'); pg.click('#btnStart'); pg.wait_for_timeout(300)
     check(pg.locator('.k[data-k="T3"]').inner_text().strip() == 'ˇ' and pg.locator('.k[data-k="T1"]').inner_text().strip() == 'ˉ' and pg.locator('.k[data-k="T5"]').inner_text().strip() == '˙', '拼音聲調鍵只顯示聲調符號（ˉ ˊ ˇ ˋ ˙）')
     r = S(pg, 'S.q.r')[0]
     pg.keyboard.type(r[:-1]); pg.wait_for_timeout(50)
@@ -219,7 +231,7 @@ with sync_playwright() as p:
     pg.click('#btnPause'); pg.click('#bHome'); pg.wait_for_timeout(200)
 
     print('== 注音鍵盤')
-    pg.click('#segKb button:nth-child(2)'); pg.click('#btnStart'); pg.wait_for_timeout(300)
+    sset(pg, '#segKb button:nth-child(2)'); pg.click('#btnStart'); pg.wait_for_timeout(300)
     n = pg.locator('#kb .k').count()
     check(n == 37 + 1 + 5, f'注音鍵盤：37 符號＋⌫＋5 聲調 = 43，實際 {n}')
     check(pg.locator('.k[data-k="T2"]').inner_text().strip() == 'ˊ' and pg.locator('.k[data-k="T1"]').inner_text().strip() == 'ˉ', '注音聲調鍵只顯示聲調符號（ˉ ˊ ˇ ˋ ˙）')
@@ -236,10 +248,10 @@ with sync_playwright() as p:
     pg.click('#btnPause'); pg.click('#bHome'); pg.wait_for_timeout(200)
 
     print('== 難度時間、簡體＋西文')
-    pg.click('#segLevel button:nth-child(1)'); pg.click('#btnStart'); pg.wait_for_timeout(300)
+    sset(pg, '#segLevel button:nth-child(1)'); pg.click('#btnStart'); pg.wait_for_timeout(300)
     check(abs(S(pg, 'S.T') - 15) < .01, '簡單：15 秒')
     pg.click('#btnPause'); pg.click('#bHome'); pg.wait_for_timeout(200)
-    pg.click('#segLevel button:nth-child(3)'); pg.click('#segScript button:nth-child(2)'); pg.click('#segLang button:nth-child(2)')
+    sset(pg, '#segLevel button:nth-child(3)', '#segScript button:nth-child(2)', '#segLang button:nth-child(2)')
     check('Cuidado' in pg.inner_text('#tTitle') and '别被雷劈到' in pg.inner_text('#tTitle'), '簡體＋西文標題')
     pg.click('#btnStart'); pg.wait_for_timeout(300)
     check(abs(S(pg, 'S.T') - 10) < .01, '進階：10 秒')

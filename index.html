@@ -21,15 +21,13 @@ button{font-family:inherit;color:inherit}
 
 /* ---------- 首頁 ---------- */
 #start{overflow-y:auto;-webkit-overflow-scrolling:touch}
-#start .inner{padding:50px 18px 8px;display:flex;flex-direction:column;align-items:center}
+#start .inner{flex:1 0 auto;padding:50px 18px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 #heroWrap{position:relative;width:min(100%,360px);aspect-ratio:360/205;background:var(--paper2);border:1px solid var(--line);border-radius:8px;margin-top:6px;overflow:hidden}
 #heroWrap>svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 #heroWrap .clouds{position:absolute;left:0;right:0;top:-8px;height:34%;opacity:.7}
 #heroWrap .clouds svg{width:100%;height:100%;display:block}
 #heroChar{position:absolute;left:0;right:0;bottom:3%;height:52%;display:flex;justify-content:center}
 #heroChar svg{height:100%;width:auto}
-#btnRoll{position:absolute;right:8px;bottom:8px;width:44px;height:44px;border-radius:50%;border:1px solid var(--keyb);background:rgba(251,248,240,.92);font-size:20px;line-height:1;cursor:pointer;padding:0}
-#btnRoll:active{transform:scale(.94)}
 h1{font-size:30px;margin:14px 0 2px;font-weight:700;letter-spacing:.08em;text-align:center}
 h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .sub{font-size:14px;color:var(--ink2);text-align:center;margin:6px 0 10px;line-height:1.5}
@@ -126,8 +124,8 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
   .k{height:35px;font-size:17px}.k.t{height:40px}#ch{font-size:46px}#scene{min-height:96px}#spk{width:38px;height:38px}
 }
 /* ---------- 浮層 ---------- */
-#ov{position:absolute;inset:0;background:rgba(244,240,230,.94);display:flex;align-items:center;justify-content:center;padding:18px;z-index:5;overflow-y:auto}
-.panel{width:min(100%,380px);background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:18px 16px;text-align:center}
+#ov{position:absolute;inset:0;background:rgba(244,240,230,.94);display:flex;align-items:flex-start;justify-content:center;padding:18px;z-index:5;overflow-y:auto}
+.panel{margin:auto;width:min(100%,380px);background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:18px 16px;text-align:center}
 .panel h2{margin:0 0 4px;font-size:24px}
 .panel .btns{display:flex;flex-direction:column;gap:8px;margin-top:14px}
 .stars{font-size:30px;letter-spacing:6px;color:#C9A55A;margin:6px 0 2px;line-height:1.1}
@@ -200,6 +198,15 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #mpStrip .sc.me{background:var(--red);color:#fff}
 #mpStrip .sc.out{background:transparent;color:var(--ink3);text-decoration:line-through}
 #info .wt{color:var(--ink2)}
+
+/* ---------- 首頁右上角：設定、說明 ---------- */
+#topBar{position:absolute;top:10px;right:58px;display:flex;gap:8px;z-index:3}
+.ib{width:40px;height:40px;border-radius:50%;border:1px solid rgba(0,0,0,.28);background:rgba(255,255,255,.88);color:#222;font-size:19px;line-height:1;padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.ib:active{transform:scale(.94)}
+.sumLine{margin:8px 0 4px;min-height:36px;padding:6px 16px;border-radius:18px;border:1px solid var(--keyb);background:var(--key);font-size:14px;color:var(--ink2);cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.setPanel{text-align:left}
+.setPanel h2{text-align:center}
+.setPanel .how{margin-top:0}
 </style>
 </head>
 <body>
@@ -207,6 +214,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 
 <!-- 首頁 -->
 <section id="start" class="screen">
+  <div id="topBar"><button class="ib" id="btnSet" type="button">⚙</button><button class="ib" id="btnHelp" type="button">❓</button></div>
   <div class="inner">
     <div id="heroWrap">
       <svg viewBox="0 0 480 288" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -277,17 +285,21 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 <g fill="#7C8386"><circle cx="30" cy="10" r="30"/><circle cx="88" cy="4" r="34"/><circle cx="150" cy="12" r="30"/><circle cx="212" cy="2" r="36"/><circle cx="276" cy="10" r="32"/><circle cx="338" cy="4" r="34"/></g>
 <g fill="#9AA0A0"><circle cx="56" cy="28" r="22"/><circle cx="120" cy="26" r="24"/><circle cx="186" cy="30" r="22"/><circle cx="250" cy="28" r="24"/><circle cx="318" cy="28" r="22"/></g></svg></div>
       <div id="heroChar"></div>
-      <button id="btnRoll" type="button">🎲</button>
     </div>
     <h1 id="tTitle"></h1>
     <p class="sub" id="tSub"></p>
-    <div class="grp"><div class="lab" id="lGender"></div><div class="seg" id="segGender"></div></div>
-    <div class="how" id="tHow" style="margin-top:12px"></div>
-    <div class="grp"><div class="lab" id="lScript"></div><div class="seg" id="segScript"></div></div>
-    <div class="grp"><div class="lab" id="lLang"></div><div class="seg" id="segLang"></div></div>
-    <div class="grp"><div class="lab" id="lKb"></div><div class="seg" id="segKb"></div></div>
-    <div class="grp"><div class="lab" id="lLevel"></div><div class="seg" id="segLevel"></div></div>
-    <div class="grp"><div class="lab" id="lName"></div><input class="nameIn" id="inName" type="text" maxlength="14" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    <button class="sumLine" id="sumLine" type="button"></button>
+  </div>
+  <div id="holder" hidden>
+    <div id="setBody">
+      <div class="grp"><div class="lab" id="lGender"></div><div class="seg" id="segGender"></div></div>
+      <div class="grp"><div class="lab" id="lScript"></div><div class="seg" id="segScript"></div></div>
+      <div class="grp"><div class="lab" id="lLang"></div><div class="seg" id="segLang"></div></div>
+      <div class="grp"><div class="lab" id="lKb"></div><div class="seg" id="segKb"></div></div>
+      <div class="grp"><div class="lab" id="lLevel"></div><div class="seg" id="segLevel"></div></div>
+      <div class="grp"><div class="lab" id="lName"></div><input class="nameIn" id="inName" type="text" maxlength="14" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    </div>
+    <div id="helpBody"><div class="how" id="tHow"></div></div>
   </div>
   <div id="startBar"><button class="big" id="btnStart"></button><button class="ghost" id="btnMulti" type="button"></button><button class="ghost" id="btnLb" type="button"></button></div>
 </section>
@@ -463,6 +475,9 @@ var TXT = {
   lbNeedName:['輸入暱稱才能上排行榜','输入昵称才能上排行榜','Escribe un apodo para entrar en la clasificación','Enter a nickname to join the leaderboard'],
   lbSubmit:['上榜','上榜','Subir','Submit'],
   lbBack:['返回','返回','Volver','Back'],
+  setTitle:['設定','设置','Ajustes','Settings'],
+  helpTitle:['遊戲說明','游戏说明','Cómo se juega','How to play'],
+  setDone:['完成','完成','Listo','Done'],
   mpBtn:['連線','联机','En línea','Online'],
   mpTitle:['連線對戰','联机对战','Partida en línea','Online match'],
   mpIntro:['最多 15 人同題比賽，一條命：打錯或時間到就被雷劈、出局。','最多 15 人同题比赛，一条命：打错或时间到就被雷劈、出局。','Hasta 15 jugadores con las mismas preguntas. Una sola vida: si fallas o se acaba el tiempo, te cae un rayo y quedas fuera.','Up to 15 players, same questions, one life: a wrong answer or timeout gets you struck and out.'],
@@ -617,7 +632,7 @@ function paintLb(){
   }).catch(function(){ if(want===lbTab&&$('lbBody')===body) body.innerHTML='<p class="lbSt">'+plain('lbError')+'</p>'; });
 }
 $('btnLb').addEventListener('click',showLb);
-$('inName').addEventListener('input',function(){ setName(this.value); });
+$('inName').addEventListener('input',function(){ setName(this.value); $('sumLine').textContent=zh(cfg.lv)+' · '+(cfg.kb==='pinyin'?'拼音':'注音')+' · '+(getName()||zh('namePh'))+'  ⚙'; });
 
 /* ---------- 首頁 ---------- */
 function seg(id,opts,cur,fn){
@@ -643,10 +658,25 @@ function renderStart(){
   $('lName').innerHTML=plain('secName'); $('inName').placeholder=zh('namePh'); if($('inName').value!==getName()) $('inName').value=getName();
   $('btnLb').innerHTML='🏆'; $('btnLb').setAttribute('aria-label',plain('lbTitle'));
   $('btnMulti').innerHTML='👥<span class="tl">'+(tl('mpBtn')||zh('mpBtn'))+'</span>'; $('btnMulti').setAttribute('aria-label',plain('mpTitle'));
-  $('btnRoll').setAttribute('aria-label',plain('roll'));
+  $('btnSet').setAttribute('aria-label',plain('setTitle')); $('btnHelp').setAttribute('aria-label',plain('helpTitle'));
+  if($('setTtl')) $('setTtl').innerHTML='⚙ '+zh('setTitle')+(tl('setTitle')?'<span class="tl">'+tl('setTitle')+'</span>':'');
+  if($('helpTtl')) $('helpTtl').innerHTML='❓ '+zh('helpTitle')+(tl('helpTitle')?'<span class="tl">'+tl('helpTitle')+'</span>':'');
+  $('sumLine').textContent=zh(cfg.lv)+' · '+(cfg.kb==='pinyin'?'拼音':'注音')+' · '+(getName()||zh('namePh'))+'  ⚙';
   $('heroChar').innerHTML=CHARS[cfg.g][ci];
 }
-$('btnRoll').addEventListener('click',function(){ var n; do{ n=Math.floor(Math.random()*5); }while(n===ci); ci=n; $('heroChar').innerHTML=CHARS[cfg.g][ci]; });
+/* 設定、說明：把藏在 #holder 裡的內容搬進浮層，關掉時再搬回去 */
+function ovClose(){ var h=$('holder'); if($('setBody')) h.appendChild($('setBody')); if($('helpBody')) h.appendChild($('helpBody')); var ov=$('ov'); ov.hidden=true; ov.innerHTML=''; }
+function openSet(){
+  var ov=$('ov'); ov.hidden=false;
+  ov.innerHTML='<div class="panel setPanel"><h2 id="setTtl"></h2><div id="slot"></div><div class="btns"><button class="big" id="bSetOk" type="button"></button></div></div>';
+  $('slot').appendChild($('setBody')); $('bSetOk').innerHTML=H('setDone'); $('bSetOk').addEventListener('click',ovClose); renderStart();
+}
+function openHelp(){
+  var ov=$('ov'); ov.hidden=false;
+  ov.innerHTML='<div class="panel setPanel"><h2 id="helpTtl"></h2><div id="slot"></div><div class="btns"><button class="big" id="bSetOk" type="button"></button></div></div>';
+  $('slot').appendChild($('helpBody')); $('bSetOk').innerHTML=H('setDone'); $('bSetOk').addEventListener('click',ovClose); renderStart();
+}
+$('btnSet').addEventListener('click',openSet); $('sumLine').addEventListener('click',openSet); $('btnHelp').addEventListener('click',openHelp);
 
 /* ---------- 鍵盤 ---------- */
 var TONEMARK={1:'',2:'ˊ',3:'ˇ',4:'ˋ',5:''}, TONESYM={1:'ˉ',2:'ˊ',3:'ˇ',4:'ˋ',5:'˙'};
@@ -933,6 +963,7 @@ function pauseGame(){
 }
 function resumeGame(){ if(!S.paused) return; S.paused=false; $('ov').hidden=true; last=performance.now(); }
 function goHome(){
+  ci=Math.floor(Math.random()*5);
   S.running=false; S.paused=false; $('ov').hidden=true; $('play').hidden=true; $('start').hidden=false; renderStart();
 }
 $('btnPause').addEventListener('click',pauseGame);
@@ -1058,7 +1089,7 @@ function mpExit(msgKey){
   $('crowd').innerHTML=''; $('mpStrip').hidden=true; $('player').hidden=false; $('btnPause').textContent='❚❚';
   $('scene').classList.remove('mp'); $('play').hidden=true; $('start').hidden=false; $('kb').classList.remove('locked'); setStorm(0);
   try{ history.replaceState(null,'',location.pathname+location.hash); }catch(e){}
-  renderStart();
+  ci=Math.floor(Math.random()*5); renderStart();
   var ov=$('ov');
   if(msgKey&&was){ ov.hidden=false; ov.innerHTML='<div class="panel"><p class="lbSt"><b>'+plain(msgKey)+'</b></p><div class="btns"><button class="big" id="mpOk" type="button">'+H('mpOk')+'</button></div></div>'; $('mpOk').addEventListener('click',function(){ ov.hidden=true; ov.innerHTML=''; }); }
   else { ov.hidden=true; ov.innerHTML=''; }
