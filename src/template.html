@@ -23,7 +23,9 @@ button{font-family:inherit;color:inherit}
 #start{overflow-y:auto;-webkit-overflow-scrolling:touch}
 #start .inner{flex:1 0 auto;padding:50px 18px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 #heroWrap{position:relative;width:min(100%,360px);aspect-ratio:360/205;background:var(--paper2);border:1px solid var(--line);border-radius:8px;margin-top:6px;overflow:hidden}
-#heroWrap>svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+/* 街景只畫一次：整張當成背景圖（手機不用一直重畫上百個向量圖形，避免 iPhone 記憶體不夠、整頁被系統重開） */
+.streetBg{background-image:url(__STREETIMG__);background-repeat:no-repeat;background-position:50% 100%;background-size:cover}
+#heroWrap>.streetBg{position:absolute;inset:0}
 #heroWrap .clouds{position:absolute;left:0;right:0;top:-8px;height:34%;opacity:.7}
 #heroWrap .clouds svg{width:100%;height:100%;display:block}
 #heroChar{position:absolute;left:0;right:0;bottom:3%;height:52%;display:flex;justify-content:center}
@@ -56,7 +58,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 
 #scene{flex:2 1 160px;min-height:110px;max-height:440px;position:relative;margin:0 8px;background:#CDBFA8;border:1px solid var(--line);border-radius:8px;overflow:hidden;--storm:0}
 #world{position:absolute;inset:0;pointer-events:none}
-#world svg{display:block;width:100%;height:100%}
+#world{background-color:transparent}
 #player{position:absolute;left:0;top:0;pointer-events:none;transform-origin:50% 95.6%}
 #player.mv{transition:transform .75s cubic-bezier(.4,.1,.25,1)}
 #player svg{height:100%;width:100%;display:block;transform-origin:50% 100%}
@@ -220,7 +222,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
   <div id="topBar"><button class="ib" id="btnSet" type="button">⚙</button><button class="ib" id="btnHelp" type="button">❓</button></div>
   <div class="inner">
     <div id="heroWrap">
-      <!--HERO-->
+      <div class="streetBg"></div>
       <div class="clouds"><!--CLOUDS--></div>
       <div id="heroChar"></div>
     </div>
@@ -252,7 +254,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
     <button id="btnPause" aria-label="pause">❚❚</button>
   </div>
   <div id="scene">
-    <div id="world"><!--WORLD--></div>
+    <div id="world" class="streetBg"></div>
     <div id="player"></div>
     <div id="crowd"></div>
     <div id="veil"></div>
@@ -748,7 +750,7 @@ var geo={W:360,H:200,s:1,ox:0,oy:0,hC:52,wC:30};
 function measure(){
   var sc=$('scene'), W=sc.clientWidth||360, Hh=sc.clientHeight||200;
   var s=Hh/HV;                                       // 一律讓整條街（10 階）上下都看得到；太窄就裁掉左右的房子，太寬就在兩側補牆色
-  var wsvg=$('world').firstChild; if(wsvg&&wsvg.setAttribute) wsvg.setAttribute('preserveAspectRatio',W/WV>s?'xMidYMax meet':'xMidYMax slice');
+  $('world').style.backgroundSize=(W/WV>s?'contain':'cover');
   geo.W=W; geo.H=Hh; geo.s=s; geo.ox=(W-WV*s)/2; geo.oy=0;
   geo.hC=Math.max(58*s,40); geo.wC=geo.hC*60/102;
   var pl=$('player'); pl.style.width=geo.wC.toFixed(1)+'px'; pl.style.height=geo.hC.toFixed(1)+'px';
