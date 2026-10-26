@@ -120,7 +120,7 @@ html = html.replace('<!--WORLD-->', world('w')).replace('<!--HERO-->', HERO).rep
 
 // ---- 資料與共用零件 ----
 const words = rd(path.join(root, 'data/words.json'));
-const GAME = 'rayo';   // 遊戲代號（靜音設定用）
+const GAME = 'rayo';   // 遊戲代號（靜音設定、遊玩紀錄都用這個）
 const part = n => rd(path.join(GK, 'parts', n));
 html = html.replace('/*__WORDS__*/', () => words)
   .replace('/*__CHARS__*/', () => JSON.stringify(CHARS))
@@ -128,7 +128,7 @@ html = html.replace('/*__WORDS__*/', () => words)
   .replace('/*__MUTE__*/', () => part('mute.js').replace(/__GAME__/g, GAME).replace(/__POS__/g, 'right:10px;top:10px').replace(/__MOUNT__/g, ''))
   .replace('/*__COPY__*/', () => part('copyright.js'))
   .replace('/*__VOICEHINT__*/', () => part('voicehint.js'))
-  .replace('/*__PLAYS__*/', () => '');   // Firebase 遊玩紀錄先不接（之後要接再放回 game-kit 的 plays.js）
+  .replace('/*__PLAYS__*/', () => part('plays.js').replace(/REPLACE_GAME_ID/g, GAME));   // 遊玩紀錄（寫到 memorma 的 plays／visits）
 
 fs.writeFileSync(path.join(root, 'index.html'), html);
 console.log('index.html', Math.round(html.length / 1024) + 'KB');

@@ -143,6 +143,29 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .chip span{font-size:12px;color:var(--ink2);display:block}
 .newbest{color:var(--red);font-weight:700;font-size:14px;margin-top:6px}
 .bestline{font-size:12px;color:var(--ink3);margin-top:6px}
+/* ---------- 暱稱、排行榜 ---------- */
+.nameIn{width:100%;min-height:44px;padding:6px 12px;border-radius:8px;border:1px solid var(--keyb);background:var(--paper2);font-size:16px;font-family:inherit;color:var(--ink);-webkit-user-select:text;user-select:text}
+.nameIn::placeholder{color:var(--ink3)}
+#startBar{display:flex;gap:8px}
+#startBar .big{flex:1}
+#btnLb{flex:0 0 auto;width:auto;min-width:64px;min-height:54px;padding:0 14px;border-radius:10px;font-size:22px}
+.lbBox{margin-top:12px;text-align:left}
+.lbBox .lbSt{font-size:13px;color:var(--ink2);text-align:center;margin:6px 0;line-height:1.4}
+.lbBox .lbSt b{color:var(--red)}
+.lbNote{font-size:12px;color:var(--ink3);text-align:center;margin:0 0 8px;line-height:1.4}
+.lbList{display:flex;flex-direction:column;gap:5px}
+.lbRow{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--paper);border:1px solid var(--line);border-radius:8px;font-size:15px}
+.lbRow.me{background:var(--redbg);border-color:var(--red)}
+.lbRank{flex:0 0 28px;text-align:center;font-size:16px;color:var(--ink2)}
+.lbName{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lbVal{flex:0 0 auto;font-size:13px;color:var(--ink2);white-space:nowrap}
+.lbVal b{color:var(--ink);font-size:15px}
+.lbTabs{display:flex;gap:6px;margin:10px 0 8px}
+.lbTabs button{flex:1;min-height:40px;border-radius:8px;border:1px solid var(--keyb);background:var(--key);font-size:14px;line-height:1.2;cursor:pointer}
+.lbTabs button.on{background:var(--ink);border-color:var(--ink);color:var(--paper2)}
+.lbAsk{display:flex;gap:6px;margin-top:6px}
+.lbAsk .nameIn{flex:1}
+.lbAsk .ghost{flex:0 0 auto}
 </style>
 </head>
 <body>
@@ -230,8 +253,9 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
     <div class="grp"><div class="lab" id="lLang"></div><div class="seg" id="segLang"></div></div>
     <div class="grp"><div class="lab" id="lKb"></div><div class="seg" id="segKb"></div></div>
     <div class="grp"><div class="lab" id="lLevel"></div><div class="seg" id="segLevel"></div></div>
+    <div class="grp"><div class="lab" id="lName"></div><input class="nameIn" id="inName" type="text" maxlength="14" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
   </div>
-  <div id="startBar"><button class="big" id="btnStart"></button></div>
+  <div id="startBar"><button class="big" id="btnStart"></button><button class="ghost" id="btnLb" type="button"></button></div>
 </section>
 
 <!-- 遊戲 -->
@@ -390,7 +414,19 @@ var TXT = {
   answer:['答案','答案','Respuesta','Answer'],
   struck:['被雷劈了！','被雷劈了！','¡Te cayó un rayo!','Struck by lightning!'],
   timeup:['時間到！','时间到！','¡Se acabó el tiempo!','Time’s up!'],
-  empty:['先打字，再按聲調鍵','先打字，再按声调键','Escribe primero y luego pulsa el tono','Type first, then press a tone']
+  empty:['先打字，再按聲調鍵','先打字，再按声调键','Escribe primero y luego pulsa el tono','Type first, then press a tone'],
+  secName:['暱稱（上排行榜用）','昵称（上排行榜用）','Apodo (para la clasificación)','Nickname (for the leaderboard)'],
+  namePh:['輸入暱稱','输入昵称','Tu apodo','Your nickname'],
+  lbTitle:['排行榜','排行榜','Clasificación','Leaderboard'],
+  lbNote:['被雷劈越少排越前面，一樣就比誰爬得快','被雷劈越少排越前面，一样就比谁爬得快','Menos rayos va primero; si empatan, gana quien suba más rápido','Fewer strikes rank higher; ties go to the faster climb'],
+  lbLoading:['載入中…','载入中…','Cargando…','Loading…'],
+  lbEmpty:['還沒有人上榜，你當第一個！','还没有人上榜，你当第一个！','Aún no hay nadie. ¡Sé el primero!','Nobody yet. Be the first!'],
+  lbError:['排行榜暫時無法使用','排行榜暂时无法使用','La clasificación no está disponible ahora','The leaderboard is unavailable right now'],
+  lbNew:['新紀錄！已更新排行榜','新纪录！已更新排行榜','¡Nuevo récord! Clasificación actualizada','New record! Leaderboard updated'],
+  lbNotBetter:['沒有超過你的最佳成績，排行榜保留最好的一次','没有超过你的最佳成绩，排行榜保留最好的一次','No superaste tu mejor marca; se guarda la mejor','Not better than your best; the best one stays'],
+  lbNeedName:['輸入暱稱才能上排行榜','输入昵称才能上排行榜','Escribe un apodo para entrar en la clasificación','Enter a nickname to join the leaderboard'],
+  lbSubmit:['上榜','上榜','Subir','Submit'],
+  lbBack:['返回','返回','Volver','Back']
 };
 function idxLang(){ return Settings.lang==='es'?2:Settings.lang==='en'?3:0; }
 function zh(k){ var a=TXT[k]; return Settings.script==='simp'?a[1]:a[0]; }
@@ -412,9 +448,99 @@ var LEVELS={
 };
 
 /* ---------- 狀態 ---------- */
-var S={running:false,paused:false,over:false,phase:'ask',tLeft:10,T:10,phaseT:0,step:0,strikes:0,correct:0,locked:false,
+var S={gid:0,running:false,paused:false,over:false,phase:'ask',tLeft:10,T:10,phaseT:0,step:0,strikes:0,correct:0,locked:false,
   q:null,buf:'',missed:[],used:[],t0:0,pool:[],timeScale:1,lastSec:0,ci:0};
 var P=LEVELS.normal;
+
+/* ---------- 暱稱（存在這支手機，不上傳，除非上排行榜）---------- */
+var NAME_KEY='typingRayo.name';
+function cleanName(s){ return Array.from(String(s||'').replace(/\s+/g,' ').trim()).slice(0,14).join(''); }
+function getName(){ try{ return cleanName(localStorage.getItem(NAME_KEY)||''); }catch(e){ return ''; } }
+function setName(s){ try{ localStorage.setItem(NAME_KEY,cleanName(s)); }catch(e){} }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+/* ---------- 排行榜（Firebase，下面的 module 提供 window.LB）----------
+   每台裝置每個難度只留一筆最好成績；被雷劈越少越前面，一樣比時間。只顯示前 10 名。 */
+function waitLB(){
+  return new Promise(function(res){
+    var n=0; (function chk(){ if(window.LB) return res(window.LB); if(++n>50) return res(null); setTimeout(chk,100); })();
+  });
+}
+function fmtTime(s){ s=Math.max(0,Math.round(+s||0)); return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+function lbTable(list,myUid){
+  if(!list.length) return '<p class="lbSt">'+plain('lbEmpty')+'</p>';
+  var medals=['🥇','🥈','🥉'];
+  return '<div class="lbList">'+list.map(function(e,i){
+    return '<div class="lbRow'+(e.uid===myUid?' me':'')+'"><span class="lbRank">'+(medals[i]||(i+1))+'</span><span class="lbName">'+esc(e.name||'???')+'</span><span class="lbVal">⚡<b>'+(+e.strikes||0)+'</b> · '+fmtTime(e.secs)+'</span></div>';
+  }).join('')+'</div>';
+}
+/* 結算畫面：把這一局成績送上去，再顯示前 10 名 */
+function lbAfterGame(strikes,secs,gid){
+  var area=$('lbArea'); if(!area) return;
+  var board=cfg.lv, kb=cfg.kb;
+  var here=function(){ return gid===S.gid && $('lbArea')===area; };
+  function show(note){
+    return waitLB().then(function(lb){
+      if(!lb) throw 0;
+      return lb.top(board).then(function(top){
+        if(!here()) return;
+        area.innerHTML=(note?'<p class="lbSt"><b>'+note+'</b></p>':'')+'<p class="lbNote">'+plain('lbNote')+'</p>'+lbTable(top.list,top.uid);
+      });
+    });
+  }
+  function fail(){ if(here()) area.innerHTML='<p class="lbSt">'+plain('lbError')+'</p>'; }
+  function submit(){
+    area.innerHTML='<p class="lbSt">'+plain('lbLoading')+'</p>';
+    waitLB().then(function(lb){
+      if(!lb) throw 0;
+      return lb.submit(board,{name:getName(),strikes:strikes,secs:secs,kb:kb}).then(function(r){
+        return show(plain(r.saved?'lbNew':'lbNotBetter'));
+      });
+    }).catch(fail);
+  }
+  if(getName()){ submit(); return; }
+  /* 還沒有暱稱：先看榜，旁邊問暱稱 */
+  area.innerHTML='<p class="lbSt">'+plain('lbLoading')+'</p>';
+  show('').then(function(){
+    if(!here()) return;
+    var ask=document.createElement('div');
+    ask.innerHTML='<p class="lbSt"><b>'+plain('lbNeedName')+'</b></p><div class="lbAsk"><input class="nameIn" id="lbName" type="text" maxlength="14" autocomplete="off" placeholder="'+zh('namePh')+'"><button class="ghost" id="lbGo" type="button">'+zh('lbSubmit')+'</button></div>';
+    area.insertBefore(ask,area.firstChild);
+    $('lbGo').addEventListener('click',function(){
+      var v=cleanName($('lbName').value); if(!v) return;
+      setName(v); if($('inName')) $('inName').value=v; submit();
+    });
+  }).catch(fail);
+}
+/* 首頁的排行榜（簡單／普通／進階三個榜） */
+var lbTab='normal';
+function showLb(){
+  lbTab=cfg.lv;
+  var ov=$('ov'); ov.hidden=false;
+  ov.innerHTML='<div class="panel"><h2>🏆 '+zh('lbTitle')+(tl('lbTitle')?'<span class="tl">'+tl('lbTitle')+'</span>':'')+'</h2>'+
+    '<div class="lbTabs" id="lbTabs"></div><div class="lbBox" id="lbBody"></div>'+
+    '<div class="btns"><button class="big" id="bLbBack" type="button">'+H('lbBack')+'</button></div></div>';
+  $('bLbBack').addEventListener('click',function(){ ov.hidden=true; ov.innerHTML=''; });
+  paintLb();
+}
+function paintLb(){
+  var tabs=$('lbTabs'), body=$('lbBody'); if(!tabs) return;
+  tabs.innerHTML=''; ['easy','normal','hard'].forEach(function(k){
+    var b=document.createElement('button'); b.type='button'; b.innerHTML=zh(k)+(tl(k)?'<span class="tl">'+tl(k)+'</span>':''); if(k===lbTab) b.className='on';
+    b.addEventListener('click',function(){ lbTab=k; paintLb(); }); tabs.appendChild(b);
+  });
+  body.innerHTML='<p class="lbSt">'+plain('lbLoading')+'</p>';
+  var want=lbTab;
+  waitLB().then(function(lb){
+    if(!lb) throw 0;
+    return lb.top(want).then(function(top){
+      if(want!==lbTab||$('lbBody')!==body) return;
+      body.innerHTML='<p class="lbNote">'+plain('lbNote')+'</p>'+lbTable(top.list,top.uid);
+    });
+  }).catch(function(){ if(want===lbTab&&$('lbBody')===body) body.innerHTML='<p class="lbSt">'+plain('lbError')+'</p>'; });
+}
+$('btnLb').addEventListener('click',showLb);
+$('inName').addEventListener('input',function(){ setName(this.value); });
 
 /* ---------- 首頁 ---------- */
 function seg(id,opts,cur,fn){
@@ -437,6 +563,8 @@ function renderStart(){
   seg('segKb',[{v:'pinyin',h:'拼音<span class="tl">pīnyīn</span>'},{v:'zhuyin',h:'注音<span class="tl">ㄅㄆㄇㄈ</span>'}],cfg.kb,function(v){ cfg.kb=v; saveCfg(); renderStart(); });
   seg('segLevel',['easy','normal','hard'].map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),cfg.lv,function(v){ cfg.lv=v; saveCfg(); renderStart(); });
   $('btnStart').innerHTML=H('start');
+  $('lName').innerHTML=plain('secName'); $('inName').placeholder=zh('namePh'); if($('inName').value!==getName()) $('inName').value=getName();
+  $('btnLb').innerHTML='🏆'; $('btnLb').setAttribute('aria-label',plain('lbTitle'));
   $('btnRoll').setAttribute('aria-label',plain('roll'));
   $('heroChar').innerHTML=CHARS[cfg.g][ci];
 }
@@ -713,7 +841,8 @@ function startGame(){
   $('player').innerHTML=CHARS[cfg.g][ci];
   renderKb(); measure(); placePlayer(false); nextQ();
   requestAnimationFrame(function(){ measure(); placePlayer(false); last=performance.now(); requestAnimationFrame(tick); });
-  try{ HGPlays.start(cfg.lv+'-'+cfg.kb); }catch(e){}
+  S.gid=(S.gid||0)+1;
+  try{ HGPlays.start(cfg.lv+'-'+cfg.kb,getName()); }catch(e){}
 }
 function pauseGame(){
   if(!S.running||S.over||S.paused) return; S.paused=true;
@@ -738,7 +867,7 @@ function finish(){
   var isBest = prev!==null && S.strikes<prev;
   if(prev===null || S.strikes<prev){ try{ localStorage.setItem(bestKey(),String(S.strikes)); }catch(e){} }
   var bestNow = prev===null?S.strikes:Math.min(prev,S.strikes);
-  try{ HGPlays.end({score:S.correct,secs:secs}); }catch(e){}
+  try{ HGPlays.end({score:S.correct,secs:secs,name:getName()}); }catch(e){}
   var st=starsOf(S.strikes), stars=''; for(var i=0;i<3;i++) stars+=(i<st?'★':'<span class="off">★</span>');
   var chips=S.missed.map(function(c){ var w=BYCH[c]; return '<div class="chip"><b>'+chText(w)+'</b><span>'+LABELS[w.r[0]][0]+'</span><span>'+LABELS[w.r[0]][1]+'</span></div>'; }).join('');
   var ov=$('ov'); ov.hidden=false;
@@ -746,8 +875,10 @@ function finish(){
     '<div class="stats"><div><b>'+S.correct+'/'+NSTEP+'</b>'+H('sCorrect')+'</div><div><b>⚡'+S.strikes+'</b>'+H('sStrike')+'</div></div>'+
     (isBest?'<div class="newbest">'+plain('best')+'</div>':'')+
     '<div class="bestline">'+plain('bestLab')+'：'+bestNow+'</div>'+
+    '<div class="lbBox" id="lbArea"></div>'+
     (chips?'<div class="rev"><div class="lab">'+plain('review')+'</div><div class="chips">'+chips+'</div></div>':'')+
     '<div class="btns"><button class="big" id="bAgain">'+H('again')+'</button><button class="ghost" id="bHome">'+H('home')+'</button></div></div>';
+  lbAfterGame(S.strikes,secs,S.gid);
   $('bAgain').addEventListener('click',function(){ ci=Math.floor(Math.random()*5); startGame(); }); $('bHome').addEventListener('click',goHome);
 }
 
@@ -755,6 +886,59 @@ function finish(){
 renderStart();
 if(TEST){ window.__nian={S:S,LABELS:LABELS,cfg:cfg,BYCH:BYCH,geo:geo,placePlayer:placePlayer,footPos:footPos,startGame:startGame,timeUp:timeUp,keyPress:keyPress,advance:advance}; }
 })();
+</script>
+<script type="module">
+// 排行榜：Firebase 專案 memorma-24dab（匿名登入，跟其他遊戲同一個專案）
+// 資料放在 rayo_boards/{easy|normal|hard}/entries/{匿名登入的 uid}，一台裝置一個難度一筆，只留最好成績。
+// 排名數字 rank = (10 - 被雷劈次數) × 100000 + (99999 - 用時秒數)：越大越前面。規則見 firestore.rules.txt。
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,collection,query,orderBy,limit,getDocs,getDoc,doc,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyC_YSDn2OH6_GKKwCq0d8QFNl3fYXzTC60",
+  authDomain: "memorma-24dab.firebaseapp.com",
+  projectId: "memorma-24dab",
+  storageBucket: "memorma-24dab.firebasestorage.app",
+  messagingSenderId: "806709458465",
+  appId: "1:806709458465:web:f0d12acb2f911f2f165560"
+};
+try{
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  async function ensureUid(){
+    await auth.authStateReady();
+    if(auth.currentUser) return auth.currentUser.uid;
+    const c = await signInAnonymously(auth);
+    return c.user.uid;
+  }
+  const BOARDS = ['easy','normal','hard'];
+  const rankOf = (strikes, secs) => (10 - strikes) * 100000 + (99999 - secs);
+  window.LB = {
+    async top(board){
+      if(!BOARDS.includes(board)) return { uid:'', list:[] };
+      const uid = await ensureUid();
+      const snap = await getDocs(query(collection(db, 'rayo_boards', board, 'entries'), orderBy('rank', 'desc'), limit(10)));
+      return { uid, list: snap.docs.map(d => ({ uid: d.id, ...d.data() })) };
+    },
+    async submit(board, e){
+      if(!BOARDS.includes(board)) return { saved:false };
+      const name = [...String(e.name || '').trim()].slice(0, 14).join('');
+      if(!name) return { saved:false };
+      const strikes = Math.max(0, Math.min(10, Math.round(+e.strikes) || 0));
+      const secs = Math.max(15, Math.min(3600, Math.round(+e.secs) || 15));
+      const uid = await ensureUid();
+      const ref = doc(db, 'rayo_boards', board, 'entries', uid);
+      const rank = rankOf(strikes, secs);
+      const old = await getDoc(ref);
+      if(old.exists() && (Number(old.data().rank) || 0) >= rank) return { saved:false };
+      const data = { name, strikes, secs, rank, updatedAt: serverTimestamp() };
+      if(e.kb === 'pinyin' || e.kb === 'zhuyin') data.kb = e.kb;
+      await setDoc(ref, data);
+      return { saved:true };
+    }
+  };
+}catch(e){ console.error('Firebase 初始化失敗', e); }
 </script>
 <script>/* ===== 一鍵靜音（只關音樂和音效，不影響念字的語音）— 每天一分鐘遊戲統一做法 ===== */
 (function(){
@@ -858,6 +1042,97 @@ if(TEST){ window.__nian={S:S,LABELS:LABELS,cfg:cfg,BYCH:BYCH,geo:geo,placePlayer
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
 /* ===== /找不到中文聲音的提示 ===== */
+</script>
+<script>
+/* ===== 遊玩紀錄（hgPlays）— 每個遊戲共用，貼在 </body> 前 =====
+   用法：
+     HGPlays.visit();                       // 頁面打開時（本檔會自動呼叫一次）
+     HGPlays.start('easy', '小明');         // 真的開始玩一局（關卡／難度、暱稱都可省略）
+     HGPlays.end({score: 120, name: '小明'}); // 這一局正常結算（score、name 可省略）
+   沒呼叫 end 的那一局，後台就會顯示「沒玩完」。
+   寫到 memorma 專案：plays（每局）、visits（每台裝置每天每遊戲一筆）。
+   任何錯誤都靜默，不影響遊戲。 */
+(function () {
+  var GAME = 'rayo';          // ← 每個遊戲改成自己的代號（英文小寫、底線）
+  var NAME_GETTER = null;                // ← 可選：function(){ return 目前暱稱或'' }
+  var CFG = { apiKey: 'AIzaSyC_YSDn2OH6_GKKwCq0d8QFNl3fYXzTC60', authDomain: 'memorma-24dab.firebaseapp.com',
+              projectId: 'memorma-24dab', appId: '1:806709458465:web:f0d12acb2f911f2f165560' };
+  var V = '10.12.2', CDN = 'https://www.gstatic.com/firebasejs/' + V + '/';
+  var cur = null, readyP = null, lib = null;
+
+  function gid() { try { return (HG.gameFn ? HG.gameFn() : GAME) || GAME; } catch (e) { return GAME; } } // taiwan-life 這類共用引擎的遊戲可改寫 HGPlays.gameFn
+  function day() { // 以台灣時間（UTC+8）算「哪一天」，方便老師對帳
+    var d = new Date(Date.now() + 8 * 3600e3);
+    return d.toISOString().slice(0, 10);
+  }
+  function ls(k, v) {
+    try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {}
+    return null;
+  }
+  function ready() {
+    if (readyP) return readyP;
+    readyP = (async function () {
+      var A = await import(CDN + 'firebase-app.js');
+      var Au = await import(CDN + 'firebase-auth.js');
+      var F = await import(CDN + 'firebase-firestore.js');
+      var app = A.initializeApp(CFG, 'hgplays');
+      var auth = Au.getAuth(app);
+      if (!auth.currentUser) await Au.signInAnonymously(auth);
+      else await auth.authStateReady();
+      lib = { F: F, db: F.getFirestore(app), uid: auth.currentUser.uid };
+      return lib;
+    })().catch(function () { readyP = null; return null; });
+    return readyP;
+  }
+  function getName(n) {
+    if (n) return String(n).slice(0, 36);
+    try { if (NAME_GETTER) return String(NAME_GETTER() || '').slice(0, 36); } catch (e) {}
+    return '';
+  }
+
+  var HG = window.HGPlays = {
+    /* 每台裝置每天、每個遊戲只算一次訪客 */
+    visit: function () {
+      var g = gid(), d = day(), key = 'hg.visit.' + g;
+      if (ls(key) === d) return;
+      ready().then(function (L) {
+        if (!L) return;
+        var id = d + '_' + g + '_' + L.uid;
+        return L.F.setDoc(L.F.doc(L.db, 'visits', id), { game: g, day: d, uid: L.uid, at: L.F.serverTimestamp() })
+          .then(function () { ls(key, d); });
+      }).catch(function () {});
+    },
+    /* 真的開始玩一局 */
+    start: function (level, name) {
+      var mine = cur = { id: null, level: level == null ? '' : String(level).slice(0, 30) };
+      ready().then(function (L) {
+        if (!L) return;
+        var data = { game: gid(), level: mine.level, uid: L.uid, name: getName(name), day: day(),
+                     startedAt: L.F.serverTimestamp(), done: false };
+        return L.F.addDoc(L.F.collection(L.db, 'plays'), data).then(function (ref) {
+          mine.id = ref.id; if (mine.pendingEnd) HG._finish(mine, mine.pendingEnd);
+        });
+      }).catch(function () {});
+    },
+    /* 這一局正常結算 */
+    end: function (info) {
+      var mine = cur; if (!mine || mine.ended) return; mine.ended = true; info = info || {};
+      if (mine.id) HG._finish(mine, info); else mine.pendingEnd = info; // 開始的寫入還沒回來就先記著
+    },
+    _finish: function (mine, info) {
+      ready().then(function (L) {
+        if (!L || !mine.id) return;
+        var u = { done: true, endedAt: L.F.serverTimestamp(),
+                  secs: Math.max(0, Math.min(86400, Math.round(Number(info.secs != null ? info.secs : (Date.now() - (mine.t0 || Date.now())) / 1000) || 0))) };
+        var s = Number(info.score); if (isFinite(s) && info.score != null) u.score = Math.max(-1e9, Math.min(1e9, Math.round(s)));
+        var n = getName(info.name); if (n) u.name = n;
+        return L.F.updateDoc(L.F.doc(L.db, 'plays', mine.id), u);
+      }).catch(function () {});
+    }
+  };
+  var _s = HG.start; HG.start = function (l, n) { _s(l, n); if (cur) cur.t0 = Date.now(); };
+  setTimeout(function () { HG.visit(); }, 2500);   // 等遊戲載完再記訪客
+})();
 </script>
 
 </body>
