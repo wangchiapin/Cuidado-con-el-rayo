@@ -78,18 +78,26 @@ const CLOUDS = `<svg viewBox="0 0 360 64" preserveAspectRatio="xMidYMin slice" x
 <g fill="#7C8386">${[[30, 10, 30], [88, 4, 34], [150, 12, 30], [212, 2, 36], [276, 10, 32], [338, 4, 34]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join('')}</g>
 <g fill="#9AA0A0">${[[56, 28, 22], [120, 26, 24], [186, 30, 22], [250, 28, 24], [318, 28, 22]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join('')}</g></svg>`;
 // 7 個背景（九份＋6 個台灣場景），每個都是 480x288 的一張圖，遊戲裡只畫一次、當背景貼著
-// 背景存成 bg/ 資料夾裡的圖片檔（檔名帶內容碼，改圖後網址會變，手機不會讀到舊圖）
+// 背景：7 個台灣場景，先延伸成直式滿版（tools/tall.js），存成 bg/svg/*.svg（原始檔），
+// 再用 tools/raster.py 轉成 bg/*.webp（遊戲實際載入的圖；檔名帶內容碼，改圖後手機不會讀到舊的）
+const { tall } = require('./tall.js');
 const SC = { INK, WV, HV, YB, SPC, CX };
-const bgSvgs = [world('s')].concat(['xiangshan', 'zhongzheng', 'longshan', 'alishan', 'houtong', 'nightmarket'].map(n => require('./scenes/' + n + '.js')(SC)));
-const bgDir = path.join(root, 'bg');
-fs.mkdirSync(bgDir, { recursive: true });
-fs.readdirSync(bgDir).forEach(f => fs.unlinkSync(path.join(bgDir, f)));
+const NAMES = ['jiufen', 'xiangshan', 'zhongzheng', 'longshan', 'alishan', 'houtong', 'nightmarket'];
+const TALLOPT = require('./tall_opts.js');
+const bgSvgs = [world('s')].concat(NAMES.slice(1).map(n => require('./scenes/' + n + '.js')(SC))).map((svg, i) => tall(svg, TALLOPT[NAMES[i]]));
+const bgDir = path.join(root, 'bg'), svgDir = path.join(bgDir, 'svg');
+fs.mkdirSync(svgDir, { recursive: true });
+const keep = new Set();
 const BGS = bgSvgs.map((svg, i) => {
   const h = require('crypto').createHash('md5').update(svg).digest('hex').slice(0, 6);
-  const name = 'bg' + i + '-' + h + '.svg';
-  fs.writeFileSync(path.join(bgDir, name), svg);
-  return 'bg/' + name;
+  const name = 'bg' + i + '-' + h;
+  fs.writeFileSync(path.join(svgDir, name + '.svg'), svg);
+  keep.add(name + '.svg'); keep.add(name + '.webp');
+  return 'bg/' + name + '.webp';
 });
+fs.readdirSync(svgDir).forEach(f => { if (!keep.has(f)) fs.unlinkSync(path.join(svgDir, f)); });
+fs.readdirSync(bgDir).forEach(f => { if (f !== 'svg' && !keep.has(f)) fs.unlinkSync(path.join(bgDir, f)); });
+require('child_process').execFileSync('python3', [path.join(__dirname, 'raster.py')], { stdio: 'inherit' });
 
 html = html.replace('__BGS__', () => JSON.stringify(BGS)).replace(/<!--CLOUDS-->/g, CLOUDS)
   .replace(/__YB__/g, String(YB)).replace(/__SPC__/g, String(SPC)).replace(/__CX__/g, String(CX)).replace(/__WV__/g, String(WV)).replace(/__HV__/g, String(HV));

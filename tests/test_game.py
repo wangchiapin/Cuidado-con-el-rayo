@@ -108,7 +108,8 @@ with sync_playwright() as p:
     check(S(pg, 'S.phase') == 'reveal' and S(pg, 'S.correct') == 1 and S(pg, 'S.strikes') == 0, f'打對 {q} {r[0]}：馬上判定，答對 +1、沒被雷劈')
     check('✓' in pg.inner_text('#info'), '顯示 ✓ 和讀音')
     check(pg.evaluate("()=>document.getElementById('kb').classList.contains('locked')"), '揭曉時鍵盤變淡（鎖住）')
-    b0 = S(pg, 'S.buf'); pg.click('.k[data-k="a"]'); check(S(pg, 'S.buf') == b0, '揭曉中按鍵不會有反應')
+    b0 = S(pg, 'S.buf'); pg.evaluate("()=>window.__nian.keyPress('a')"); check(S(pg, 'S.buf') == b0, '揭曉中按鍵不會有反應')
+    check(pg.evaluate("()=>!document.getElementById('play').classList.contains('sheetUp')"), '揭曉時面板收下去，露出滿版畫面（上樓／雷擊）')
     check(not pg.evaluate("()=>document.getElementById('player').classList.contains('hit')"), '答對：人物沒有被雷劈')
     skip(pg)
     check(S(pg, 'S.phase') == 'move' and S(pg, 'S.step') == 1, '答對後往上走一階（step=1）')
@@ -285,13 +286,13 @@ with sync_playwright() as p:
     check(same, '首頁預覽的背景 = 接著開始的那一局的背景')
     check(all(seq[i] != seq[i+1] for i in range(len(seq)-1)) and len(set(seq)) >= 3, f'每一局都換背景（連兩局不會一樣）：{seq}')
     urls = pg.evaluate("()=>window.__nian.BGS")
-    check(all(u.startswith('bg/') and u.endswith('.svg') and os.path.isfile(os.path.join(ROOT, u)) for u in urls), '7 個背景都是 bg/ 資料夾裡真的存在的圖片檔')
+    check(all(u.startswith('bg/') and u.endswith('.webp') and os.path.isfile(os.path.join(ROOT, u)) for u in urls), '7 個背景都是 bg/ 資料夾裡真的存在的 webp 圖片檔')
     check(all(os.path.getsize(os.path.join(ROOT, u)) > 10000 for u in urls), '圖片檔都不是空的')
     def loads(i):
-        return pg.evaluate("""(i)=>new Promise(res=>{window.__nian.setBg(i);var im=new Image();im.onload=()=>res(im.naturalWidth>0);im.onerror=()=>res(false);im.src=window.__nian.BGS[i];})""", i)
-    check(all(loads(i) for i in range(7)), '7 個背景圖片都能讀進來並顯示')
+        return pg.evaluate("""(i)=>new Promise(res=>{window.__nian.setBg(i);var im=new Image();im.onload=()=>res(im.naturalWidth>0&&im.naturalHeight>im.naturalWidth*1.5);im.onerror=()=>res(false);im.src=window.__nian.BGS[i];})""", i)
+    check(all(loads(i) for i in range(7)), '7 個背景圖片都能讀進來（直式）並顯示')
     check(all('url(' in pg.evaluate("(i)=>{window.__nian.setBg(i);return document.getElementById('world').style.backgroundImage}", i) for i in range(7)), '背景有套用到畫面上')
-    texts = [open(os.path.join(ROOT, u), encoding='utf-8').read().count('<text') for u in urls]
+    texts = [open(os.path.join(ROOT, u.replace('bg/', 'bg/svg/').replace('.webp', '.svg')), encoding='utf-8').read().count('<text') for u in urls]
     check(texts[:6] == [0]*6 and texts[6] > 0, f'只有夜市（最後一個）有文字，其他都沒有：{texts}')
     print('== 各尺寸版面')
     for (w_, h_) in [(320, 568), (360, 640), (375, 667), (390, 844), (768, 1024), (1280, 800)]:

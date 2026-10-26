@@ -27,8 +27,8 @@ button{font-family:inherit;color:inherit}
 #start .inner .nameIn{margin-top:12px;text-align:center}
 @media(max-width:560px){#start .inner{padding-top:52px}}
 /* 街景只畫一次：整張當成背景圖（手機不用一直重畫上百個向量圖形，避免 iPhone 記憶體不夠、整頁被系統重開） */
-.streetBg{background-repeat:no-repeat;background-position:50% 100%;background-size:cover}
-#heroWrap>.streetBg{position:absolute;inset:0}
+.streetBg{background-repeat:no-repeat;background-position:50% 85%;background-size:cover}
+#heroWrap>.streetBg{position:absolute;inset:0;background-position:50% 25%}
 #heroWrap .clouds{position:absolute;left:0;right:0;top:-8px;height:34%;opacity:.7}
 #heroWrap .clouds svg{width:100%;height:100%;display:block}
 #heroChar{position:absolute;left:0;right:0;bottom:3%;height:52%;display:flex;justify-content:center}
@@ -52,14 +52,14 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .ghost{min-height:46px;padding:8px 14px;border-radius:10px;border:1px solid var(--keyb);background:var(--key);font-size:16px;cursor:pointer}
 
 /* ---------- 遊戲畫面 ---------- */
-#hud{flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:8px 58px 4px 14px;min-height:46px}
+#hud{position:relative;z-index:4;flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:8px 58px 4px 14px;min-height:46px;background:linear-gradient(rgba(244,240,230,.92),rgba(244,240,230,.6) 70%,rgba(244,240,230,0))}
 .stat{font-size:12px;color:var(--ink2);line-height:1.15;white-space:nowrap}
 .stat b{font-size:17px;color:var(--ink);font-weight:700}
 #stStrike b{color:var(--red)}
 #hud .sp{flex:1}
 #btnPause{width:40px;height:40px;border-radius:50%;border:1px solid var(--keyb);background:var(--key);font-size:15px;line-height:1;cursor:pointer;padding:0}
 
-#scene{flex:1 1 160px;min-height:110px;max-height:620px;position:relative;margin:0 8px;background:#CDBFA8;border:1px solid var(--line);border-radius:8px;overflow:hidden;--storm:0}
+#scene{position:absolute;inset:0;background:#CDBFA8;overflow:hidden;--storm:0}
 #world{position:absolute;inset:0;pointer-events:none}
 #world{background-color:transparent}
 #player{position:absolute;left:0;top:0;pointer-events:none;transform-origin:50% 95.6%}
@@ -90,7 +90,9 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #scene.shake{animation:shk .3s linear}
 @keyframes shk{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
 
-#qa{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:8px 12px 6px;gap:6px}
+#sheet{position:absolute;left:0;right:0;bottom:0;z-index:3;display:flex;flex-direction:column;background:rgba(244,240,230,.97);border-radius:18px 18px 0 0;box-shadow:0 -8px 22px rgba(0,0,0,.22);transform:translateY(106%);transition:transform .28s ease;pointer-events:none}
+#play.sheetUp #sheet{transform:none;pointer-events:auto}
+#qa{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:12px 12px 6px;gap:6px}
 #board{position:relative;align-self:stretch;margin:0 4px;display:flex;align-items:center;justify-content:center;gap:14px;padding:2px 0 8px;background:var(--paper2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 #ch{font-size:clamp(44px,min(17vw,9dvh),72px);line-height:1.08;font-weight:500}
 #spk{width:44px;height:44px;border-radius:50%;border:1px solid var(--keyb);background:var(--key);font-size:19px;cursor:pointer;padding:0}
@@ -106,11 +108,13 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .kbsw button{width:34px;height:36px;border:0;background:var(--key);font-size:15px;padding:0;cursor:pointer}
 .kbsw button.on{background:var(--ink);color:var(--paper2)}
 #info .tag{font-size:14px;color:var(--red);font-weight:700;margin-bottom:1px}
-#info{order:-1;min-height:44px;font-size:16px;color:var(--ink2);text-align:center;line-height:1.3}
+#info{position:absolute;z-index:4;left:50%;top:calc(58px + env(safe-area-inset-top));transform:translateX(-50%);width:max-content;max-width:calc(100% - 24px);padding:8px 16px;background:rgba(251,248,240,.95);border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.2);font-size:16px;color:var(--ink2);text-align:center;line-height:1.3}
+#info:empty{display:none}
+#scene.mp ~ #info{top:calc(112px + env(safe-area-inset-top))}
 #info .good{color:var(--ok);font-weight:700}
 #info .ans{color:var(--red);font-weight:700}
 
-#kb{flex:0 0 auto;padding:6px 6px calc(8px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:6px;background:var(--paper);transition:opacity .15s}
+#kb{flex:0 0 auto;padding:6px 6px calc(8px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:6px;transition:opacity .15s}
 #kb.locked{opacity:.45}
 .kr{display:flex;gap:5px}
 .k{flex:1 1 0;min-width:0;height:44px;border-radius:7px;border:1px solid var(--keyb);background:var(--key);font-size:19px;font-weight:500;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation}
@@ -208,7 +212,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .fig.me .nm{background:var(--red);color:#fff;font-weight:700}
 .fig.out .nm{color:var(--ink3)}
 .fig.out{opacity:.85}
-#mpStrip{flex:0 0 auto;display:flex;flex-wrap:wrap;gap:3px;padding:3px 10px 0;margin:0 0 -2px}
+#mpStrip{position:absolute;z-index:4;left:0;right:0;top:calc(48px + env(safe-area-inset-top));display:flex;flex-wrap:wrap;gap:3px;padding:3px 10px 0}
 #mpStrip .sc{max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;line-height:1.5;padding:0 5px;border-radius:9px;background:var(--key);color:var(--ink2)}
 #mpStrip .sc.me{background:var(--red);color:#fff}
 #mpStrip .sc.out{background:transparent;color:var(--ink3);text-decoration:line-through}
@@ -277,12 +281,14 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
     <div id="flash"></div>
   </div>
   <div id="mpStrip" hidden></div>
-  <div id="qa">
-    <div id="board"><div id="ch">你</div><button id="spk" aria-label="speak">🔊</button><div id="timer"><i id="timerBar"></i></div></div>
-    <div id="typed"><div id="typedTxt"></div></div>
-    <div id="info"></div>
+  <div id="sheet">
+    <div id="qa">
+      <div id="board"><div id="ch">你</div><button id="spk" aria-label="speak">🔊</button><div id="timer"><i id="timerBar"></i></div></div>
+      <div id="typed"><div id="typedTxt"></div></div>
+    </div>
+    <div id="kb"></div>
   </div>
-  <div id="kb"></div>
+  <div id="info"></div>
 </section>
 
 <div id="ov" hidden></div>
@@ -769,7 +775,7 @@ function renderTimer(){
 }
 /* ---------- 場景位置（整條街固定不動，人物沿著 10 階往上走）---------- */
 /* ---------- 背景（7 個台灣場景，每一局隨機換；連線時用房號＋第幾局算出來，全員一樣）---------- */
-var BGS = ["bg/bg0-ead0ef.svg","bg/bg1-3bdf85.svg","bg/bg2-d69c71.svg","bg/bg3-767d87.svg","bg/bg4-1d69ad.svg","bg/bg5-1b28cb.svg","bg/bg6-6d43fc.svg"];
+var BGS = ["bg/bg0-3204bb.webp","bg/bg1-708fe5.webp","bg/bg2-1779ad.webp","bg/bg3-93a00c.webp","bg/bg4-a9c30a.webp","bg/bg5-9b8b43.webp","bg/bg6-0e6995.webp"];
 var bgIdx = -1;
 function setBg(i){
   bgIdx=i; var u='url("'+BGS[i]+'")';
@@ -781,11 +787,14 @@ window.addEventListener('load',function(){ setTimeout(preloadBgs,1500); });
 function pickBg(){ var n; do{ n=Math.floor(Math.random()*BGS.length); }while(n===bgIdx&&BGS.length>1); setBg(n); }
 function mpBgIdx(r){ return ((parseInt(MP.code,10)||0)+(+r.n||0))%BGS.length; }
 var geo={W:360,H:200,s:1,ox:0,oy:0,hC:52,wC:30};
+/* 直式滿版：背景圖是 480x985 的直式圖（tools/tall.js），場景放大 TS 倍、階梯底端（第 0 階）落在圖的 TBASE 位置；
+   畫面用 cover 鋪滿，垂直方向偏上 TBIAS（多切下面的地面），人物、雷擊、連線小人都用同一套換算 */
+var TW=480, TH=985, TS=1.4, TBASE=514, TBIAS=.85;
 function measure(){
-  var sc=$('scene'), W=sc.clientWidth||360, Hh=sc.clientHeight||200;
-  var s=Hh/HV;                                       // 一律讓整條街（10 階）上下都看得到；太窄就裁掉左右的房子，太寬就在兩側補牆色
-  $('world').style.backgroundSize=(W/WV>s?'contain':'cover');
-  geo.W=W; geo.H=Hh; geo.s=s; geo.ox=(W-WV*s)/2; geo.oy=0;
+  var sc=$('scene'), W=sc.clientWidth||360, Hh=sc.clientHeight||640;
+  var k=Math.max(W/TW,Hh/TH), s=k*TS, oyImg=Math.min(0,Math.max((Hh-TH*k)*TBIAS,64-157*k));   // 偏上，但一定要讓最高那一階（圖上約 y=157）離上緣至少 64px，不被標題列擋住
+  $('world').style.backgroundSize='cover'; $('world').style.backgroundPosition='50% '+oyImg.toFixed(1)+'px';
+  geo.W=W; geo.H=Hh; geo.s=s; geo.ox=W/2-CX*s; geo.oy=oyImg+(TBASE-HV*TS)*k;
   geo.hC=Math.max(58*s,40); geo.wC=geo.hC*60/102;
   var pl=$('player'); pl.style.width=geo.wC.toFixed(1)+'px'; pl.style.height=geo.hC.toFixed(1)+'px';
 }
@@ -799,9 +808,16 @@ function placePlayer(anim){
 window.addEventListener('resize',function(){ if(S.running){ measure(); placePlayer(false); } });
 
 /* ---------- 主迴圈 ---------- */
+function sheetWanted(){
+  if(!S.running||S.over) return false;
+  if(MP.on){ if(!MP.inGame||!MP.room||!mpAmIn()||mpElim()[MP.uid]!==undefined) return false; return S.phase!=='reveal'&&S.phase!=='end'; }
+  return S.phase==='ask';
+}
+function syncSheet(){ $('play').classList.toggle('sheetUp',sheetWanted()); }
 var last=0;
 function tick(ts){
   if(!S.running) return;
+  syncSheet();
   var dt=Math.min(.05,(ts-last)/1000); last=ts; if(dt<0)dt=0;
   if(MP.on){ if(MP.inGame) mpFrame(dt*S.timeScale); requestAnimationFrame(tick); return; }
   if(!S.paused && !S.over){
@@ -835,7 +851,7 @@ function advance(){
 function startGame(){
   P=LEVELS[cfg.lv]; buildPool();
   S.running=true; S.paused=false; S.over=false; S.step=0; S.strikes=0; S.correct=0; S.locked=false; S.q=null; S.buf=''; S.missed=[]; S.used=[]; S.t0=Date.now(); S.ci=ci;
-  $('start').hidden=true; $('play').hidden=false; $('ov').hidden=true;
+  $('start').hidden=true; $('play').hidden=false; $('play').classList.remove('sheetUp'); $('ov').hidden=true;
   $('player').innerHTML=CHARS[cfg.g][ci];
   renderKb(); measure(); placePlayer(false); nextQ();
   requestAnimationFrame(function(){ measure(); placePlayer(false); last=performance.now(); requestAnimationFrame(tick); });
