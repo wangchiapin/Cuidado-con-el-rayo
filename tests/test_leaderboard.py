@@ -14,7 +14,7 @@ def sset(pg, *sels):
     for x in sels: pg.click(x)
     pg.click('#bSetOk'); pg.wait_for_timeout(60)
 def sname(pg, v):
-    pg.click('#btnSet'); pg.wait_for_selector('#bSetOk'); pg.fill('#inName', v); pg.click('#bSetOk'); pg.wait_for_timeout(60)
+    pg.fill('#inName', v); pg.wait_for_timeout(60)
 
 def check(c, msg):
     global fails
@@ -123,15 +123,14 @@ with sync_playwright() as p:
 
     print('== 首頁：暱稱與排行榜鈕')
     check(pg.is_visible('#btnLb') and pg.is_visible('#btnStart') and pg.is_visible('#btnSet'), '首頁有 🏆 排行榜鈕、開始鈕、⚙ 設定鈕')
-    pg.click('#btnSet'); pg.wait_for_selector('#bSetOk')
-    check(pg.is_visible('#inName'), '設定裡有暱稱欄')
-    check(pg.evaluate("()=>document.getElementById('lName').innerText").startswith('暱稱'), '暱稱欄標籤')
+    check(pg.is_visible('#inName'), '首頁直接有暱稱欄')
+    check('暱稱' in (pg.get_attribute('#inName', 'placeholder') or ''), '暱稱欄提示字')
     pg.fill('#inName', '  小明   ')
     check(pg.evaluate("()=>localStorage.getItem('typingRayo.name')") == '小明', '暱稱存在手機裡（去掉前後空白）')
     pg.fill('#inName', '一二三四五六七八九十甲乙丙丁戊己')
     check(pg.evaluate("()=>localStorage.getItem('typingRayo.name')") == '一二三四五六七八九十甲乙丙丁', '暱稱最多 14 個字')
-    pg.fill('#inName', '小明'); pg.click('#bSetOk'); pg.wait_for_timeout(100)
-    check('小明' in pg.inner_text('#sumLine'), '首頁摘要列顯示暱稱：%s' % pg.inner_text('#sumLine'))
+    pg.fill('#inName', '小明'); pg.wait_for_timeout(100)
+    check(pg.input_value('#inName') == '小明', '首頁暱稱欄顯示暱稱')
 
     print('== 首頁排行榜：三個難度分頁')
     pg.evaluate("""()=>{window.__store=window.__store||{};
@@ -203,7 +202,7 @@ with sync_playwright() as p:
     pg.evaluate("()=>{localStorage.removeItem('typingRayo.name')}"); pg.reload(); pg.wait_for_timeout(600)
     pg.evaluate("""()=>{window.__store=window.__store||{};   // 重新整理後假資料會清掉，再放一次進階榜的 11 筆
       for(let i=0;i<11;i++) window.__store['rayo_boards/hard/entries/H'+i]={name:'高手'+i,strikes:i%4,secs:100+i,rank:(10-i%4)*100000+(99999-100-i),updatedAt:'x'};}""")
-    check(pg.input_value('#inName') == '' and '輸入暱稱' in pg.inner_text('#sumLine'), '清掉暱稱後，欄位是空的、摘要列顯示「輸入暱稱」')
+    check(pg.input_value('#inName') == '', '清掉暱稱後，欄位是空的')
     sset(pg, '#segKb button:nth-child(1)', '#segLevel button:nth-child(3)')
     pg.click('#btnStart'); pg.wait_for_timeout(400)
     before = len([o for o in ops(pg, 'set') if o['p'].startswith('rayo_boards/')])
@@ -218,7 +217,7 @@ with sync_playwright() as p:
     check(len(sets) == before + 1 and sets[-1]['p'] == 'rayo_boards/hard/entries/UID1' and sets[-1]['d']['name'] == '小美' and rules_ok('hard', 'UID1', sets[-1]['d']), '輸入暱稱後上榜（hard 榜），資料符合規則')
     check(pg.evaluate("()=>localStorage.getItem('typingRayo.name')") == '小美', '暱稱也存起來了')
     pg.click('#bHome'); pg.wait_for_timeout(200)
-    check(pg.input_value('#inName') == '小美' and '小美' in pg.inner_text('#sumLine'), '回首頁，暱稱和摘要列都有「小美」')
+    check(pg.input_value('#inName') == '小美', '回首頁，暱稱欄有「小美」')
 
     print('== 讀不到榜單：遊戲照常、顯示提示')
     pg.evaluate("()=>{window.__failTop=true}")
@@ -233,7 +232,7 @@ with sync_playwright() as p:
     print('== 簡體＋西文')
     pg.click('#bHome'); pg.wait_for_timeout(200)
     sset(pg, '#segScript button:nth-child(2)', '#segLang button:nth-child(2)'); pg.wait_for_timeout(200)
-    check('昵称' in pg.inner_text('#lName') and 'Apodo' in pg.inner_text('#lName'), '暱稱標籤：简体＋西文')
+    check('昵称' in pg.get_attribute('#inName', 'placeholder') and 'apodo' in pg.get_attribute('#inName', 'placeholder').lower(), '暱稱欄提示字：简体＋西文')
     pg.click('#btnLb'); pg.wait_for_timeout(500)
     t = pg.inner_text('#ov')
     check('排行榜' in t and 'Clasificación' in t and 'Volver' in t, '排行榜視窗：简体＋西文')

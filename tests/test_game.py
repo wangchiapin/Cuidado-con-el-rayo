@@ -12,7 +12,7 @@ def sset(pg, *sels):
     for x in sels: pg.click(x)
     pg.click('#bSetOk'); pg.wait_for_timeout(60)
 def sname(pg, v):
-    pg.click('#btnSet'); pg.wait_for_selector('#bSetOk'); pg.fill('#inName', v); pg.click('#bSetOk'); pg.wait_for_timeout(60)
+    pg.fill('#inName', v); pg.wait_for_timeout(60)
 
 def check(c, msg):
     global fails
@@ -78,7 +78,7 @@ with sync_playwright() as p:
     check(pg.inner_html('#heroChar') in chars['f'], '選女生：預覽換成女生人物')
     pg.screenshot(path=SHOTS + '/1_settings.png'); pg.click('#bSetOk'); pg.wait_for_timeout(100)
     check(pg.locator('#btnSet').is_visible() and pg.locator('#btnHelp').is_visible() and pg.locator('#hgMute').is_visible(), '右上角有 ⚙ ❓ 🔊')
-    check(pg.locator('#segKb').is_hidden() and pg.locator('#inName').is_hidden(), '首頁不再直接顯示設定')
+    check(pg.locator('#segKb').is_hidden() and pg.locator('#inName').is_visible() and pg.locator('#sumLine').count() == 0, '首頁：設定收在 ⚙，暱稱欄直接放在首頁，中間的摘要鈕已拿掉')
     pg.screenshot(path=SHOTS + '/1_start.png')
 
     print('== 拼音鍵盤、開局')

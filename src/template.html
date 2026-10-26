@@ -21,8 +21,11 @@ button{font-family:inherit;color:inherit}
 
 /* ---------- 首頁 ---------- */
 #start{overflow-y:auto;-webkit-overflow-scrolling:touch}
-#start .inner{flex:1 0 auto;padding:50px 18px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-#heroWrap{position:relative;width:min(100%,360px);aspect-ratio:360/205;background:var(--paper2);border:1px solid var(--line);border-radius:8px;margin-top:6px;overflow:hidden}
+#start .inner{flex:1 0 auto;padding:16px 18px 8px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+#heroWrap{position:relative;width:100%;aspect-ratio:360/290;background:var(--paper2);border:1px solid var(--line);border-radius:8px;margin-top:6px;overflow:hidden}
+#start .inner h1{margin-top:0}
+#start .inner .nameIn{margin-top:12px;text-align:center}
+@media(max-width:560px){#start .inner{padding-top:52px}}
 /* 街景只畫一次：整張當成背景圖（手機不用一直重畫上百個向量圖形，避免 iPhone 記憶體不夠、整頁被系統重開） */
 .streetBg{background-repeat:no-repeat;background-position:50% 100%;background-size:cover}
 #heroWrap>.streetBg{position:absolute;inset:0}
@@ -208,7 +211,6 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #topBar{position:absolute;top:10px;right:58px;display:flex;gap:8px;z-index:3}
 .ib{width:40px;height:40px;border-radius:50%;border:1px solid rgba(0,0,0,.28);background:rgba(255,255,255,.88);color:#222;font-size:19px;line-height:1;padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .ib:active{transform:scale(.94)}
-.sumLine{margin:8px 0 4px;min-height:36px;padding:6px 16px;border-radius:18px;border:1px solid var(--keyb);background:var(--key);font-size:14px;color:var(--ink2);cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .setPanel{text-align:left}
 .setPanel h2{text-align:center}
 .setPanel .how{margin-top:0}
@@ -221,14 +223,14 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 <section id="start" class="screen">
   <div id="topBar"><button class="ib" id="btnSet" type="button">⚙</button><button class="ib" id="btnHelp" type="button">❓</button></div>
   <div class="inner">
+    <h1 id="tTitle"></h1>
+    <p class="sub" id="tSub"></p>
     <div id="heroWrap">
       <div class="streetBg"></div>
       <div class="clouds"><!--CLOUDS--></div>
       <div id="heroChar"></div>
     </div>
-    <h1 id="tTitle"></h1>
-    <p class="sub" id="tSub"></p>
-    <button class="sumLine" id="sumLine" type="button"></button>
+    <input class="nameIn" id="inName" type="text" maxlength="14" autocomplete="off" autocapitalize="off" spellcheck="false">
   </div>
   <div id="holder" hidden>
     <div id="setBody">
@@ -237,7 +239,6 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
       <div class="grp"><div class="lab" id="lLang"></div><div class="seg" id="segLang"></div></div>
       <div class="grp"><div class="lab" id="lKb"></div><div class="seg" id="segKb"></div></div>
       <div class="grp"><div class="lab" id="lLevel"></div><div class="seg" id="segLevel"></div></div>
-      <div class="grp"><div class="lab" id="lName"></div><input class="nameIn" id="inName" type="text" maxlength="14" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
     </div>
     <div id="helpBody"><div class="how" id="tHow"></div></div>
   </div>
@@ -290,7 +291,7 @@ var YB = __YB__, SPC = __SPC__, CX = __CX__, WV = __WV__, HV = __HV__, NSTEP = 1
 /* ---------- 文字（中文繁／簡、西文、英文）---------- */
 var TXT = {
   title:['別被雷劈到','别被雷劈到','¡Cuidado con el rayo!','Don’t get struck!'],
-  sub:['打對讀音往上爬，打錯就被雷劈','打对读音往上爬，打错就被雷劈','Escribe la pronunciación para subir. Si fallas, ¡te cae un rayo!','Type the reading to climb. Get it wrong and lightning strikes!'],
+  sub:['念對就向上，念錯就雷劈','念对就向上，念错就雷劈','Lee bien y sube; lee mal y ¡te cae un rayo!','Read it right to climb; get it wrong and lightning strikes!'],
   how1:['看到字，在時間內打出它的讀音（要打聲調）','看到字，在时间内打出它的读音（要打声调）','Mira el carácter y escribe su pronunciación a tiempo (con tono)','See the character and type its reading in time (with tone)'],
   tone:['打完字母或注音，按聲調鍵送出（一聲按 ˉ，輕聲按 ˙）','打完字母或注音，按声调键送出（一声按 ˉ，轻声按 ˙）','Al terminar las letras, pulsa la tecla del tono para enviar (1.º tono: ˉ, tono neutro: ˙)','After the letters, press a tone key to submit (1st tone: ˉ, neutral: ˙)'],
   how2:['答對：往上走一階','答对：往上走一阶','Acierto: subes un escalón','Right: climb one step'],
@@ -486,7 +487,7 @@ function paintLb(){
   }).catch(function(){ if(want===lbTab&&$('lbBody')===body) body.innerHTML='<p class="lbSt">'+plain('lbError')+'</p>'; });
 }
 $('btnLb').addEventListener('click',showLb);
-$('inName').addEventListener('input',function(){ setName(this.value); $('sumLine').textContent=zh(cfg.lv)+' · '+(cfg.kb==='pinyin'?'拼音':'注音')+' · '+(getName()||zh('namePh'))+'  ⚙'; });
+$('inName').addEventListener('input',function(){ setName(this.value); });
 
 /* ---------- 首頁 ---------- */
 function seg(id,opts,cur,fn){
@@ -509,13 +510,12 @@ function renderStart(){
   seg('segKb',[{v:'pinyin',h:'拼音<span class="tl">pīnyīn</span>'},{v:'zhuyin',h:'注音<span class="tl">ㄅㄆㄇㄈ</span>'}],cfg.kb,function(v){ cfg.kb=v; saveCfg(); renderStart(); });
   seg('segLevel',['easy','normal','hard'].map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),cfg.lv,function(v){ cfg.lv=v; saveCfg(); renderStart(); });
   $('btnStart').innerHTML=H('start');
-  $('lName').innerHTML=plain('secName'); $('inName').placeholder=zh('namePh'); if($('inName').value!==getName()) $('inName').value=getName();
+  $('inName').placeholder=plain('namePh'); if($('inName').value!==getName()) $('inName').value=getName();
   $('btnLb').innerHTML='🏆'; $('btnLb').setAttribute('aria-label',plain('lbTitle'));
   $('btnMulti').innerHTML='👥<span class="tl">'+(tl('mpBtn')||zh('mpBtn'))+'</span>'; $('btnMulti').setAttribute('aria-label',plain('mpTitle'));
   $('btnSet').setAttribute('aria-label',plain('setTitle')); $('btnHelp').setAttribute('aria-label',plain('helpTitle'));
   if($('setTtl')) $('setTtl').innerHTML='⚙ '+zh('setTitle')+(tl('setTitle')?'<span class="tl">'+tl('setTitle')+'</span>':'');
   if($('helpTtl')) $('helpTtl').innerHTML='❓ '+zh('helpTitle')+(tl('helpTitle')?'<span class="tl">'+tl('helpTitle')+'</span>':'');
-  $('sumLine').textContent=zh(cfg.lv)+' · '+(cfg.kb==='pinyin'?'拼音':'注音')+' · '+(getName()||zh('namePh'))+'  ⚙';
   $('heroChar').innerHTML=CHARS[cfg.g][ci];
 }
 /* 設定、說明：把藏在 #holder 裡的內容搬進浮層，關掉時再搬回去 */
@@ -530,7 +530,7 @@ function openHelp(){
   ov.innerHTML='<div class="panel setPanel"><h2 id="helpTtl"></h2><div id="slot"></div><div class="btns"><button class="big" id="bSetOk" type="button"></button></div></div>';
   $('slot').appendChild($('helpBody')); $('bSetOk').innerHTML=H('setDone'); $('bSetOk').addEventListener('click',ovClose); renderStart();
 }
-$('btnSet').addEventListener('click',openSet); $('sumLine').addEventListener('click',openSet); $('btnHelp').addEventListener('click',openHelp);
+$('btnSet').addEventListener('click',openSet); $('btnHelp').addEventListener('click',openHelp);
 
 /* ---------- 鍵盤 ---------- */
 var TONEMARK={1:'',2:'ˊ',3:'ˇ',4:'ˋ',5:''}, TONESYM={1:'ˉ',2:'ˊ',3:'ˇ',4:'ˋ',5:'˙'};
