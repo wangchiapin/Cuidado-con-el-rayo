@@ -269,7 +269,7 @@ function mpGame(){
   if(r.status==='finished'){ mpFinish(); return; }
   if(r.ph==='ready'){ MP.countT=3; MP.lastC=0; S.phase='wait'; S.locked=true; MP.wait=99; $('kb').classList.add('locked'); setInfo('<div class="tag">'+plain('mpReady')+'</div>'); $('ch').textContent='3'; mpLayout(true); return; }
   if(r.ph==='ask'){ mpLayout(true); S.phase='wait'; S.locked=true; MP.wait=prev&&r.rd>0?.85:.3; $('kb').classList.add('locked'); $('typedTxt').className=''; S.buf=''; renderTyped(); setInfo(''); setStorm(0);
-    $('ch').textContent='\u00a0'; S.T=S.tLeft=P.T; renderTimer(); return; }   // 等鍵盤升起的這段時間，先清掉上一題的字、時間條補滿，免得先看到舊題目
+    var w0=r.qs&&BYCH[r.qs[r.rd]]; $('ch').textContent=w0?chText(w0):'\u00a0'; S.T=S.tLeft=P.T; renderTimer(); return; }   // 鍵盤開始升起時，上一題的字馬上換成新題的字（還不能打、時間還沒開始走，等 MP.wait 到了才由 mpShowQ 解鎖），不會空白、也不會殘留舊字
   if(r.ph==='reveal'){ mpReveal(); return; }
 }
 function mpHud(){
