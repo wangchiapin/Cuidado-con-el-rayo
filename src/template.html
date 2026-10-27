@@ -108,7 +108,12 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #player.zap svg{animation:zap .6s linear forwards}
 #player.hit svg{transform:rotate(24deg) translateX(2px)}
 #world.zin,#player.zin{transition:scale .9s cubic-bezier(.45,.05,.25,1),translate .9s cubic-bezier(.45,.05,.25,1),transform .75s cubic-bezier(.4,.1,.25,1)}
-#player.cheer svg{animation:cheer .6s ease-out 5}
+#player.cheer svg{animation:cheer .6s ease-out 5;overflow:visible}
+#player.cheer .al,#player.cheer .ar{animation-duration:.6s;animation-iteration-count:5;animation-timing-function:ease-in-out}
+#player.cheer .al{transform-origin:12.5px 40px;animation-name:armL}
+#player.cheer .ar{transform-origin:47.5px 40px;animation-name:armR}
+@keyframes armL{0%{transform:rotate(55deg)}40%{transform:rotate(160deg)}75%{transform:rotate(150deg)}100%{transform:rotate(55deg)}}
+@keyframes armR{0%{transform:rotate(-55deg)}40%{transform:rotate(-160deg)}75%{transform:rotate(-150deg)}100%{transform:rotate(-55deg)}}
 @keyframes cheer{0%{transform:translateY(0) scale(1,1)}14%{transform:translateY(0) scale(1.1,.88)}46%{transform:translateY(-48%) scale(.94,1.08) rotate(-5deg)}78%{transform:translateY(0) scale(1.08,.92) rotate(3deg)}100%{transform:translateY(0) scale(1,1)}}
 .cf{position:absolute;top:-16px;width:8px;height:12px;border-radius:2px;animation:cfall var(--d) linear forwards}
 @keyframes cfall{from{transform:translate(0,0) rotate(0);opacity:1}85%{opacity:1}to{transform:translate(var(--dx),calc(100vh + 40px)) rotate(var(--rot));opacity:.9}}

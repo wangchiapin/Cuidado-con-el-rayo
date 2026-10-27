@@ -37,9 +37,8 @@ function charSVG(c) {
 ${hp.back}
 <rect x="18" y="66" width="10" height="23" rx="3" fill="${c.pants}" stroke="${INK}" stroke-width=".9"/><rect x="32" y="66" width="10" height="23" rx="3" fill="${c.pants}" stroke="${INK}" stroke-width=".9"/>
 <ellipse cx="23" cy="89.5" rx="6.5" ry="3" fill="${INK}"/><ellipse cx="37" cy="89.5" rx="6.5" ry="3" fill="${INK}"/>
-<rect x="10.5" y="49" width="4.5" height="14" rx="2" fill="${sk}" stroke="${INK}" stroke-width=".8"/><circle cx="12.8" cy="65" r="3.6" fill="${sk}" stroke="${INK}" stroke-width=".8"/>
-<rect x="45" y="49" width="4.5" height="14" rx="2" fill="${sk}" stroke="${INK}" stroke-width=".8"/><circle cx="47.2" cy="65" r="3.6" fill="${sk}" stroke="${INK}" stroke-width=".8"/>
-<rect x="9" y="38" width="7" height="13" rx="3" fill="${c.shirt}" stroke="${INK}" stroke-width=".9"/><rect x="44" y="38" width="7" height="13" rx="3" fill="${c.shirt}" stroke="${INK}" stroke-width=".9"/>
+<g class="al"><rect x="10.5" y="49" width="4.5" height="14" rx="2" fill="${sk}" stroke="${INK}" stroke-width=".8"/><circle cx="12.8" cy="65" r="3.6" fill="${sk}" stroke="${INK}" stroke-width=".8"/><rect x="9" y="38" width="7" height="13" rx="3" fill="${c.shirt}" stroke="${INK}" stroke-width=".9"/></g>
+<g class="ar"><rect x="45" y="49" width="4.5" height="14" rx="2" fill="${sk}" stroke="${INK}" stroke-width=".8"/><circle cx="47.2" cy="65" r="3.6" fill="${sk}" stroke="${INK}" stroke-width=".8"/><rect x="44" y="38" width="7" height="13" rx="3" fill="${c.shirt}" stroke="${INK}" stroke-width=".9"/></g>
 <rect x="15" y="37" width="30" height="31" rx="6" fill="${c.shirt}" stroke="${INK}" stroke-width="1"/>
 <ellipse class="soot" cx="30" cy="52" rx="15" ry="16" fill="${INK}" opacity=".28"/>
 <rect x="26" y="32" width="8" height="8" fill="${sk}" stroke="${INK}" stroke-width=".8"/>
