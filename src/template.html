@@ -284,17 +284,6 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .plFig svg{width:100%;height:100%;display:block}
 .plTag{flex:0 0 auto;font-size:11px;padding:1px 6px;border-radius:9px;background:var(--ink);color:var(--paper2)}
 .plTag.w{background:var(--keyb);color:var(--ink)}
-/* 階梯底下那塊空地：站滿觀看的人（背影），跟著背景一起捲動，只在爬到低階、看得到空地時才看得到 */
-#crowdFg{position:absolute;left:0;top:0;width:100%;height:0;z-index:1;pointer-events:none}
-#scene.mp #crowdFg{display:none}
-.cwRow{position:absolute;left:0;top:0;width:0;height:0;animation:cwRow var(--d,.9s) ease-in-out var(--dl,0s) infinite alternate}
-.cw{position:absolute;transform-origin:50% 100%}
-.cw.r5,.cw.r6{animation:cwBob var(--d,.8s) ease-in-out var(--dl,0s) infinite alternate}
-.cw svg{display:block;width:100%;height:auto}
-.cw.pop svg{animation:cwPop .28s ease-out}
-@keyframes cwRow{from{transform:translateY(0)}to{transform:translateY(-3px)}}
-@keyframes cwBob{from{transform:translateY(0) rotate(-1.6deg)}to{transform:translateY(-2.6%) rotate(1.2deg)}}
-@keyframes cwPop{from{transform:scale(.86,.82)}to{transform:none}}
 #crowd{position:absolute;inset:0;pointer-events:none}
 #scene.mp #player{display:none}
 .fig{position:absolute;left:0;top:0;transform-origin:50% 95.6%}
@@ -372,7 +361,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
     <button id="btnPause" aria-label="pause">❚❚</button>
   </div>
   <div id="scene">
-    <div id="world"><div id="crowdFg" aria-hidden="true"></div></div>
+    <div id="world"></div>
     <div id="player"></div>
     <div id="crowd"></div>
     <div id="veil"></div>
@@ -929,7 +918,6 @@ function measure(){
   geo.ay=Math.max(64+geo.hC+30,Math.min(Hh-sh-14,.62*Hh));   // 人物腳底的高度：在作答欄上面一點
   var w=$('world'); w.style.width=(WV*s).toFixed(1)+'px'; w.style.marginLeft=(-WV*s/2).toFixed(1)+'px'; w.style.height=(worldH()*s+Hh+40).toFixed(1)+'px'; w.style.setProperty('--ih',(worldH()*s).toFixed(1)+'px');
   var pl=$('player'); pl.style.width=geo.wC.toFixed(1)+'px'; pl.style.height=geo.hC.toFixed(1)+'px';
-  layoutCrowd();
   camTo(geo.c,false);
 }
 function camTo(c,anim){   // 鏡頭看第 c 階（可以是小數）
@@ -942,66 +930,9 @@ function footPos(step){   // 第 step 階的腳底位置（畫面像素）；越
 }
 function placePlayer(anim){
   camTo(S.step,anim);
-  var cf=$('crowdFg'); if(cf) cf.style.display=(S.step>NSTEP*.7)?'none':'';
   var f=footPos(S.step), pl=$('player'); pl.classList.toggle('mv',!!anim);
   pl.style.transform='translate('+(f.x-geo.wC/2).toFixed(1)+'px,'+(f.y-.956*geo.hC).toFixed(1)+'px) scale('+f.sc.toFixed(3)+')';
 }
-/* ---------- 空地上的人群（背影）---------- */
-var CROWD_V=[
-  {h:'#2E2A28',k:'#C99A78',c:'#8FA3A0',t:'short',p:'#6A6F73'},{h:'#3A2F2A',k:'#A87654',c:'#C98F7C',t:'bun',p:'#5F6670'},
-  {h:'#1F1D1D',k:'#D9B08C',c:'#D8CBB0',t:'long',p:'#74706A'},{h:'#6B5238',k:'#E2BE9C',c:'#6F7480',t:'cap',p:'#4F5560'},
-  {h:'#2A2523',k:'#7E5238',c:'#A6BAA5',t:'curly',p:'#7B7F86'},{h:'#B8924A',k:'#EBC9A8',c:'#9AA3B5',t:'short',p:'#6F7480'},
-  {h:'#2B2B2E',k:'#C99A78',c:'#B5584A',t:'long',p:'#3F4348'},{h:'#4A3A32',k:'#B98A68',c:'#D9B96F',t:'cap',p:'#5C5A55'}
-];
-var CROWD_BR=[.82,.74,.68,.62,.58,.56];
-function dimC(c,f){ var n=parseInt(c.slice(1),16), r=Math.round((n>>16&255)*f), g=Math.round((n>>8&255)*f), b=Math.round((n&255)*f); return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1); }
-function crowdSVG(v0,ri){
-  var f=CROWD_BR[ri||0], v={h:dimC(v0.h,f),k:dimC(v0.k,f),c:dimC(v0.c,f),p:dimC(v0.p,f),t:v0.t};
-  var hair='', t=v.t;
-  if(t==='long') hair='<path d="M10.5 15Q10 3 20 3.5Q30 3 29.5 15L31 34Q31 37 27.5 37H12.5Q9 37 9 34Z" fill="'+v.h+'"/>';
-  else if(t==='bun') hair='<ellipse cx="20" cy="14.5" rx="9.4" ry="10.6" fill="'+v.h+'"/><circle cx="20" cy="3.4" r="4.2" fill="'+v.h+'"/>';
-  else if(t==='curly') hair='<circle cx="20" cy="9" r="6.5" fill="'+v.h+'"/><circle cx="13" cy="13" r="5.6" fill="'+v.h+'"/><circle cx="27" cy="13" r="5.6" fill="'+v.h+'"/><circle cx="14.5" cy="19.5" r="4.6" fill="'+v.h+'"/><circle cx="25.5" cy="19.5" r="4.6" fill="'+v.h+'"/>';
-  else if(t==='cap') hair='<ellipse cx="20" cy="15" rx="9" ry="10" fill="'+v.h+'"/><path d="M10.6 13Q11 4 20 4Q29 4 29.4 13Q20 10.5 10.6 13Z" fill="'+v.c+'"/><rect x="18.8" y="10.4" width="2.4" height="2.2" fill="#2A2523" opacity=".55"/>';
-  else hair='<ellipse cx="20" cy="14.5" rx="9.2" ry="10.4" fill="'+v.h+'"/>';
-  var ln='stroke="#2A2420" stroke-width=".7"';
-  return '<svg viewBox="0 0 40 92" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'+
-    '<rect x="8" y="50" width="11.6" height="37" rx="2.6" fill="'+v.p+'" '+ln+'/><rect x="20.4" y="50" width="11.6" height="37" rx="2.6" fill="'+v.p+'" '+ln+'/>'+
-    '<ellipse cx="13.6" cy="88.6" rx="6" ry="3" fill="#2A2420"/><ellipse cx="26.4" cy="88.6" rx="6" ry="3" fill="#2A2420"/>'+
-    '<rect x="1.5" y="27" width="5.2" height="22" rx="2.4" fill="'+v.c+'" '+ln+'/><rect x="33.3" y="27" width="5.2" height="22" rx="2.4" fill="'+v.c+'" '+ln+'/>'+
-    '<circle cx="4.1" cy="51.6" r="2.5" fill="'+v.k+'"/><circle cx="35.9" cy="51.6" r="2.5" fill="'+v.k+'"/>'+
-    '<path d="M5.5 28Q7 25 20 25Q33 25 34.5 28L33.5 53H6.5Z" fill="'+v.c+'" '+ln+'/>'+
-    '<rect x="17" y="21" width="6" height="6" fill="'+v.k+'"/><circle cx="10.6" cy="17" r="1.9" fill="'+v.k+'"/><circle cx="29.4" cy="17" r="1.9" fill="'+v.k+'"/>'+hair+'</svg>';
-}
-var CROWD=[], CROWD_ROWS=[[28,16],[48,21],[72,28],[102,37],[138,48],[182,62]];   // [腳底在第 0 階下面幾單位, 人物寬度單位]
-function buildCrowd(){
-  var box=$('crowdFg'); box.innerHTML=''; CROWD=[];
-  CROWD_ROWS.forEach(function(r,ri){
-    var row=document.createElement('div'); row.className='cwRow'; row.style.setProperty('--d',(.7+Math.random()*.5).toFixed(2)+'s'); row.style.setProperty('--dl',(-Math.random()).toFixed(2)+'s'); box.appendChild(row);
-    var gap=r[1]*.95, n=Math.ceil(WV/gap)+1, off=(ri%2)*gap*.5;
-    for(var i=0;i<n;i++){
-      var d=document.createElement('div'); d.className='cw r'+(ri+1);
-      d.innerHTML=crowdSVG(CROWD_V[Math.floor(Math.random()*CROWD_V.length)],ri);
-      d.style.setProperty('--d',(.55+Math.random()*.7).toFixed(2)+'s'); d.style.setProperty('--dl',(-Math.random()*1.2).toFixed(2)+'s');
-      row.appendChild(d); CROWD.push({e:d,x:i*gap-off+(Math.random()-.5)*gap*.3,ri:ri});
-    }
-  });
-}
-function layoutCrowd(){
-  var s=geo.s, y0u=y0();
-  CROWD.forEach(function(o){
-    var r=CROWD_ROWS[o.ri], w=r[1]*s, e=o.e;
-    e.style.width=w.toFixed(1)+'px'; e.style.left=(o.x*s).toFixed(1)+'px'; e.style.top=((y0u+r[0])*s-w*92/40).toFixed(1)+'px';
-  });
-}
-/* 「兩三種不同的背影輪流閃動」：每隔一下，隨機幾個人換成另一種背影 */
-setInterval(function(){
-  if($('play').hidden||!S.running||S.paused||S.over||MP.on||S.step>NSTEP*.62) return;
-  for(var k=0;k<5;k++){
-    var o=CROWD[Math.floor(Math.random()*CROWD.length)]; if(!o) return;
-    o.e.innerHTML=crowdSVG(CROWD_V[Math.floor(Math.random()*CROWD_V.length)],o.ri);
-    o.e.classList.remove('pop'); void o.e.offsetWidth; o.e.classList.add('pop');
-  }
-},380);
 window.addEventListener('resize',function(){ if(S.running&&!MP.on){ measure(); placePlayer(false); } });
 
 /* ---------- 主迴圈 ---------- */
@@ -1150,7 +1081,6 @@ function finish(){
 /*__MULTI__*/
 
 /* ---------- 啟動 ---------- */
-buildCrowd();
 pickBg();
 renderStart();
 $('btnMulti').addEventListener('click',function(){ mpOpen(); });
