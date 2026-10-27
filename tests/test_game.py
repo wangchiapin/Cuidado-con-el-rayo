@@ -335,6 +335,21 @@ with sync_playwright() as p:
     # 星星門檻
     sset(pg, '#segN button:nth-child(1)')
     check(pg.evaluate("()=>window.__nian.boardId('normal',10)+','+window.__nian.boardId('hard',15)+','+window.__nian.boardId('easy',25)") == 'normal,hard_15,easy_25', '榜名：10 題沿用舊榜、其他是 難度_題數')
+    print('== 登頂慶祝：開心連跳約 3 秒，再跳出結算（含排行榜）')
+    import time as _t
+    pc = ctx.new_page(); pc.set_viewport_size({'width': 390, 'height': 844}); pc.route('**/*', route)
+    pc.goto(URL); pc.wait_for_timeout(300)
+    pc.evaluate("()=>{localStorage.clear();localStorage.setItem('typingRayo.name','測試')}"); pc.reload(); pc.wait_for_timeout(300)
+    pc.click('#btnStart'); pc.wait_for_timeout(500)
+    pc.evaluate("()=>{const n=window.__nian; n.S.step=n.NSTEP()-1; n.S.phase='reveal'; n.S.phaseT=0;}")
+    t0 = _t.time()
+    pc.wait_for_function("()=>document.getElementById('player').classList.contains('cheer')", timeout=5000)
+    check(pc.evaluate("()=>document.querySelectorAll('.cf').length>10 && !!document.getElementById('topTxt') && document.getElementById('ov').hidden"), '登頂：人物開始跳、落彩帶、顯示「登頂！」，結算還沒出現')
+    pc.wait_for_function("()=>!document.getElementById('ov').hidden", timeout=7000)
+    dt = _t.time() - t0
+    check(3.2 <= dt <= 5.2, f'登頂後約 3 秒慶祝才跳出結算（實測 {dt:.1f} 秒含走到頂）')
+    check(pc.evaluate("()=>!document.getElementById('player').classList.contains('cheer') && document.querySelectorAll('.cf').length===0") and pc.is_visible('#lbArea'), '結算出現時慶祝動畫已收掉、畫面有排行榜區')
+    pc.close()
     print('== 各尺寸版面')
     for (w_, h_) in [(320, 568), (360, 640), (375, 667), (390, 844), (768, 1024), (1280, 800)]:
         pg2 = ctx.new_page(); pg2.set_viewport_size({'width': w_, 'height': h_}); pg2.route('**/*', route)

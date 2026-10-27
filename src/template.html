@@ -39,13 +39,13 @@ button{font-family:inherit;color:inherit}
 @media(min-width:700px){
   #app:has(#start:not([hidden])){max-width:820px}
   #start{--hh:clamp(210px,calc(100dvh - 465px),560px);--hw:calc(var(--hh)*1.24)}
-  #start .inner{padding-top:20px}
+  #start .inner{padding-top:20px;padding-bottom:0;flex:0 0 auto}   /* 電腦版：開始鈕緊接在男生／女生下面，不貼到視窗最底 */
   #start h1{font-size:46px;margin-top:4px}
   #start .sub{font-size:18px;margin:4px 0 6px}
   #heroWrap{aspect-ratio:auto;flex:none;height:var(--hh);width:var(--hw);margin:6px auto 0}
   #start .inner .nameIn{width:var(--hw);margin-left:auto;margin-right:auto;min-height:56px;font-size:20px}
   #start .inner #segGender{align-self:center;width:var(--hw)}
-  #startBar{display:flex;justify-content:center}
+  #startBar{display:flex;justify-content:center;padding-top:2px;margin-top:8px}
   #start #startBar .big{width:340px;align-self:center}
 }
 /* 矮視窗（電腦視窗不高、小手機）：標題縮小、拿掉副標的西文行，讓整頁還是不用捲動 */
@@ -83,7 +83,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .seg button{flex:1;min-height:44px;padding:6px 4px;border-radius:8px;border:1px solid var(--keyb);background:var(--key);font-size:15px;line-height:1.2;cursor:pointer}
 .seg button.on{background:var(--ink);border-color:var(--ink);color:var(--paper2)}
 .seg button.on .tl{color:#D8D2C4}
-#startBar{position:sticky;bottom:0;padding:10px 18px calc(12px + env(safe-area-inset-bottom));background:var(--paper);border-top:1px solid var(--line);margin-top:14px;z-index:2}
+#startBar{position:sticky;bottom:0;padding:10px 18px calc(12px + env(safe-area-inset-bottom));background:var(--paper);margin-top:14px;z-index:2}
 .big{width:100%;min-height:54px;border-radius:10px;border:0;background:var(--red);color:#fff;font-size:20px;font-weight:700;letter-spacing:.2em;cursor:pointer}
 .big .tl{color:#F5DDD6;letter-spacing:0;font-size:.6em}
 .big:active{transform:scale(.985)}
@@ -107,6 +107,14 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #player.hop svg{animation:hop .4s ease-out}
 #player.zap svg{animation:zap .6s linear forwards}
 #player.hit svg{transform:rotate(24deg) translateX(2px)}
+#world.zin,#player.zin{transition:scale .9s cubic-bezier(.45,.05,.25,1),translate .9s cubic-bezier(.45,.05,.25,1),transform .75s cubic-bezier(.4,.1,.25,1)}
+#player.cheer svg{animation:cheer .6s ease-out 5}
+@keyframes cheer{0%{transform:translateY(0) scale(1,1)}14%{transform:translateY(0) scale(1.1,.88)}46%{transform:translateY(-48%) scale(.94,1.08) rotate(-5deg)}78%{transform:translateY(0) scale(1.08,.92) rotate(3deg)}100%{transform:translateY(0) scale(1,1)}}
+.cf{position:absolute;top:-16px;width:8px;height:12px;border-radius:2px;animation:cfall var(--d) linear forwards}
+@keyframes cfall{from{transform:translate(0,0) rotate(0);opacity:1}85%{opacity:1}to{transform:translate(var(--dx),calc(100vh + 40px)) rotate(var(--rot));opacity:.9}}
+.topTxt{position:absolute;left:0;right:0;top:9%;text-align:center;font-size:46px;font-weight:700;letter-spacing:.1em;color:#fff;text-shadow:0 2px 0 #B5584A,0 0 14px rgba(217,164,65,.9),0 3px 10px rgba(0,0,0,.35);animation:topPop .5s cubic-bezier(.3,1.6,.5,1) both}
+.topTxt .tl{display:block;font-size:.38em;letter-spacing:0;margin-top:2px;color:#fff;font-weight:600}
+@keyframes topPop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes hop{0%{transform:translateY(0)}40%{transform:translateY(-12px)}100%{transform:translateY(0)}}
 @keyframes zap{0%{transform:translateX(0)}12%{transform:translateX(-3px)}24%{transform:translateX(3px)}36%{transform:translateX(-2px)}48%{transform:translateX(2px)}100%{transform:rotate(24deg) translateX(2px)}}
 .ex,.mx,.soot{display:none}
@@ -894,15 +902,48 @@ function tick(ts){
       }
     }else{
       S.phaseT-=dt;
+      if(S.phase==='end' && !S.cheered && S.phaseT<=CHEER_T){ S.cheered=true; startCheer(); }   // 走到頂（約 0.8 秒）之後才開始慶祝
       if(S.phaseT<=0) advance();
     }
   }
   requestAnimationFrame(tick);
 }
+/* 登頂慶祝：人物開心連跳約 3 秒、落彩帶、顯示「登頂！」，然後才跳出結算（含排行榜） */
+var CHEER_T=3;
+function startCheer(){
+  sfx('done');
+  var pl=$('player'); pl.classList.remove('cheer'); void pl.offsetWidth; pl.classList.add('cheer');
+  zoomTop(true);
+  var fx=$('fx'), W=geo.W||360, cols=['#D9A441','#B5584A','#6F9B6A','#5E86B8','#F1EBDB','#E8735A'];
+  for(var i=0;i<46;i++){
+    var d=document.createElement('i'); d.className='cf';
+    d.style.left=(Math.random()*W).toFixed(0)+'px'; d.style.background=cols[i%cols.length];
+    d.style.setProperty('--dx',((Math.random()-.5)*90).toFixed(0)+'px'); d.style.setProperty('--rot',((Math.random()-.5)*1100).toFixed(0)+'deg');
+    d.style.setProperty('--d',(1.6+Math.random()*1.4).toFixed(2)+'s'); d.style.animationDelay=(Math.random()*1.4).toFixed(2)+'s';
+    fx.appendChild(d);
+  }
+  var t=document.createElement('div'); t.className='topTxt'; t.id='topTxt'; t.innerHTML=H('mpTop'); fx.appendChild(t);
+}
+/* 慶祝時鏡頭拉近到頂端的人物：以人物為中心放大，再把人物移到畫面中央偏下 */
+var ZOOM=1.9;
+function zoomTop(on){
+  var w=$('world'), pl=$('player');
+  if(!on){ [w,pl].forEach(function(e){ e.classList.remove('zin'); e.style.scale=''; e.style.translate=''; e.style.transformOrigin=''; }); return; }
+  var f=footPos(S.step), px=f.x, py=f.y-geo.hC*.5, bx=geo.W/2-parseFloat(w.style.width||0)/2;
+  w.style.transformOrigin=(px-bx).toFixed(1)+'px '+py.toFixed(1)+'px';
+  pl.style.transformOrigin=px.toFixed(1)+'px '+py.toFixed(1)+'px';
+  var tx=(geo.W/2-px).toFixed(1)+'px', ty=Math.min(geo.H*.56-py,(ZOOM-1)*py-1).toFixed(1)+'px';   // 不能把圖的頂邊拉下來露出空白
+  [w,pl].forEach(function(e){ e.classList.add('zin'); void e.offsetWidth; e.style.scale=ZOOM; e.style.translate=tx+' '+ty; });
+}
+function clearCheer(){
+  zoomTop(false);
+  $('player').classList.remove('cheer');
+  var fx=$('fx'); [].slice.call(fx.querySelectorAll('.cf,.topTxt')).forEach(function(n){ n.remove(); });
+}
 function advance(){
   if(S.phase==='reveal'){
     S.phase='move'; S.step++; S.phaseT=.85; setStorm(0); placePlayer(true); hop(); renderHud();
-    if(S.step>=NSTEP){ S.phase='end'; S.phaseT=1.1; }
+    if(S.step>=NSTEP){ S.phase='end'; S.phaseT=.8+CHEER_T; S.cheered=false; }
   }else if(S.phase==='move'){
     nextQ();
   }else if(S.phase==='end'){
@@ -915,7 +956,7 @@ function startGame(){
   P=LEVELS[cfg.lv]; buildPool(); NSTEP=cfg.n; setBg(bgIdx);
   S.running=true; S.paused=false; S.over=false; S.step=0; S.strikes=0; S.correct=0; S.locked=false; S.q=null; S.buf=''; S.missed=[]; S.used=[]; S.t0=Date.now(); S.ci=ci;
   $('start').hidden=true; $('play').hidden=false; $('play').classList.remove('sheetUp'); $('ov').hidden=true;
-  $('player').innerHTML=CHARS[cfg.g][ci];
+  $('player').innerHTML=CHARS[cfg.g][ci]; clearCheer();
   renderKb(); measure(); placePlayer(false); nextQ();
   requestAnimationFrame(function(){ measure(); placePlayer(false); last=performance.now(); requestAnimationFrame(tick); });
   S.gid=(S.gid||0)+1;
@@ -948,7 +989,7 @@ $('inName').addEventListener('input',function(){ $('nameHint').hidden=true; this
 function bestKey(){ return 'typingRayo.best.'+cfg.lv+'.'+cfg.kb+(NSTEP===10?'':'.'+NSTEP); }    // 10 題沿用舊的紀錄
 function starsOf(n,N){ N=N||10; return n===0?3:n<=Math.floor(N*.2)?2:n<=Math.floor(N*.5)?1:0; }   // 10 題：0 劈＝3 星、≤2＝2 星、≤5＝1 星，其他題數照比例
 function finish(){
-  S.over=true; sfx('done');
+  S.over=true; clearCheer();
   var secs=Math.round((Date.now()-S.t0)/1000), prev=null;
   try{ var v=localStorage.getItem(bestKey()); if(v!==null&&v!=='') prev=+v; }catch(e){}
   var isBest = prev!==null && S.strikes<prev;
