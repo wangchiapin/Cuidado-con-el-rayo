@@ -765,9 +765,10 @@ function sfx(k){
 }
 /* ---------- 背景音樂（用 Web Audio 現場合成，明快的五聲音階小調；閃電時會自動壓低，不跟雷聲打架）---------- */
 var BG={on:false,step:0,next:0,duck:null,fade:null};
-var BG_MEL=[76,0,79,0,81,79,76,0, 74,0,76,0,79,76,74,0, 72,0,74,76,79,0,81,0, 79,0,76,0,74,0,72,0,
-            81,0,84,0,81,79,76,0, 79,0,81,0,79,76,74,0, 76,79,81,0,84,81,79,0, 81,0,79,0,76,0,72,0];
-var BG_BASS=[48,55,57,55,48,55,57,52];     // 每小節的低音（比雷聲的低頻高，而且很短）
+var BG_MEL=[76,0,79,76,72,0,76,79, 74,0,79,74,71,0,74,79, 76,0,81,76,72,0,76,81, 72,0,77,72,69,0,72,77,
+            79,0,76,79,84,0,83,79, 79,0,74,79,83,0,81,79, 81,0,77,81,84,0,81,77, 79,0,74,79,83,0,81,0];   // 明亮的大調（C–G–Am–F 那種流行小品），不用五聲音階
+var BG_BASS=[48,55,57,53,48,55,53,55];                                         // 每小節的低音（根音；第 3 拍換五度）
+var BG_CH=[[60,64,67],[59,62,67],[60,64,69],[60,65,69],[60,64,67],[59,62,67],[60,65,69],[59,62,67]];   // 每小節的和弦（反拍輕輕點一下）
 function mf(m){ return 440*Math.pow(2,(m-69)/12); }
 function bgNode(){
   var a=ac(); if(!a) return null;
@@ -782,9 +783,10 @@ function bgPluck(f,t0,dur,type,vol){
 }
 function bgStep(st,t0){
   var bar=Math.floor(st/8), i=st%8, m=BG_MEL[st];
-  if(m){ bgPluck(mf(m),t0,.34,'triangle',.05); bgPluck(mf(m+12),t0,.2,'sine',.012); }
-  if(i===0||i===4) bgPluck(mf(BG_BASS[bar]),t0,.4,'triangle',.06);
-  if(i===2||i===6) bgPluck(2300,t0,.03,'triangle',.014);       // 輕輕的木魚聲當節拍
+  if(m){ bgPluck(mf(m),t0,.3,'triangle',.05); bgPluck(mf(m+12),t0,.16,'sine',.012); }
+  if(i===0) bgPluck(mf(BG_BASS[bar]),t0,.34,'triangle',.06);
+  if(i===4) bgPluck(mf(BG_BASS[bar]+7),t0,.3,'triangle',.05);
+  if(i===2||i===6) BG_CH[bar].forEach(function(n){ bgPluck(mf(n),t0,.13,'triangle',.017); });   // 反拍的和弦點點，輕快的跳動感
 }
 function bgDuck(depth,dur){     // 閃電、登頂音效時，音樂先退到後面再慢慢回來
   var a=AC; if(!a||!BG.duck) return; var t=a.currentTime;
@@ -795,7 +797,7 @@ setInterval(function(){
   var want=bgWant(), a;
   if(want&&!BG.on){ a=bgNode(); if(!a||a.state!=='running') return; BG.on=true; BG.next=a.currentTime+.1; BG.fade.gain.cancelScheduledValues(a.currentTime); BG.fade.gain.setTargetAtTime(1,a.currentTime,.4); }
   else if(!want&&BG.on){ BG.on=false; a=AC; if(a&&BG.fade){ BG.fade.gain.cancelScheduledValues(a.currentTime); BG.fade.gain.setTargetAtTime(0,a.currentTime,.12); } }
-  if(BG.on){ a=AC; var dur=60/118/2; while(BG.next<a.currentTime+.35){ bgStep(BG.step,BG.next); BG.next+=dur; BG.step=(BG.step+1)%64; } }
+  if(BG.on){ a=AC; var dur=60/126/2; while(BG.next<a.currentTime+.35){ bgStep(BG.step,BG.next); BG.next+=dur; BG.step=(BG.step+1)%64; } }
 },90);
 /* 念字：只用台灣華語（zh-TW）或 cmn 的聲音，不用粵語／香港 */
 function speak(txt){
