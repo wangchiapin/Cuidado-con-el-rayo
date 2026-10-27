@@ -256,7 +256,7 @@ with sync_playwright() as p:
     check(abs(S(pg, 'S.T') - 15) < .01, '簡單：15 秒')
     pg.click('#btnPause'); pg.click('#bHome'); pg.wait_for_timeout(200)
     sset(pg, '#segLevel button:nth-child(3)', '#segScript button:nth-child(2)', '#segLang button:nth-child(2)')
-    check('Cuidado' in pg.inner_text('#tTitle') and '别被雷劈到' in pg.inner_text('#tTitle'), '簡體＋西文標題')
+    check('Cuidado' in pg.inner_text('#tTitle') and '天打雷劈' in pg.inner_text('#tTitle'), '簡體＋西文標題')
     pg.click('#btnStart'); pg.wait_for_timeout(300)
     check(abs(S(pg, 'S.T') - 10) < .01, '進階：10 秒')
     w = pg.evaluate("()=>{const S=window.__nian.S;const w=S.pool.find(x=>x.s);S.q=w;document.getElementById('ch').textContent=w.s;return w}")

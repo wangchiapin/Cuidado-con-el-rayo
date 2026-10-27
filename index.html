@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>別被雷劈到｜¡Cuidado con el rayo!</title>
+<title>天打雷劈｜¡Cuidado con el rayo!</title>
 <meta name="theme-color" content="#F4F0E6">
 <style>
 :root{
@@ -56,6 +56,7 @@ button{font-family:inherit;color:inherit}
 #heroChar{position:absolute;left:0;right:0;bottom:3%;height:52%;display:flex;justify-content:center}
 #heroChar svg{height:100%;width:auto}
 h1{font-size:30px;margin:14px 0 2px;font-weight:700;letter-spacing:.08em;text-align:center}
+h1 .bolt{display:inline-block;height:1.15em;width:auto;vertical-align:-.2em;margin-right:.1em;transform:rotate(8deg)}
 h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .sub{font-size:14px;color:var(--ink2);text-align:center;margin:6px 0 10px;line-height:1.5}
 .how{align-self:stretch;margin:0 0 6px;padding:10px 12px;background:var(--paper2);border:1px solid var(--line);border-radius:8px;font-size:13px;line-height:1.45;color:var(--ink2)}
@@ -262,8 +263,10 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #topBar{position:absolute;top:10px;right:58px;display:flex;gap:8px;z-index:3}
 .ib{width:40px;height:40px;border-radius:50%;border:1px solid rgba(0,0,0,.28);background:rgba(255,255,255,.88);color:#222;font-size:19px;line-height:1;padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .ib:active{transform:scale(.94)}
-.ib.sq{border-radius:10px;background:var(--key);border:1px solid var(--keyb);box-shadow:none;font-size:13px;font-weight:600;color:var(--ink);letter-spacing:0}
+.ib.sq{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1;border-radius:10px;background:var(--key);border:1px solid var(--keyb);box-shadow:none;font-size:13px;font-weight:600;color:var(--ink);letter-spacing:0}
 #btnLb{font-size:19px}
+#btnMulti .ic{font-size:17px}
+#btnMulti .lb{font-size:10px;font-weight:600}
 .setPanel{text-align:left}
 .setPanel h2{text-align:center}
 .setPanel .how{margin-top:0}
@@ -374,7 +377,7 @@ var WT = 60, WGB = 30;   // 背景圖上方拉長的天空、最底下的地面�
 
 /* ---------- 文字（中文繁／簡、西文、英文）---------- */
 var TXT = {
-  title:['別被雷劈到','别被雷劈到','¡Cuidado con el rayo!','Don’t get struck!'],
+  title:['天打雷劈','天打雷劈','¡Cuidado con el rayo!','Don’t get struck!'],
   sub:['念對就向上，念錯就雷劈','念对就向上，念错就雷劈','Lee bien y sube; lee mal y ¡te cae un rayo!','Read it right to climb; get it wrong and lightning strikes!'],
   how1:['看到字，在時間內打出它的讀音（要打聲調）','看到字，在时间内打出它的读音（要打声调）','Mira el carácter y escribe su pronunciación a tiempo (con tono)','See the character and type its reading in time (with tone)'],
   tone:['打完字母或注音，按聲調鍵送出（一聲按 ˉ，輕聲按 ˙）','打完字母或注音，按声调键送出（一声按 ˉ，轻声按 ˙）','Al terminar las letras, pulsa la tecla del tono para enviar (1.º tono: ˉ, tono neutro: ˙)','After the letters, press a tone key to submit (1st tone: ˉ, neutral: ˙)'],
@@ -582,7 +585,7 @@ function seg(id,opts,cur,fn){
 function secLabel(k,sec){ var t=tl(k); return zh(k)+'<span class="tl">'+(t?t+' · ':'')+sec+' s</span>'; }
 function renderStart(){
   document.documentElement.lang = Settings.script==='simp'?'zh-Hans':'zh-Hant';
-  $('tTitle').innerHTML=H('title'); $('tSub').innerHTML=Settings.lang==='zh'?zh('sub'):zh('sub')+'<span class="tl">'+tl('sub')+'</span>';
+  $('tTitle').innerHTML='<svg class="bolt" viewBox="0 0 40 64" aria-hidden="true"><defs><linearGradient id="boltG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF3B8"/><stop offset=".55" stop-color="#F1C94B"/><stop offset="1" stop-color="#D9962F"/></linearGradient></defs><path d="M25 3 8 35h11l-6 26 22-33H22.5L31 3Z" fill="url(#boltG)" stroke="#3B3B38" stroke-width="3" stroke-linejoin="round"/><path d="M24 9 14 31h8.5" fill="none" stroke="#FFFBE6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/></svg>'+H('title'); $('tSub').innerHTML=Settings.lang==='zh'?zh('sub'):zh('sub')+'<span class="tl">'+tl('sub')+'</span>';
   $('tHow').innerHTML='<div>'+H('how1')+'</div><div>'+H('tone')+'</div><div>'+H('how2')+'</div><div>'+H('how3')+'</div><div>'+H('how4').replace(/%n/g,cfg.n)+'</div><div>'+H('kbhint')+'</div>';
   $('lScript').innerHTML=plain('secScript'); $('lLang').innerHTML=plain('secLang'); $('lKb').innerHTML=plain('secKb'); $('lLevel').innerHTML=plain('secLevel'); $('lN').innerHTML=plain('secN');
   seg('segGender',[{v:'m',h:H('boy')},{v:'f',h:H('girl')}],cfg.g,function(v){ if(v!==cfg.g){ cfg.g=v; ci=Math.floor(Math.random()*5); saveCfg(); } renderStart(); });
@@ -594,7 +597,7 @@ function renderStart(){
   $('btnStart').innerHTML=H('start');
   $('inName').placeholder=plain('namePh'); if($('inName').value!==getName()) $('inName').value=getName();
   $('btnLb').innerHTML='🏆'; $('btnLb').setAttribute('aria-label',plain('lbTitle'));
-  $('btnMulti').innerHTML=zh('mpBtn'); $('btnMulti').setAttribute('aria-label',plain('mpTitle'));
+  $('btnMulti').innerHTML='<span class="ic">👥</span><span class="lb">'+zh('mpBtn')+'</span>'; $('btnMulti').setAttribute('aria-label',plain('mpTitle'));
   $('btnSet').setAttribute('aria-label',plain('setTitle')); $('btnHelp').setAttribute('aria-label',plain('helpTitle'));
   if($('setTtl')) $('setTtl').innerHTML='⚙ '+zh('setTitle')+(tl('setTitle')?'<span class="tl">'+tl('setTitle')+'</span>':'');
   if($('helpTtl')) $('helpTtl').innerHTML='❓ '+zh('helpTitle')+(tl('helpTitle')?'<span class="tl">'+tl('helpTitle')+'</span>':'');
