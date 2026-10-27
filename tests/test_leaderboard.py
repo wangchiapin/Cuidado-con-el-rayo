@@ -181,7 +181,7 @@ with sync_playwright() as p:
     n_sets = len([o for o in ops(pg, 'set') if o['p'].startswith('rayo_boards/')])
     play(pg, 'pinyin', [True, False, False, False, True, True, True, True, True, True])   # 被劈 3 次，比 2 次差
     check(len([o for o in ops(pg, 'set') if o['p'].startswith('rayo_boards/')]) == n_sets, '被劈 3 次（比之前差）→ 沒有再寫入')
-    check('沒有超過' in pg.inner_text('#lbArea'), '畫面說「沒有超過你的最佳成績」')
+    check('沒破紀錄' in pg.inner_text('#lbArea'), '畫面說「沒破紀錄，保留最佳成績」')
     pg.click('#bAgain'); pg.wait_for_timeout(300)
     play(pg, 'pinyin', [True] * 10)
     sets = [o for o in ops(pg, 'set') if o['p'].startswith('rayo_boards/')]
@@ -228,7 +228,7 @@ with sync_playwright() as p:
     check(not rules_ok('normal_15', 'UID1', dict(sets[-1]['d'], strikes=16, rank=(15 - 16) * 100000 + (99999 - 90))), '規則檢查：15 題被劈 16 次不合法（對照）')
     check(not rules_ok('normal_30', 'UID1', sets[-1]['d']) and not rules_ok('normal_15', 'UID2', sets[-1]['d']), '規則檢查：沒有 30 題的榜、不能寫別人的（對照）')
     check('新紀錄' in pg.inner_text('#lbArea') and '十五題高手' in pg.inner_text('#lbArea') and '十題老手' not in pg.inner_text('#lbArea'), '結算畫面顯示的是 15 題的榜')
-    check('8' not in pg.inner_text('#ov .bestline') and '2' in pg.inner_text('#ov .bestline'), '最少被劈 2（15 題自己的紀錄）')
+    check(pg.evaluate("(k)=>localStorage.getItem(k)", 'typingRayo.best.normal.pinyin.15') == '2' and pg.evaluate("()=>!document.querySelector('#ov .bestline') && !document.querySelector('#lbArea .lbNote')"), '最少被劈 2（15 題自己的紀錄）；結算畫面沒有多餘的灰字說明')
     pg.click('#bHome'); pg.wait_for_timeout(200)
     sset(pg, '#segN button:nth-child(1)')
 

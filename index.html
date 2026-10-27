@@ -108,6 +108,14 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #player.zap svg{animation:zap .6s linear forwards}
 #player.hit svg{transform:rotate(24deg) translateX(2px)}
 #world.zin,#player.zin{transition:scale .9s cubic-bezier(.45,.05,.25,1),translate .9s cubic-bezier(.45,.05,.25,1),transform .75s cubic-bezier(.4,.1,.25,1)}
+#player.tired svg{animation:pant .55s ease-in-out infinite;overflow:visible;transform-origin:50% 100%}
+@keyframes pant{0%,100%{transform:scale(1.03,.9) rotate(2deg)}50%{transform:scale(1.06,.87) rotate(-2deg)}}
+#player.tired .mn{display:none}#player.tired .mx{display:inline}
+#player.tired .al{transform:rotate(-26deg);transform-origin:12.5px 40px}#player.tired .ar{transform:rotate(26deg);transform-origin:47.5px 40px}
+#player .pf{position:absolute;pointer-events:none;font-weight:700;color:#fff;text-shadow:0 0 3px #4A4F52,0 0 3px #4A4F52,0 1px 3px rgba(0,0,0,.5);font-size:calc(var(--pw,30px)*.42);animation:puff 1.1s ease-out infinite;opacity:0}
+@keyframes puff{0%{opacity:0;transform:translate(0,0) scale(.7)}25%{opacity:1}100%{opacity:0;transform:translate(var(--px,14px),-14px) scale(1.15)}}
+#player .sw{position:absolute;width:calc(var(--pw,30px)*.1);height:calc(var(--pw,30px)*.15);background:#8EC3E6;border:1px solid #5E86B8;border-radius:50% 50% 50% 50%/65% 65% 38% 38%;animation:sweat .9s ease-in infinite;opacity:0}
+@keyframes sweat{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(calc(var(--pw,30px)*.4))}}
 #player.cheer svg{animation:cheer .6s ease-out 5;overflow:visible}
 #player.cheer .al,#player.cheer .ar{animation-duration:.6s;animation-iteration-count:5;animation-timing-function:ease-in-out}
 #player.cheer .al{transform-origin:12.5px 40px;animation-name:armL}
@@ -445,7 +453,7 @@ var TXT = {
   lbEmpty:['還沒有人上榜，你當第一個！','还没有人上榜，你当第一个！','Aún no hay nadie. ¡Sé el primero!','Nobody yet. Be the first!'],
   lbError:['排行榜暫時無法使用','排行榜暂时无法使用','La clasificación no está disponible ahora','The leaderboard is unavailable right now'],
   lbNew:['新紀錄！已更新排行榜','新纪录！已更新排行榜','¡Nuevo récord! Clasificación actualizada','New record! Leaderboard updated'],
-  lbNotBetter:['沒有超過你的最佳成績，排行榜保留最好的一次','没有超过你的最佳成绩，排行榜保留最好的一次','No superaste tu mejor marca; se guarda la mejor','Not better than your best; the best one stays'],
+  lbNotBetter:['沒破紀錄，保留最佳成績','没破纪录，保留最佳成绩','No superaste tu marca','Not a new best'],
   lbNeedName:['輸入名字才能上排行榜','输入名字才能上排行榜','Escribe tu nombre para entrar en la clasificación','Enter a name to join the leaderboard'],
   lbSubmit:['上榜','上榜','Subir','Submit'],
   lbBack:['返回','返回','Volver','Back'],
@@ -488,6 +496,7 @@ var TXT = {
   mpAlive:['還在爬','还在爬','Siguen','Alive'],
   mpStall:['房主好像斷線了，可以離開房間','房主好像断线了，可以离开房间','El anfitrión parece desconectado. Puedes salir.','The host seems disconnected. You can leave.'],
   mpResult:['比賽結果','比赛结果','Resultados','Results'],
+  tiredTop:['登頂…','登顶…','¡Uf, llegué!','Made it… barely'],
   mpTop:['登頂！','登顶！','¡Arriba!','Top!'],
   mpSteps:['爬了 %n 階','爬了 %n 阶','Escalones: %n','Steps: %n'],
   mpAgain:['再來一局','再来一局','Otra partida','Play again'],
@@ -553,7 +562,7 @@ function lbAfterGame(strikes,secs,gid){
       if(!lb) throw 0;
       return lb.top(board).then(function(top){
         if(!here()) return;
-        area.innerHTML=(note?'<p class="lbSt"><b>'+note+'</b></p>':'')+'<p class="lbNote">'+plain('lbNote')+'</p>'+lbTable(top.list,top.uid);
+        area.innerHTML=(note?'<p class="lbSt"><b>'+note+'</b></p>':'')+lbTable(top.list,top.uid);
       });
     });
   }
@@ -938,11 +947,23 @@ function tick(ts){
   }
   requestAnimationFrame(tick);
 }
+/* 被劈超過題數一半：登頂時不歡呼，改成彎著腰、手撐大腿、氣喘吁吁、冒汗（一樣約 3 秒） */
+function startTired(pl){
+  pl.style.setProperty('--pw',(geo.wC||30).toFixed(0)+'px');
+  pl.classList.remove('tired'); void pl.offsetWidth; pl.classList.add('tired');
+  var h='';
+  [[.62,.02,0],[.74,.12,.35],[.56,.14,.7]].forEach(function(a,i){ h+='<span class="pf" style="left:'+(a[0]*100)+'%;top:'+(a[1]*100)+'%;animation-delay:'+a[2]+'s">'+(i%2?'呼':'哈')+'</span>'; });
+  [[.82,.2,0],[.12,.22,.45],[.9,.3,.8]].forEach(function(a){ h+='<span class="sw" style="left:'+(a[0]*100)+'%;top:'+(a[1]*100)+'%;animation-delay:'+a[2]+'s"></span>'; });
+  pl.insertAdjacentHTML('beforeend',h);
+  zoomTop(true);
+  var t=document.createElement('div'); t.className='topTxt'; t.id='topTxt'; t.innerHTML=H('tiredTop'); $('fx').appendChild(t);
+}
 /* 登頂慶祝：人物開心連跳約 3 秒、落彩帶、顯示「登頂！」，然後才跳出結算（含排行榜） */
 var CHEER_T=3;
 function startCheer(){
   sfx('done');
-  var pl=$('player'); pl.classList.remove('cheer'); void pl.offsetWidth; pl.classList.add('cheer');
+  var pl=$('player');
+  if(S.strikes*2>NSTEP){ startTired(pl); return; } pl.classList.remove('cheer'); void pl.offsetWidth; pl.classList.add('cheer');
   zoomTop(true);
   var fx=$('fx'), W=geo.W||360, cols=['#D9A441','#B5584A','#6F9B6A','#5E86B8','#F1EBDB','#E8735A'];
   for(var i=0;i<46;i++){
@@ -967,7 +988,7 @@ function zoomTop(on){
 }
 function clearCheer(){
   zoomTop(false);
-  $('player').classList.remove('cheer');
+  $('player').classList.remove('cheer','tired'); [].slice.call($('player').querySelectorAll('.pf,.sw')).forEach(function(n){ n.remove(); });
   var fx=$('fx'); [].slice.call(fx.querySelectorAll('.cf,.topTxt')).forEach(function(n){ n.remove(); });
 }
 function advance(){
@@ -1032,7 +1053,6 @@ function finish(){
   ov.innerHTML='<div class="panel"><h2>'+H(S.strikes===0?'perfect':'done')+'</h2><div class="stars">'+stars+'</div>'+
     '<div class="stats"><div><b>'+S.correct+'/'+NSTEP+'</b>'+H('sCorrect')+'</div><div><b>⚡'+S.strikes+'</b>'+H('sStrike')+'</div></div>'+
     (isBest?'<div class="newbest">'+plain('best')+'</div>':'')+
-    '<div class="bestline">'+plain('bestLab')+'：'+bestNow+'</div>'+
     '<div class="lbBox" id="lbArea"></div>'+
     (chips?'<div class="rev"><div class="lab">'+plain('review')+'</div><div class="chips">'+chips+'</div></div>':'')+
     '<div class="btns"><button class="big" id="bAgain">'+H('again')+'</button><button class="ghost" id="bHome">'+H('home')+'</button></div></div>';
