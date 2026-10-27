@@ -310,24 +310,27 @@ service cloud.firestore {
       allow delete: if isAdmin();   // 後台排行榜總覽可刪除
     }
 
-    // ---- 別被雷劈到 Cuidado con el rayo（2026-10-26 新增；簡單／普通／進階各一個榜，每台裝置每榜只留一筆最好成績） ----
-    // 排名 rank = (10 - 被雷劈次數) × 100000 + (99999 - 用時秒數)：越大越前面（被劈少的在前，一樣比時間）
-    // 一局固定 10 階、答對＋被劈＝10，所以只存被劈次數；用時最快的真實一局也要 30 秒以上，下限放 15 秒
+    // ---- 別被雷劈到 Cuidado con el rayo（2026-10-26 新增；2026-10-27 加上題數 10／15／20／25，每種題數、每個難度各一個榜，共 12 個，每台裝置每榜只留一筆最好成績） ----
+    // 榜名：10 題＝easy／normal／hard（舊榜），其他題數＝難度_題數，例如 normal_15、hard_25
+    // 排名 rank = (題數 - 被雷劈次數) × 100000 + (99999 - 用時秒數)：越大越前面（被劈少的在前，一樣比時間）
+    // 一局固定「題數」階、答對＋被劈＝題數，所以只存被劈次數；用時下限放 1.5 秒 × 題數（10 題＝15 秒）
     match /rayo_boards/{board}/entries/{uid} {
       function ry() { return request.resource.data; }
+      function validRayoBoard() { return board.matches('^(easy|normal|hard)(_(15|20|25))?$'); }
+      function nq() { return board.matches('.*_15') ? 15 : (board.matches('.*_20') ? 20 : (board.matches('.*_25') ? 25 : 10)); }
       function okRayo() {
-        return board in ['easy','normal','hard']
+        return validRayoBoard()
           && ry().keys().hasOnly(['name','strikes','secs','kb','rank','updatedAt'])
           && ry().keys().hasAll(['name','strikes','secs','rank','updatedAt'])
           && ry().name is string && ry().name.size() >= 1 && ry().name.size() <= 14
-          && ry().strikes is int && ry().strikes >= 0 && ry().strikes <= 10
-          && ry().secs is int && ry().secs >= 15 && ry().secs <= 3600
+          && ry().strikes is int && ry().strikes >= 0 && ry().strikes <= nq()
+          && ry().secs is int && ry().secs >= nq() * 3 / 2 && ry().secs <= 3600
           && (!('kb' in ry().keys()) || ry().kb in ['pinyin','zhuyin'])
           && ry().rank is int
-          && ry().rank == (10 - ry().strikes) * 100000 + (99999 - ry().secs)
+          && ry().rank == (nq() - ry().strikes) * 100000 + (99999 - ry().secs)
           && ry().updatedAt == request.time;
       }
-      allow read: if board in ['easy','normal','hard'];
+      allow read: if validRayoBoard();
       allow create: if signedIn() && request.auth.uid == uid && okRayo();
       allow update: if signedIn() && request.auth.uid == uid && okRayo()
                     && ry().rank >= resource.data.rank;
@@ -342,15 +345,16 @@ service cloud.firestore {
       // 已過期或已關閉的房間，任何人都可以重新開一間同代碼的新房間，或把它刪掉
       function reclaimable() { return old().expireAt < request.time || old().status == 'closed'; }
       function okShape() {
-        return r().keys().hasOnly(['code','hostUid','hostName','level','status','ph','rd','n','qs','ro','elim','final','createdAt','expireAt'])
+        return r().keys().hasOnly(['code','hostUid','hostName','level','nq','status','ph','rd','n','qs','ro','elim','final','createdAt','expireAt'])
           && r().keys().hasAll(['code','hostUid','hostName','level','status','ph','rd','n','qs','ro','elim','final','createdAt','expireAt'])
           && okName(r().hostName)
           && r().level in ['easy','normal','hard']
           && r().status in ['waiting','playing','finished','closed']
           && r().ph in ['','ready','ask','reveal','end']
-          && r().rd is int && r().rd >= 0 && r().rd <= 9
+          && r().get('nq', 10) in [10,15,20,25]            // 題數（舊房間沒有這欄＝10 題）
+          && r().rd is int && r().rd >= 0 && r().rd <= 24
           && r().n is int && r().n >= 0 && r().n <= 999
-          && r().qs is list && r().qs.size() <= 10
+          && r().qs is list && r().qs.size() <= r().get('nq', 10)
           && r().ro is list && r().ro.size() <= 15
           && r().elim is map && r().elim.size() <= 15
           && r().final is list && r().final.size() <= 15
@@ -367,12 +371,12 @@ service cloud.firestore {
           && r().createdAt == request.time
           && okShape();
       }
-      // 只有房主能改房間；房號、房主、建立與到期時間不能動；難度只能在「等人」時改
+      // 只有房主能改房間；房號、房主、建立與到期時間不能動；難度和題數只能在「等人」時改
       function hostUpdate() {
         return request.auth.uid == old().hostUid
           && r().code == old().code && r().hostUid == old().hostUid
           && r().createdAt == old().createdAt && r().expireAt == old().expireAt
-          && (r().level == old().level || r().status == 'waiting')
+          && ((r().level == old().level && r().get('nq', 10) == old().get('nq', 10)) || r().status == 'waiting')
           && okShape();
       }
       allow read: if signedIn();
@@ -391,7 +395,7 @@ service cloud.firestore {
             && p().g in ['m','f']
             && p().ci is int && p().ci >= 0 && p().ci <= 4
             && p().want is bool && p().spec is bool
-            && p().a is map && p().a.size() <= 10;
+            && p().a is map && p().a.size() <= 25;
         }
         allow read: if signedIn();
         // 比賽開始後才進來的人只能當觀賽

@@ -23,7 +23,7 @@
           if(tsMs(d.expireAt) > Date.now() && d.status !== 'closed') continue;
           // 舊房間留下的玩家資料清掉（房主才能刪，所以要等新房間建好再清）
         }
-        const data = { code, hostUid: uid, hostName: name, level: o.level, status: 'waiting', ph: '', rd: 0, n: 0,
+        const data = { code, hostUid: uid, hostName: name, level: o.level, nq: [10,15,20,25].includes(o.nq) ? o.nq : 10, status: 'waiting', ph: '', rd: 0, n: 0,
           qs: [], ro: [], elim: {}, final: [], createdAt: serverTimestamp(), expireAt: Timestamp.fromMillis(Date.now() + ROOM_MS) };
         await setDoc(roomRef(code), data);
         if(snap.exists()){

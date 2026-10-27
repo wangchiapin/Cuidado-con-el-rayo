@@ -269,12 +269,15 @@ with sync_playwright() as p:
     pos = pg.evaluate("""()=>{const n=window.__nian,S=n.S,sc=document.getElementById('scene').getBoundingClientRect(),pl=document.getElementById('player');
       const out=[];for(let i=0;i<=10;i++){S.step=i;n.placePlayer(false);const r=pl.getBoundingClientRect();out.push([r.top-sc.top,r.bottom-sc.top,r.left-sc.left,r.right-sc.left,sc.height,sc.width]);}return out}""")
     check(all(p_[0] >= 0 and p_[1] <= p_[4] and p_[2] >= 0 and p_[3] <= p_[5] for p_ in pos), '第 0～10 階，人物每一階都完整在場景內')
-    check(all(pos[i][1] > pos[i+1][1] + 3 for i in range(10)), '每往上一階，人物都在畫面更高的位置')
+    rel = pg.evaluate("""()=>{const n=window.__nian,S=n.S,w=document.getElementById('world'),pl=document.getElementById('player'),sc=document.getElementById('scene').getBoundingClientRect();
+      const out=[];for(let i=0;i<=10;i++){S.step=i;n.placePlayer(false);const r=pl.getBoundingClientRect(),wr=w.getBoundingClientRect();out.push([r.bottom-wr.top,wr.top-sc.top,wr.bottom-sc.bottom]);}S.step=0;n.placePlayer(false);return out}""")
+    check(all(rel[i][0] > rel[i+1][0] + 3 for i in range(10)), '每往上一階，人物在背景圖上的位置都更高（鏡頭跟著捲）')
+    check(all(r_[1] <= 0.5 and r_[2] >= -0.5 for r_ in rel), '鏡頭捲動時，背景圖永遠鋪滿整個場景（上下都沒有空白）')
     pg.evaluate("()=>{window.__nian.S.step=5;window.__nian.placePlayer(false);window.__nian.S.tLeft=.05}"); pg.wait_for_timeout(300)
     pg.screenshot(path=SHOTS + '/7_mid.png')
 
     print('== 背景（7 個台灣場景，每一局隨機換）')
-    nb = pg.evaluate("()=>window.__nian.BGS.length")
+    nb = pg.evaluate("()=>window.__nian.BGS[10].length")
     check(nb == 7, f'一共 {nb} 個背景')
     seq = []; same = True
     for _ in range(12):
@@ -285,15 +288,48 @@ with sync_playwright() as p:
         same = same and pg.evaluate("()=>window.__nian.bgIdx()") == a_[0]
     check(same, '首頁預覽的背景 = 接著開始的那一局的背景')
     check(all(seq[i] != seq[i+1] for i in range(len(seq)-1)) and len(set(seq)) >= 3, f'每一局都換背景（連兩局不會一樣）：{seq}')
-    urls = pg.evaluate("()=>window.__nian.BGS")
-    check(all(u.startswith('bg/') and u.endswith('.webp') and os.path.isfile(os.path.join(ROOT, u)) for u in urls), '7 個背景都是 bg/ 資料夾裡真的存在的 webp 圖片檔')
+    allb = pg.evaluate("()=>window.__nian.BGS")
+    check(sorted(allb.keys()) == ['10', '15', '20', '25'] and all(len(v) == 7 for v in allb.values()), '10／15／20／25 題各有 7 個背景（共 28 張）')
+    urls = [u for k in ['10', '15', '20', '25'] for u in allb[k]]
+    check(all(u.startswith('bg/') and u.endswith('.webp') and os.path.isfile(os.path.join(ROOT, u)) for u in urls), '28 個背景都是 bg/ 資料夾裡真的存在的 webp 圖片檔')
     check(all(os.path.getsize(os.path.join(ROOT, u)) > 10000 for u in urls), '圖片檔都不是空的')
     def loads(i):
-        return pg.evaluate("""(i)=>new Promise(res=>{window.__nian.setBg(i);var im=new Image();im.onload=()=>res(im.naturalWidth>0&&im.naturalHeight>im.naturalWidth*1.5);im.onerror=()=>res(false);im.src=window.__nian.BGS[i];})""", i)
-    check(all(loads(i) for i in range(7)), '7 個背景圖片都能讀進來（直式）並顯示')
+        return pg.evaluate("""(i)=>new Promise(res=>{window.__nian.setBg(i);var im=new Image();im.onload=()=>res(im.naturalWidth===840&&im.naturalHeight>600);im.onerror=()=>res(false);im.src=window.__nian.BGS[10][i];})""", i)
+    check(all(loads(i) for i in range(7)), '7 個背景圖片都能讀進來並顯示')
     check(all('url(' in pg.evaluate("(i)=>{window.__nian.setBg(i);return document.getElementById('world').style.backgroundImage}", i) for i in range(7)), '背景有套用到畫面上')
-    texts = [open(os.path.join(ROOT, u.replace('bg/', 'bg/svg/').replace('.webp', '.svg')), encoding='utf-8').read().count('<text') for u in urls]
+    texts = [open(os.path.join(ROOT, u.replace('bg/', 'bg/svg/').replace('.webp', '.svg')), encoding='utf-8').read().count('<text') for u in allb['10']]
     check(texts[:6] == [0]*6 and texts[6] > 0, f'只有夜市（最後一個）有文字，其他都沒有：{texts}')
+    print('== 選題數：10／15／20／25')
+    pg.click('#btnPause'); pg.click('#bHome'); pg.wait_for_timeout(150)
+    pg.click('#btnSet'); pg.wait_for_selector('#bSetOk')
+    check(pg.locator('#segN button').count() == 4 and [pg.locator('#segN button').nth(i).inner_text().split('\n')[0] for i in range(4)] == ['10', '15', '20', '25'], '設定裡有題數選項 10／15／20／25')
+    check(pg.evaluate("()=>window.__nian.cfg.n") == 10 and 'on' in pg.get_attribute('#segN button:nth-child(1)', 'class'), '預設 10 題')
+    pg.click('#bSetOk'); pg.wait_for_timeout(60)
+    for idx, N in [(2, 15), (3, 20), (4, 25)]:
+        sset(pg, f'#segN button:nth-child({idx})')
+        check(pg.evaluate("()=>JSON.parse(localStorage.getItem('typingRayo.cfg')).n") == N, f'{N} 題：選項存起來了')
+        LV = pg.evaluate("()=>window.__nian.cfg.lv")
+        pg.click('#btnStart'); pg.wait_for_timeout(300)
+        check(pg.evaluate("()=>window.__nian.NSTEP()") == N and f'1/{N}' in pg.inner_text('#stStep').replace('\n', ''), f'{N} 題：上方顯示 1/{N}')
+        bgi = pg.evaluate("()=>window.__nian.bgIdx()")
+        check(f'_{N}-' in pg.evaluate("()=>document.getElementById('world').style.backgroundImage") and f'bg{bgi}_{N}-' in pg.evaluate("()=>document.getElementById('world').style.backgroundImage"), f'{N} 題：用 {N} 階的長背景圖')
+        check('_10-' in pg.evaluate("()=>document.querySelector('#heroWrap>.streetBg').style.backgroundImage"), '首頁預覽固定用 10 階的圖')
+        seqN = [i % 6 != 5 for i in range(N)]                  # 每 6 題錯 1 題
+        strikesN = seqN.count(False)
+        for i, ok in enumerate(seqN):
+            answer(pg, 'pinyin', ok); to_next_q(pg) if i < N - 1 else skip(pg)
+        skip(pg); pg.wait_for_timeout(300)
+        check(S(pg, 'S.step') == N and S(pg, 'S.over'), f'{N} 題：答完站到山頂（step={N}）')
+        txt = pg.inner_text('#ov')
+        check(f'{N - strikesN}/{N}' in txt and f'⚡{strikesN}' in txt, f'{N} 題：結算 {N - strikesN}/{N}、被劈 {strikesN} 次')
+        offs = pg.evaluate("()=>document.querySelectorAll('#ov .stars .off').length")
+        check(offs == (1 if N // 5 >= strikesN > 0 else 2 if strikesN <= N // 2 else 3), f'{N} 題：被劈 {strikesN} 次，星星數照比例（空星 {offs}）')
+        check(pg.evaluate("(k)=>localStorage.getItem(k)", f'typingRayo.best.{LV}.pinyin.{N}') == str(strikesN), f'{N} 題：最佳紀錄存在 typingRayo.best.normal.pinyin.{N}，不跟 10 題混在一起')
+        check(pg.evaluate("(k)=>localStorage.getItem(k)", f'typingRayo.best.{LV}.pinyin') in ('0', '2', None) and pg.evaluate("(k)=>localStorage.getItem(k)", f'typingRayo.best.{LV}.pinyin') != str(strikesN), f'{N} 題：10 題的紀錄沒被動到')
+        pg.click('#bHome'); pg.wait_for_timeout(150)
+    # 星星門檻
+    sset(pg, '#segN button:nth-child(1)')
+    check(pg.evaluate("()=>window.__nian.boardId('normal',10)+','+window.__nian.boardId('hard',15)+','+window.__nian.boardId('easy',25)") == 'normal,hard_15,easy_25', '榜名：10 題沿用舊榜、其他是 難度_題數')
     print('== 各尺寸版面')
     for (w_, h_) in [(320, 568), (360, 640), (375, 667), (390, 844), (768, 1024), (1280, 800)]:
         pg2 = ctx.new_page(); pg2.set_viewport_size({'width': w_, 'height': h_}); pg2.route('**/*', route)
@@ -306,9 +342,9 @@ with sync_playwright() as p:
         ok = g['kb']['bottom'] <= g['ih'] + 1 and g['scene']['height'] >= 90 and g['player']['top'] >= g['scene']['top'] and g['player']['bottom'] <= g['scene']['bottom'] + 1 and g['sw'] <= g['iw'] + 1
         ok = ok and g['board']['bottom'] <= g['kb']['top'] + 1 and g['typed']['bottom'] <= g['kb']['top'] + 1
         check(ok and not errs2, f'{w_}x{h_}：鍵盤在畫面內、場景高 {g["scene"]["height"]:.0f}px、人物在場景內、沒有橫向捲動')
-        allin = pg2.evaluate("""()=>{const n=window.__nian,S=n.S,sc=document.getElementById('scene').getBoundingClientRect(),pl=document.getElementById('player');let ok=true;
-          for(let i=0;i<=10;i++){S.step=i;n.placePlayer(false);const r=pl.getBoundingClientRect();if(r.top<sc.top||r.bottom>sc.bottom+1||r.left<sc.left||r.right>sc.right)ok=false;}S.step=0;n.placePlayer(false);return ok}""")
-        check(allin, f'{w_}x{h_}：10 階人物都在場景內')
+        allin = pg2.evaluate("""()=>{const n=window.__nian,S=n.S,sc=document.getElementById('scene').getBoundingClientRect(),pl=document.getElementById('player'),sh=document.getElementById('sheet').getBoundingClientRect();let ok=true;
+          for(let i=0;i<=10;i++){S.step=i;n.placePlayer(false);const r=pl.getBoundingClientRect();if(r.top<sc.top||r.bottom>sc.bottom+1||r.left<sc.left||r.right>sc.right||r.bottom>sh.top+2)ok=false;}S.step=0;n.placePlayer(false);return ok}""")
+        check(allin, f'{w_}x{h_}：10 階人物都在場景內、而且在作答欄上面（不會被擋住）')
         pg2.evaluate("()=>{window.__nian.S.tLeft=.05}"); pg2.wait_for_timeout(300)
         pg2.screenshot(path=SHOTS + f'/8_{w_}x{h_}.png')
         pg2.close()

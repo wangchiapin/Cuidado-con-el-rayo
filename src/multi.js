@@ -1,6 +1,6 @@
 /* ====================== 連線模式（最多 15 人，一條命）======================
    流程：首頁 👥 → 開房（房主選難度）或輸入 4 位數房號加入 → 等人 → 房主按開始
-   → 全部人同題、同時作答、同時揭曉：打錯或時間到就被雷劈、出局（可留下觀賽）→ 爬完 10 階或全部出局就結算。
+   → 全部人同題、同時作答、同時揭曉：打錯或時間到就被雷劈、出局（可留下觀賽）→ 爬完 N 階（房主選 10／15／20／25 題）或全部出局就結算。
    資料在 Firebase（下面 module 的 window.RM）：房主負責推進回合，每個人只寫自己的答題結果。 */
 var MP={on:false};
 function mpFresh(){
@@ -8,7 +8,7 @@ function mpFresh(){
     countT:0,lastC:0,wait:0,H:{t:0,key:'',busy:false},stall:0,stallShown:false,figs:{},pos:{},shown:'',playsN:-1,t0:0,msg:''};
 }
 MP=mpFresh();
-var mpLv="normal", MAXP=15;
+var mpLv="normal", mpN=10, MAXP=15;
 function waitRM(){
   return new Promise(function(res){
     var n=0; (function chk(){ if(window.RM) return res(window.RM); if(++n>50) return res(null); setTimeout(chk,100); })();
@@ -30,11 +30,11 @@ function mpTs(t){ return t&&typeof t.toMillis==='function'?t.toMillis():(+t||0);
 
 /* ---------- 首頁入口 ---------- */
 function mpOpen(prefill){
-  var ov=$('ov'); ov.hidden=false; if(!mpLv||!LEVELS[mpLv]) mpLv=cfg.lv;
+  var ov=$('ov'); ov.hidden=false; if(!mpLv||!LEVELS[mpLv]) mpLv=cfg.lv; if(NQS.indexOf(mpN)<0) mpN=cfg.n;
   ov.innerHTML='<div class="panel"><h2>👥 '+zh('mpTitle')+(tl('mpTitle')?'<span class="tl">'+tl('mpTitle')+'</span>':'')+'</h2>'+
     '<p class="lbNote">'+plain('mpIntro')+'</p>'+
     '<div class="grp"><div class="lab">'+plain('secName')+'</div><input class="nameIn" id="mpName" type="text" maxlength="14" autocomplete="off" spellcheck="false"></div>'+
-    '<div class="mpBox"><h3>'+plain('mpMake')+'</h3><div class="seg" id="mpSegLv"></div><div class="btns"><button class="big" id="mpMake" type="button">'+H('mpMakeGo')+'</button></div></div>'+
+    '<div class="mpBox"><h3>'+plain('mpMake')+'</h3><div class="seg" id="mpSegLv"></div><div class="lab" style="margin:8px 0 4px">'+plain('mpNIs')+'</div><div class="seg" id="mpSegN"></div><div class="btns"><button class="big" id="mpMake" type="button">'+H('mpMakeGo')+'</button></div></div>'+
     '<div class="mpBox"><h3>'+plain('mpJoinT')+'</h3><input class="nameIn" id="mpCode" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="'+zh('mpCodePh')+'">'+
     '<label class="mpChk"><input type="checkbox" id="mpWatch"> '+plain('mpWatch')+'</label>'+
     '<div class="btns"><button class="big" id="mpGo" type="button">'+H('mpJoinGo')+'</button></div></div>'+
@@ -43,6 +43,7 @@ function mpOpen(prefill){
   $('mpName').value=getName();
   if(prefill) $('mpCode').value=String(prefill).replace(/\D/g,'').slice(0,4);
   seg('mpSegLv',['easy','normal','hard'].map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),mpLv,function(v){ mpLv=v; mpOpen($('mpCode').value); });
+  seg('mpSegN',NQS.map(function(n){ return {v:n,h:n+'<span class="tl">'+(tl('nUnit')||zh('nUnit'))+'</span>'}; }),mpN,function(v){ mpN=v; mpOpen($('mpCode').value); });
   $('mpName').addEventListener('input',function(){ setName(this.value); if($('inName')) $('inName').value=getName(); });
   $('mpCode').addEventListener('input',function(){ this.value=this.value.replace(/\D/g,'').slice(0,4); });
   $('mpBack').addEventListener('click',function(){ ov.hidden=true; ov.innerHTML=''; });
@@ -57,7 +58,7 @@ function mpMake(){
   mpBusy(true); mpMsg('lbLoading');
   waitRM().then(function(rm){
     if(!rm) throw 0;
-    var me=mpMe(false); me.level=mpLv;
+    var me=mpMe(false); me.level=mpLv; me.nq=mpN;
     return rm.create(me).then(function(code){ mpEnter(code,true); });
   }).catch(function(){ mpBusy(false); mpMsg('mpErr'); });
 }
@@ -134,7 +135,8 @@ function mpLink(){ return location.origin==='null'||location.protocol==='file:' 
 function mpLobby(){
   var r=MP.room, ov=$('ov'); ov.hidden=false; $('start').hidden=false; $('play').hidden=true;
   var list=mpPlayersSorted(), n=list.length, roster=list.filter(function(p){ return !p.spec; }).length;
-  var key=JSON.stringify([r.level,list.map(function(p){ return [p.uid,p.name,p.spec]; }),cfg.kb,Settings.script,Settings.lang,roster]);
+  var nq=r.nq||10;
+  var key=JSON.stringify([r.level,nq,list.map(function(p){ return [p.uid,p.name,p.spec]; }),cfg.kb,Settings.script,Settings.lang,roster]);
   if(MP.lobbyKey===key&&$('mpLobby')) return; MP.lobbyKey=key;
   var rows=list.map(function(p){
     var tag=p.uid===r.hostUid?'<span class="plTag">'+zh('mpHostTag')+'</span>':'';
@@ -142,16 +144,21 @@ function mpLobby(){
     return '<div class="plRow'+(p.uid===MP.uid?' me':'')+'"><span class="plFig">'+(CHARS[p.g]&&CHARS[p.g][p.ci]||'')+'</span><span class="lbName">'+esc(p.name)+'</span>'+tag+'</div>';
   }).join('');
   var lvl=MP.host?'<div class="seg" id="mpSegLv2"></div>':'<div class="lbSt">'+plain('mpLevelIs')+'：<b>'+plain(r.level)+' · '+LEVELS[r.level].T+' s</b></div>';
+  var nsel=MP.host?'<div class="seg" id="mpSegN2"></div>':'<div class="lbSt">'+plain('mpNIs')+'：<b>'+nq+'</b></div>';
   var act=MP.host?(roster>=2?'<button class="big" id="mpStart" type="button">'+H('mpStartGo')+'</button>':'<button class="big" id="mpStart" type="button" disabled>'+H('mpStartGo')+'</button><p class="lbNote">'+plain('mpNeed2')+'</p>'):'<p class="lbSt">'+plain('mpWaitHost')+'</p>';
   ov.innerHTML='<div class="panel" id="mpLobby"><div class="lab">'+plain('mpRoom')+'</div><div class="codeBig">'+esc(MP.code)+'</div>'+
     '<button class="ghost" id="mpCopy" type="button">'+zh('mpCopy')+(tl('mpCopy')?' · '+tl('mpCopy'):'')+'</button>'+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpLevelIs')+'</div>'+lvl+'</div>'+
+    '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpNIs')+'</div>'+nsel+'</div>'+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpKb')+'</div><div class="seg" id="mpSegKb"></div></div>'+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpPlayers')+' '+n+'/'+MAXP+'</div><div class="plList">'+rows+'</div></div>'+
     '<div class="btns">'+act+'<button class="ghost" id="mpLeaveBtn" type="button">'+H('mpLeave')+'</button></div></div>';
   seg('mpSegKb',[{v:'pinyin',h:'拼音<span class="tl">pīnyīn</span>'},{v:'zhuyin',h:'注音<span class="tl">ㄅㄆㄇㄈ</span>'}],cfg.kb,function(v){ cfg.kb=v; saveCfg(); MP.lobbyKey=''; mpLobby(); });
   if(MP.host) seg('mpSegLv2',['easy','normal','hard'].map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),r.level,function(v){
     if(v!==r.level) waitRM().then(function(rm){ return rm.hostSet(MP.code,{level:v}); }).catch(function(){});
+  });
+  if(MP.host) seg('mpSegN2',NQS.map(function(n){ return {v:n,h:n+'<span class="tl">'+(tl('nUnit')||zh('nUnit'))+'</span>'}; }),nq,function(v){
+    if(v!==nq) waitRM().then(function(rm){ return rm.hostSet(MP.code,{nq:v}); }).catch(function(){});
   });
   $('mpCopy').addEventListener('click',function(){
     var b=this, link=mpLink();
@@ -161,10 +168,10 @@ function mpLobby(){
   $('mpLeaveBtn').addEventListener('click',mpLeaveAsk);
   if(MP.host&&$('mpStart')) $('mpStart').addEventListener('click',mpStart);
 }
-function mpPick(level){
+function mpPick(level,n){
   var set={}; LEVELS[level].pool.forEach(function(l){ set[l]=1; });
   var pool=WORDS.filter(function(w){ return w.n ? level==='hard' : set[w.lv]; }), out=[];
-  while(out.length<NSTEP&&pool.length>out.length){ var w=pool[Math.floor(Math.random()*pool.length)]; if(out.indexOf(w.c)<0) out.push(w.c); }
+  while(out.length<n&&pool.length>out.length){ var w=pool[Math.floor(Math.random()*pool.length)]; if(out.indexOf(w.c)<0) out.push(w.c); }
   return out;
 }
 function mpStart(){
@@ -173,7 +180,7 @@ function mpStart(){
   if(ro.length<2) return;
   $('mpStart').disabled=true;
   waitRM().then(function(rm){
-    return rm.hostSet(MP.code,{status:'playing',ph:'ready',rd:0,qs:mpPick(r.level),ro:ro,elim:{},final:[]});
+    return rm.hostSet(MP.code,{status:'playing',ph:'ready',rd:0,qs:mpPick(r.level,r.nq||10),ro:ro,elim:{},final:[]});
   }).catch(function(){ if($('mpStart')) $('mpStart').disabled=false; });
 }
 
@@ -184,7 +191,7 @@ function mpBackToLobby(){
   $('play').hidden=true; $('start').hidden=false; setStorm(0);
 }
 function mpSetup(){
-  MP.inGame=true; var r=MP.room; setBg(mpBgIdx(r));
+  MP.inGame=true; var r=MP.room; NSTEP=r.nq||10; setBg(mpBgIdx(r));
   P=LEVELS[r.level]; S.running=true; S.paused=false; S.over=false; S.locked=true; S.q=null; S.buf=''; S.phase='wait'; S.step=0; S.strikes=0; S.correct=0; S.T=P.T; S.tLeft=P.T;
   $('start').hidden=true; $('play').hidden=false; $('ov').hidden=true;
   $('player').hidden=true; $('scene').classList.add('mp'); $('btnPause').textContent='✕'; $('mpStrip').hidden=false;
@@ -192,7 +199,7 @@ function mpSetup(){
   measure(); mpBuildFigs(); mpLayout(false);
   requestAnimationFrame(function(){ measure(); mpLayout(false); last=performance.now(); requestAnimationFrame(tick); });
   setInfo(''); $('typedTxt').className=''; renderTyped();
-  if(mpAmIn()&&MP.playsN!==r.n){ MP.playsN=r.n; try{ HGPlays.start('room-'+r.level+'-'+cfg.kb,getName()); }catch(e){} }
+  if(mpAmIn()&&MP.playsN!==r.n){ MP.playsN=r.n; try{ HGPlays.start('room-'+r.level+'-'+cfg.kb+(NSTEP===10?'':'-n'+NSTEP),getName()); }catch(e){} }
 }
 function mpBuildFigs(){
   var c=$('crowd'); c.innerHTML=''; MP.figs={};
@@ -216,8 +223,10 @@ function mpStepOf(u){
   if(e[u]!==undefined) return +e[u];
   return r.status==='finished'?NSTEP:r.rd;
 }
+function mpCam(){ var m=0; mpRoster().forEach(function(u){ m=Math.max(m,mpStepOf(u)); }); return m; }   // 鏡頭看活著的人（全員同一階）；全員出局就看最高的那階
 function mpLayout(anim){
   var r=MP.room, ro=mpRoster(), N=ro.length; if(!N||!r) return;
+  camTo(mpCam(),anim);
   var fac=N<=2?1:N<=4?.92:N<=7?.82:N<=10?.74:.66;
   var nf=Math.max(9,Math.min(12,12*fac+1)), nch=N>8?3:4, nameW=nch*nf*1.02+8, rowStep=Math.max(11,SPC*geo.s*.95);
   var groups={}; ro.forEach(function(u){ var st=mpStepOf(u); (groups[st]=groups[st]||[]).push(u); });

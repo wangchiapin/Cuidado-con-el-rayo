@@ -28,7 +28,7 @@ button{font-family:inherit;color:inherit}
 @media(max-width:560px){#start .inner{padding-top:52px}}
 /* 街景只畫一次：整張當成背景圖（手機不用一直重畫上百個向量圖形，避免 iPhone 記憶體不夠、整頁被系統重開） */
 .streetBg{background-repeat:no-repeat;background-position:50% 85%;background-size:cover}
-#heroWrap>.streetBg{position:absolute;inset:0;background-position:50% 25%}
+#heroWrap>.streetBg{position:absolute;inset:0;background-position:50% 0,0 0;background-size:100% auto,100% 100%}
 #heroWrap .clouds{position:absolute;left:0;right:0;top:-8px;height:34%;opacity:.7}
 #heroWrap .clouds svg{width:100%;height:100%;display:block}
 #heroChar{position:absolute;left:0;right:0;bottom:3%;height:52%;display:flex;justify-content:center}
@@ -60,8 +60,9 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #btnPause{width:40px;height:40px;border-radius:50%;border:1px solid var(--keyb);background:var(--key);font-size:15px;line-height:1;cursor:pointer;padding:0}
 
 #scene{position:absolute;inset:0;background:#CDBFA8;overflow:hidden;--storm:0}
-#world{position:absolute;inset:0;pointer-events:none}
-#world{background-color:transparent}
+#world{position:absolute;left:50%;top:0;pointer-events:none;background-repeat:no-repeat;background-position:0 0,0 0;background-size:100% auto,100% 100%;will-change:transform}
+#world.mv{transition:transform .75s cubic-bezier(.4,.1,.25,1)}
+#world::after{content:'';position:absolute;left:0;right:0;top:var(--ih,100%);bottom:0;background:linear-gradient(rgba(42,36,32,0),rgba(42,36,32,.55) 60%)}   /* 圖片下面鋪滿的地面，越下面越暗 */
 #player{position:absolute;left:0;top:0;pointer-events:none;transform-origin:50% 95.6%}
 #player.mv{transition:transform .75s cubic-bezier(.4,.1,.25,1)}
 #player svg{height:100%;width:100%;display:block;transform-origin:50% 100%}
@@ -176,6 +177,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .lbVal{flex:0 0 auto;font-size:13px;color:var(--ink2);white-space:nowrap}
 .lbVal b{color:var(--ink);font-size:15px}
 .lbTabs{display:flex;gap:6px;margin:10px 0 8px}
+.lbTabs+.lbTabs{margin-top:-2px}
 .lbTabs button{flex:1;min-height:40px;border-radius:8px;border:1px solid var(--keyb);background:var(--key);font-size:14px;line-height:1.2;cursor:pointer}
 .lbTabs button.on{background:var(--ink);border-color:var(--ink);color:var(--paper2)}
 .lbAsk{display:flex;gap:6px;margin-top:6px}
@@ -202,7 +204,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #crowd{position:absolute;inset:0;pointer-events:none}
 #scene.mp #player{display:none}
 .fig{position:absolute;left:0;top:0;transform-origin:50% 95.6%}
-.fig.mv{transition:transform .7s cubic-bezier(.4,.1,.25,1)}
+.fig.mv{transition:transform .75s cubic-bezier(.4,.1,.25,1)}
 .fig svg{display:block;width:100%;height:100%;transform-origin:50% 100%}
 .fig.hop svg{animation:hop .4s ease-out}
 .fig.zap svg{animation:zap .6s linear forwards}
@@ -253,6 +255,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
       <div class="grp"><div class="lab" id="lLang"></div><div class="seg" id="segLang"></div></div>
       <div class="grp"><div class="lab" id="lKb"></div><div class="seg" id="segKb"></div></div>
       <div class="grp"><div class="lab" id="lLevel"></div><div class="seg" id="segLevel"></div></div>
+      <div class="grp"><div class="lab" id="lN"></div><div class="seg" id="segN"></div></div>
     </div>
     <div id="helpBody"><div class="how" id="tHow"></div></div>
   </div>
@@ -269,7 +272,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
     <button id="btnPause" aria-label="pause">❚❚</button>
   </div>
   <div id="scene">
-    <div id="world" class="streetBg"></div>
+    <div id="world"></div>
     <div id="player"></div>
     <div id="crowd"></div>
     <div id="veil"></div>
@@ -325,7 +328,9 @@ var DATA = window.__WORDS__, WORDS = DATA.words, LABELS = DATA.labels, CHARS = w
 var BYCH = {}; WORDS.forEach(function(w){ BYCH[w.c] = w; });
 var $ = function(id){ return document.getElementById(id); };
 var TEST = /[?&]test\b/.test(location.search);
-var YB = 272, SPC = 19, CX = 240, WV = 480, HV = 288, NSTEP = 10;
+var YB = 272, SPC = 19, CX = 240, WV = 480, HV = 288;
+var NSTEP = 10;     // 這一局的題數（＝階梯數），開始時依設定改成 10／15／20／25
+var WT = 60, WGB = 30;   // 背景圖上方拉長的天空、最底下的地面（單位；要跟 tools/tall.js 一樣）
 
 /* ---------- 文字（中文繁／簡、西文、英文）---------- */
 var TXT = {
@@ -336,7 +341,9 @@ var TXT = {
   how2:['答對：往上走一階','答对：往上走一阶','Acierto: subes un escalón','Right: climb one step'],
   how3:['答錯或時間到：被雷劈一次，但還是往上走一階','答错或时间到：被雷劈一次，但还是往上走一阶','Error o se acaba el tiempo: te cae un rayo, pero igual subes','Wrong or time up: you get struck but still climb'],
   kbhint:['電腦可以直接用鍵盤打：拼音＝字母＋數字 1～5（聲調，空白鍵＝一聲，5＝輕聲）；注音＝標準鍵位，聲調按 空白／6／3／4／7（7＝輕聲）','电脑可以直接用键盘打：拼音＝字母＋数字 1～5（声调，空白键＝一声，5＝轻声）；注音＝标准键位，声调按 空白／6／3／4／7（7＝轻声）','En el ordenador puedes usar el teclado: pinyin = letras + números 1–5 (tono; espacio = 1.º, 5 = neutro); zhuyin = distribución estándar, tonos: espacio / 6 / 3 / 4 / 7 (7 = neutro)','On a computer you can type directly: pinyin = letters + digits 1–5 for tone (space = 1st, 5 = neutral); zhuyin = standard layout, tones: space / 6 / 3 / 4 / 7 (7 = neutral)'],
-  how4:['爬完 10 階，看你被劈幾次','爬完 10 阶，看你被劈几次','Al llegar a los 10 escalones se cuentan tus rayos','After 10 steps we count your strikes'],
+  how4:['爬完 %n 階，看你被劈幾次','爬完 %n 阶，看你被劈几次','Al llegar a los %n escalones se cuentan tus rayos','After %n steps we count your strikes'],
+  secN:['題數（階梯數）','题数（阶梯数）','Preguntas (escalones)','Questions (steps)'],
+  nUnit:['題','题','preguntas','questions'],
   secGender:['選角色','选角色','Elige tu personaje','Choose your character'],
   boy:['男生','男生','Chico','Boy'], girl:['女生','女生','Chica','Girl'], roll:['換一個','换一个','Otro','Another'],
   secScript:['字形','字形','Escritura','Script'],
@@ -360,7 +367,7 @@ var TXT = {
   secName:['暱稱（上排行榜用）','昵称（上排行榜用）','Apodo (para la clasificación)','Nickname (for the leaderboard)'],
   namePh:['輸入暱稱','输入昵称','Tu apodo','Your nickname'],
   lbTitle:['排行榜','排行榜','Clasificación','Leaderboard'],
-  lbNote:['被雷劈越少排越前面，一樣就比誰爬得快','被雷劈越少排越前面，一样就比谁爬得快','Menos rayos va primero; si empatan, gana quien suba más rápido','Fewer strikes rank higher; ties go to the faster climb'],
+  lbNote:['被雷劈越少排越前面，一樣就比誰爬得快（每種題數、每個難度各一個榜）','被雷劈越少排越前面，一样就比谁爬得快（每种题数、每个难度各一个榜）','Menos rayos va primero; si empatan, gana quien suba más rápido (una clasificación por nº de preguntas y nivel)','Fewer strikes rank higher; ties go to the faster climb (one board per question count and level)'],
   lbLoading:['載入中…','载入中…','Cargando…','Loading…'],
   lbEmpty:['還沒有人上榜，你當第一個！','还没有人上榜，你当第一个！','Aún no hay nadie. ¡Sé el primero!','Nobody yet. Be the first!'],
   lbError:['排行榜暫時無法使用','排行榜暂时无法使用','La clasificación no está disponible ahora','The leaderboard is unavailable right now'],
@@ -389,6 +396,7 @@ var TXT = {
   mpHostTag:['房主','房主','Anfitrión','Host'],
   mpWatcherTag:['觀賽','观赛','Espectador','Watching'],
   mpLevelIs:['難度','难度','Nivel','Level'],
+  mpNIs:['題數','题数','Preguntas','Questions'],
   mpStartGo:['開始比賽','开始比赛','Empezar partida','Start match'],
   mpNeed2:['至少要 2 位玩家才能開始','至少要 2 位玩家才能开始','Se necesitan al menos 2 jugadores','At least 2 players needed'],
   mpWaitHost:['等房主開始…','等房主开始…','Esperando al anfitrión…','Waiting for the host…'],
@@ -422,8 +430,9 @@ function plain(k){ var t=tl(k); return zh(k)+(t?' · '+t:''); }
 
 /* ---------- 設定（角色性別、鍵盤、難度存在這個遊戲自己的 key）---------- */
 var CFG_KEY='typingRayo.cfg';
-var cfg={kb:'pinyin',lv:'normal',g:Math.random()<.5?'m':'f'};
-try{ var c0=JSON.parse(localStorage.getItem(CFG_KEY)||'null'); if(c0){ if(c0.kb==='zhuyin'||c0.kb==='pinyin')cfg.kb=c0.kb; if(['easy','normal','hard'].indexOf(c0.lv)>=0)cfg.lv=c0.lv; if(c0.g==='m'||c0.g==='f')cfg.g=c0.g; } else if(Settings.phon==='zhuyin') cfg.kb='zhuyin'; }catch(e){}
+var NQS=[10,15,20,25];
+var cfg={kb:'pinyin',lv:'normal',n:10,g:Math.random()<.5?'m':'f'};
+try{ var c0=JSON.parse(localStorage.getItem(CFG_KEY)||'null'); if(c0){ if(c0.kb==='zhuyin'||c0.kb==='pinyin')cfg.kb=c0.kb; if(['easy','normal','hard'].indexOf(c0.lv)>=0)cfg.lv=c0.lv; if(c0.g==='m'||c0.g==='f')cfg.g=c0.g; if(NQS.indexOf(c0.n)>=0)cfg.n=c0.n; } else if(Settings.phon==='zhuyin') cfg.kb='zhuyin'; }catch(e){}
 function saveCfg(){ try{ localStorage.setItem(CFG_KEY,JSON.stringify(cfg)); }catch(e){} }
 var ci=Math.floor(Math.random()*5);          // 目前選到的人物（0–4）
 
@@ -452,6 +461,7 @@ function waitLB(){
     var n=0; (function chk(){ if(window.LB) return res(window.LB); if(++n>50) return res(null); setTimeout(chk,100); })();
   });
 }
+function boardId(lv,n){ return n===10?lv:lv+'_'+n; }      // 10 題沿用舊的榜（easy／normal／hard），其他題數是 normal_15 這樣
 function fmtTime(s){ s=Math.max(0,Math.round(+s||0)); return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
 function lbTable(list,myUid){
   if(!list.length) return '<p class="lbSt">'+plain('lbEmpty')+'</p>';
@@ -463,7 +473,7 @@ function lbTable(list,myUid){
 /* 結算畫面：把這一局成績送上去，再顯示前 10 名 */
 function lbAfterGame(strikes,secs,gid){
   var area=$('lbArea'); if(!area) return;
-  var board=cfg.lv, kb=cfg.kb;
+  var board=boardId(cfg.lv,NSTEP), kb=cfg.kb;
   var here=function(){ return gid===S.gid && $('lbArea')===area; };
   function show(note){
     return waitLB().then(function(lb){
@@ -487,31 +497,36 @@ function lbAfterGame(strikes,secs,gid){
   submit();
 }
 /* 首頁的排行榜（簡單／普通／進階三個榜） */
-var lbTab='normal';
+var lbTab='normal', lbN=10;
 function showLb(){
-  lbTab=cfg.lv;
+  lbTab=cfg.lv; lbN=cfg.n;
   var ov=$('ov'); ov.hidden=false;
   ov.innerHTML='<div class="panel"><h2>🏆 '+zh('lbTitle')+(tl('lbTitle')?'<span class="tl">'+tl('lbTitle')+'</span>':'')+'</h2>'+
-    '<div class="lbTabs" id="lbTabs"></div><div class="lbBox" id="lbBody"></div>'+
+    '<div class="lbTabs" id="lbTabsN"></div><div class="lbTabs" id="lbTabs"></div><div class="lbBox" id="lbBody"></div>'+
     '<div class="btns"><button class="big" id="bLbBack" type="button">'+H('lbBack')+'</button></div></div>';
   $('bLbBack').addEventListener('click',function(){ ov.hidden=true; ov.innerHTML=''; });
   paintLb();
 }
 function paintLb(){
   var tabs=$('lbTabs'), body=$('lbBody'); if(!tabs) return;
+  var tn=$('lbTabsN'); tn.innerHTML=''; NQS.forEach(function(n){
+    var b=document.createElement('button'); b.type='button'; b.innerHTML=n+'<span class="tl">'+zh('qLab')+'</span>'; if(n===lbN) b.className='on';
+    b.addEventListener('click',function(){ lbN=n; paintLb(); }); tn.appendChild(b);
+  });
   tabs.innerHTML=''; ['easy','normal','hard'].forEach(function(k){
     var b=document.createElement('button'); b.type='button'; b.innerHTML=zh(k)+(tl(k)?'<span class="tl">'+tl(k)+'</span>':''); if(k===lbTab) b.className='on';
     b.addEventListener('click',function(){ lbTab=k; paintLb(); }); tabs.appendChild(b);
   });
   body.innerHTML='<p class="lbSt">'+plain('lbLoading')+'</p>';
-  var want=lbTab;
+  var want=boardId(lbTab,lbN), wantKey=lbTab+'/'+lbN;
   waitLB().then(function(lb){
     if(!lb) throw 0;
     return lb.top(want).then(function(top){
-      if(want!==lbTab||$('lbBody')!==body) return;
+      if(wantKey!==lbTab+'/'+lbN||$('lbBody')!==body) return;
       body.innerHTML='<p class="lbNote">'+plain('lbNote')+'</p>'+lbTable(top.list,top.uid);
     });
-  }).catch(function(){ if(want===lbTab&&$('lbBody')===body) body.innerHTML='<p class="lbSt">'+plain('lbError')+'</p>'; });
+  })
+  .catch(function(){ if(wantKey===lbTab+'/'+lbN&&$('lbBody')===body) body.innerHTML='<p class="lbSt">'+plain('lbError')+'</p>'; });
 }
 $('btnLb').addEventListener('click',showLb);
 $('inName').addEventListener('input',function(){ setName(this.value); });
@@ -529,13 +544,14 @@ function secLabel(k,sec){ var t=tl(k); return zh(k)+'<span class="tl">'+(t?t+' �
 function renderStart(){
   document.documentElement.lang = Settings.script==='simp'?'zh-Hans':'zh-Hant';
   $('tTitle').innerHTML=H('title'); $('tSub').innerHTML=Settings.lang==='zh'?zh('sub'):zh('sub')+'<span class="tl">'+tl('sub')+'</span>';
-  $('tHow').innerHTML='<div>'+H('how1')+'</div><div>'+H('tone')+'</div><div>'+H('how2')+'</div><div>'+H('how3')+'</div><div>'+H('how4')+'</div><div>'+H('kbhint')+'</div>';
-  $('lGender').innerHTML=plain('secGender'); $('lScript').innerHTML=plain('secScript'); $('lLang').innerHTML=plain('secLang'); $('lKb').innerHTML=plain('secKb'); $('lLevel').innerHTML=plain('secLevel');
+  $('tHow').innerHTML='<div>'+H('how1')+'</div><div>'+H('tone')+'</div><div>'+H('how2')+'</div><div>'+H('how3')+'</div><div>'+H('how4').replace(/%n/g,cfg.n)+'</div><div>'+H('kbhint')+'</div>';
+  $('lGender').innerHTML=plain('secGender'); $('lScript').innerHTML=plain('secScript'); $('lLang').innerHTML=plain('secLang'); $('lKb').innerHTML=plain('secKb'); $('lLevel').innerHTML=plain('secLevel'); $('lN').innerHTML=plain('secN');
   seg('segGender',[{v:'m',h:H('boy')},{v:'f',h:H('girl')}],cfg.g,function(v){ if(v!==cfg.g){ cfg.g=v; ci=Math.floor(Math.random()*5); saveCfg(); } renderStart(); });
   seg('segScript',[{v:'trad',h:'繁體'},{v:'simp',h:'简体'}],Settings.script,function(v){ Settings.script=v; writeSettings(Settings); renderStart(); });
   seg('segLang',[{v:'zh',h:'中文'},{v:'es',h:'Español'},{v:'en',h:'English'}],Settings.lang,function(v){ Settings.lang=v; writeSettings(Settings); renderStart(); });
   seg('segKb',[{v:'pinyin',h:'拼音<span class="tl">pīnyīn</span>'},{v:'zhuyin',h:'注音<span class="tl">ㄅㄆㄇㄈ</span>'}],cfg.kb,function(v){ cfg.kb=v; saveCfg(); renderStart(); });
   seg('segLevel',['easy','normal','hard'].map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),cfg.lv,function(v){ cfg.lv=v; saveCfg(); renderStart(); });
+  seg('segN',NQS.map(function(n){ return {v:n,h:n+'<span class="tl">'+(tl('nUnit')||zh('nUnit'))+'</span>'}; }),cfg.n,function(v){ cfg.n=v; saveCfg(); renderStart(); preloadBgs(); });
   $('btnStart').innerHTML=H('start');
   $('inName').placeholder=plain('namePh'); if($('inName').value!==getName()) $('inName').value=getName();
   $('btnLb').innerHTML='🏆'; $('btnLb').setAttribute('aria-label',plain('lbTitle'));
@@ -596,7 +612,7 @@ $('kb').addEventListener('pointerdown',function(e){
   keyPress(b.getAttribute('data-k'));
 });
 $('kb').addEventListener('contextmenu',function(e){ e.preventDefault(); });
-$('kbSw').addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b||b.getAttribute('data-kb')===cfg.kb) return; cfg.kb=b.getAttribute('data-kb'); saveCfg(); if(S.phase==='ask'&&!S.locked) S.buf=''; renderKb(); $('kb').classList.toggle('locked',S.phase!=='ask'||S.locked); renderTyped(); });
+$('kbSw').addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b||b.getAttribute('data-kb')===cfg.kb) return; cfg.kb=b.getAttribute('data-kb'); saveCfg(); if(S.phase==='ask'&&!S.locked) S.buf=''; renderKb(); $('kb').classList.toggle('locked',S.phase!=='ask'||S.locked); renderTyped(); if(S.running){ measure(); if(MP.on&&MP.inGame) mpLayout(false); else placePlayer(false); } });
 
 /* 電腦鍵盤：拼音模式打字母，1–4 當聲調（空白＝一聲）；注音模式用標準注音鍵位 */
 var ZYMAP={'1':'ㄅ','q':'ㄆ','a':'ㄇ','z':'ㄈ','2':'ㄉ','w':'ㄊ','s':'ㄋ','x':'ㄌ','e':'ㄍ','d':'ㄎ','c':'ㄏ','r':'ㄐ','f':'ㄑ','v':'ㄒ','5':'ㄓ','t':'ㄔ','g':'ㄕ','b':'ㄖ','y':'ㄗ','h':'ㄘ','n':'ㄙ','u':'ㄧ','j':'ㄨ','m':'ㄩ','8':'ㄚ','i':'ㄛ','k':'ㄜ',',':'ㄝ','9':'ㄞ','o':'ㄟ','l':'ㄠ','.':'ㄡ','0':'ㄢ','p':'ㄣ',';':'ㄤ','/':'ㄥ','-':'ㄦ'};
@@ -775,37 +791,47 @@ function renderTimer(){
 }
 /* ---------- 場景位置（整條街固定不動，人物沿著 10 階往上走）---------- */
 /* ---------- 背景（7 個台灣場景，每一局隨機換；連線時用房號＋第幾局算出來，全員一樣）---------- */
-var BGS = ["bg/bg0-3204bb.webp","bg/bg1-708fe5.webp","bg/bg2-1779ad.webp","bg/bg3-93a00c.webp","bg/bg4-a9c30a.webp","bg/bg5-9b8b43.webp","bg/bg6-0e6995.webp"];
+var BGS = {"10":["bg/bg0_10-22e91d.webp","bg/bg1_10-18fa1a.webp","bg/bg2_10-748099.webp","bg/bg3_10-3fe021.webp","bg/bg4_10-a4fcb9.webp","bg/bg5_10-6eb239.webp","bg/bg6_10-5a2d95.webp"],"15":["bg/bg0_15-9ec034.webp","bg/bg1_15-8df6db.webp","bg/bg2_15-8af896.webp","bg/bg3_15-0c6291.webp","bg/bg4_15-bd5240.webp","bg/bg5_15-4e48cc.webp","bg/bg6_15-d4b66f.webp"],"20":["bg/bg0_20-e1982a.webp","bg/bg1_20-49d8f8.webp","bg/bg2_20-001a96.webp","bg/bg3_20-9160f2.webp","bg/bg4_20-6cb956.webp","bg/bg5_20-b027e2.webp","bg/bg6_20-522b0c.webp"],"25":["bg/bg0_25-6954ca.webp","bg/bg1_25-e6017e.webp","bg/bg2_25-e8bde7.webp","bg/bg3_25-a0c4a4.webp","bg/bg4_25-37f812.webp","bg/bg5_25-58778b.webp","bg/bg6_25-afec71.webp"]}, BGG = ["linear-gradient(to right,#85583A 0,#85583A 26%,#A49C8A 38%,#A49C8A 62%,#945B49 74%,#945B49 100%)","linear-gradient(to right,#4B6642 0,#4B6642 26%,#9C998B 38%,#9C998B 62%,#3F5B3D 74%,#3F5B3D 100%)","linear-gradient(to right,#D9D5C8 0,#D9D5C8 26%,#DAD6CB 38%,#DAD6CB 62%,#D9D5C8 74%,#D9D5C8 100%)","linear-gradient(to right,#858073 0,#858073 26%,#8D887C 38%,#8D887C 62%,#858073 74%,#858073 100%)","linear-gradient(to right,#784939 0,#784939 26%,#5E4330 38%,#5E4330 62%,#7C4C3C 74%,#7C4C3C 100%)","linear-gradient(to right,#938F75 0,#938F75 26%,#9B968B 38%,#9B968B 62%,#B8BDAD 74%,#B8BDAD 100%)","linear-gradient(to right,#906F65 0,#906F65 26%,#84817B 38%,#84817B 62%,#906F65 74%,#906F65 100%)"];   // BGS[題數][場景]＝背景圖；BGG[場景]＝圖片下方鋪滿用的地面漸層
 var bgIdx = -1;
 function setBg(i){
-  bgIdx=i; var u='url("'+BGS[i]+'")';
-  $('world').style.backgroundImage=u;
-  var h=document.querySelector('#heroWrap>.streetBg'); if(h) h.style.backgroundImage=u;
+  bgIdx=i; var w=$('world');
+  w.style.backgroundImage='url("'+BGS[NSTEP][i]+'"),'+BGG[i];
+  var h=document.querySelector('#heroWrap>.streetBg'); if(h) h.style.backgroundImage='url("'+BGS[10][i]+'"),'+BGG[i];   // 首頁的圖固定用 10 階那張
 }
-function preloadBgs(){ BGS.forEach(function(u,k){ if(k!==bgIdx){ var im=new Image(); im.src=u; } }); }
+function preloadBgs(){ var set=BGS[cfg.n]||BGS[10]; set.forEach(function(u,k){ if(k!==bgIdx){ var im=new Image(); im.src=u; } }); }
 window.addEventListener('load',function(){ setTimeout(preloadBgs,1500); });
-function pickBg(){ var n; do{ n=Math.floor(Math.random()*BGS.length); }while(n===bgIdx&&BGS.length>1); setBg(n); }
-function mpBgIdx(r){ return ((parseInt(MP.code,10)||0)+(+r.n||0))%BGS.length; }
-var geo={W:360,H:200,s:1,ox:0,oy:0,hC:52,wC:30};
-/* 直式滿版：背景圖是 480x985 的直式圖（tools/tall.js），場景放大 TS 倍、階梯底端（第 0 階）落在圖的 TBASE 位置；
-   畫面用 cover 鋪滿，垂直方向偏上 TBIAS（多切下面的地面），人物、雷擊、連線小人都用同一套換算 */
-var TW=480, TH=985, TS=1.4, TBASE=514, TBIAS=.85;
+function pickBg(){ var n; do{ n=Math.floor(Math.random()*BGG.length); }while(n===bgIdx&&BGG.length>1); setBg(n); }
+function mpBgIdx(r){ return ((parseInt(MP.code,10)||0)+(+r.n||0))%BGG.length; }
+var geo={W:360,H:200,s:1,ox:0,top:0,ay:300,hC:52,wC:30,c:0};
+/* 從最底下往上爬：背景是 480 寬的長圖（階梯數＝題數），第 0 階在圖的最下面、終點在最上面。
+   鏡頭跟著人物：人物站在固定高度（作答欄上方），圖往下捲；快到終點時圖頂到底，人物就換成往上走到終點。
+   所有東西（人物、雷擊、連線小人）都用 footPos(階) 換算畫面位置。 */
+function worldH(){ return WT+HV+SPC*(NSTEP-10)+WGB; }     // 背景圖高度（單位）
+function y0(){ return WT+SPC*(NSTEP-10)+YB; }             // 第 0 階在圖上的位置（單位）
 function measure(){
   var sc=$('scene'), W=sc.clientWidth||360, Hh=sc.clientHeight||640;
-  var k=Math.max(W/TW,Hh/TH), s=k*TS, oyImg=Math.min(0,Math.max((Hh-TH*k)*TBIAS,64-157*k));   // 偏上，但一定要讓最高那一階（圖上約 y=157）離上緣至少 64px，不被標題列擋住
-  $('world').style.backgroundSize='cover'; $('world').style.backgroundPosition='50% '+oyImg.toFixed(1)+'px';
-  geo.W=W; geo.H=Hh; geo.s=s; geo.ox=W/2-CX*s; geo.oy=oyImg+(TBASE-HV*TS)*k;
-  geo.hC=Math.max(58*s,40); geo.wC=geo.hC*60/102;
+  var s=Math.min(W/343,Hh/520);                           // 一個單位幾像素：手機看得到約 343 單位寬
+  geo.W=W; geo.H=Hh; geo.s=s; geo.ox=W/2-CX*s; geo.hC=Math.max(58*s,40); geo.wC=geo.hC*60/102;
+  var sh=$('sheet').offsetHeight||Math.round(Hh*.5);
+  geo.ay=Math.max(64+geo.hC+30,Math.min(Hh-sh-14,.62*Hh));   // 人物腳底的高度：在作答欄上面一點
+  var w=$('world'); w.style.width=(WV*s).toFixed(1)+'px'; w.style.marginLeft=(-WV*s/2).toFixed(1)+'px'; w.style.height=(worldH()*s+Hh+40).toFixed(1)+'px'; w.style.setProperty('--ih',(worldH()*s).toFixed(1)+'px');
   var pl=$('player'); pl.style.width=geo.wC.toFixed(1)+'px'; pl.style.height=geo.hC.toFixed(1)+'px';
+  camTo(geo.c,false);
+}
+function camTo(c,anim){   // 鏡頭看第 c 階（可以是小數）
+  var w=$('world'); w.classList.toggle('mv',!!anim);
+  geo.c=c; geo.top=Math.min(0,geo.ay-(y0()-c*SPC)*geo.s);
+  w.style.transform='translateY('+geo.top.toFixed(1)+'px)';
 }
 function footPos(step){   // 第 step 階的腳底位置（畫面像素）；越高越遠，人物稍微縮小
-  return {x:geo.ox+CX*geo.s, y:geo.oy+(YB-step*SPC)*geo.s, sc:1-.16*step/NSTEP};
+  return {x:geo.ox+CX*geo.s, y:geo.top+(y0()-step*SPC)*geo.s, sc:1-.16*step/NSTEP};
 }
 function placePlayer(anim){
+  camTo(S.step,anim);
   var f=footPos(S.step), pl=$('player'); pl.classList.toggle('mv',!!anim);
   pl.style.transform='translate('+(f.x-geo.wC/2).toFixed(1)+'px,'+(f.y-.956*geo.hC).toFixed(1)+'px) scale('+f.sc.toFixed(3)+')';
 }
-window.addEventListener('resize',function(){ if(S.running){ measure(); placePlayer(false); } });
+window.addEventListener('resize',function(){ if(S.running&&!MP.on){ measure(); placePlayer(false); } });
 
 /* ---------- 主迴圈 ---------- */
 function sheetWanted(){
@@ -849,14 +875,14 @@ function advance(){
 
 /* ---------- 開始、暫停、結算 ---------- */
 function startGame(){
-  P=LEVELS[cfg.lv]; buildPool();
+  P=LEVELS[cfg.lv]; buildPool(); NSTEP=cfg.n; setBg(bgIdx);
   S.running=true; S.paused=false; S.over=false; S.step=0; S.strikes=0; S.correct=0; S.locked=false; S.q=null; S.buf=''; S.missed=[]; S.used=[]; S.t0=Date.now(); S.ci=ci;
   $('start').hidden=true; $('play').hidden=false; $('play').classList.remove('sheetUp'); $('ov').hidden=true;
   $('player').innerHTML=CHARS[cfg.g][ci];
   renderKb(); measure(); placePlayer(false); nextQ();
   requestAnimationFrame(function(){ measure(); placePlayer(false); last=performance.now(); requestAnimationFrame(tick); });
   S.gid=(S.gid||0)+1;
-  try{ HGPlays.start(cfg.lv+'-'+cfg.kb,getName()); }catch(e){}
+  try{ HGPlays.start(cfg.lv+'-'+cfg.kb+(NSTEP===10?'':'-n'+NSTEP),getName()); }catch(e){}
 }
 function pauseGame(){
   if(MP.on){ if(MP.inGame) mpLeaveAsk(); return; }
@@ -882,8 +908,8 @@ function needName(){
 }
 $('inName').addEventListener('input',function(){ $('nameHint').hidden=true; this.classList.remove('need'); });
 
-function bestKey(){ return 'typingRayo.best.'+cfg.lv+'.'+cfg.kb; }
-function starsOf(n){ return n===0?3:n<=2?2:n<=5?1:0; }
+function bestKey(){ return 'typingRayo.best.'+cfg.lv+'.'+cfg.kb+(NSTEP===10?'':'.'+NSTEP); }    // 10 題沿用舊的紀錄
+function starsOf(n,N){ N=N||10; return n===0?3:n<=Math.floor(N*.2)?2:n<=Math.floor(N*.5)?1:0; }   // 10 題：0 劈＝3 星、≤2＝2 星、≤5＝1 星，其他題數照比例
 function finish(){
   S.over=true; sfx('done');
   var secs=Math.round((Date.now()-S.t0)/1000), prev=null;
@@ -892,7 +918,7 @@ function finish(){
   if(prev===null || S.strikes<prev){ try{ localStorage.setItem(bestKey(),String(S.strikes)); }catch(e){} }
   var bestNow = prev===null?S.strikes:Math.min(prev,S.strikes);
   try{ HGPlays.end({score:S.correct,secs:secs,name:getName()}); }catch(e){}
-  var st=starsOf(S.strikes), stars=''; for(var i=0;i<3;i++) stars+=(i<st?'★':'<span class="off">★</span>');
+  var st=starsOf(S.strikes,NSTEP), stars=''; for(var i=0;i<3;i++) stars+=(i<st?'★':'<span class="off">★</span>');
   var chips=S.missed.map(function(c){ var w=BYCH[c]; return '<div class="chip"><b>'+chText(w)+'</b><span>'+LABELS[w.r[0]][0]+'</span><span>'+LABELS[w.r[0]][1]+'</span></div>'; }).join('');
   var ov=$('ov'); ov.hidden=false;
   ov.innerHTML='<div class="panel"><h2>'+H(S.strikes===0?'perfect':'done')+'</h2><div class="stars">'+stars+'</div>'+
@@ -908,7 +934,7 @@ function finish(){
 
 /* ====================== 連線模式（最多 15 人，一條命）======================
    流程：首頁 👥 → 開房（房主選難度）或輸入 4 位數房號加入 → 等人 → 房主按開始
-   → 全部人同題、同時作答、同時揭曉：打錯或時間到就被雷劈、出局（可留下觀賽）→ 爬完 10 階或全部出局就結算。
+   → 全部人同題、同時作答、同時揭曉：打錯或時間到就被雷劈、出局（可留下觀賽）→ 爬完 N 階（房主選 10／15／20／25 題）或全部出局就結算。
    資料在 Firebase（下面 module 的 window.RM）：房主負責推進回合，每個人只寫自己的答題結果。 */
 var MP={on:false};
 function mpFresh(){
@@ -916,7 +942,7 @@ function mpFresh(){
     countT:0,lastC:0,wait:0,H:{t:0,key:'',busy:false},stall:0,stallShown:false,figs:{},pos:{},shown:'',playsN:-1,t0:0,msg:''};
 }
 MP=mpFresh();
-var mpLv="normal", MAXP=15;
+var mpLv="normal", mpN=10, MAXP=15;
 function waitRM(){
   return new Promise(function(res){
     var n=0; (function chk(){ if(window.RM) return res(window.RM); if(++n>50) return res(null); setTimeout(chk,100); })();
@@ -938,11 +964,11 @@ function mpTs(t){ return t&&typeof t.toMillis==='function'?t.toMillis():(+t||0);
 
 /* ---------- 首頁入口 ---------- */
 function mpOpen(prefill){
-  var ov=$('ov'); ov.hidden=false; if(!mpLv||!LEVELS[mpLv]) mpLv=cfg.lv;
+  var ov=$('ov'); ov.hidden=false; if(!mpLv||!LEVELS[mpLv]) mpLv=cfg.lv; if(NQS.indexOf(mpN)<0) mpN=cfg.n;
   ov.innerHTML='<div class="panel"><h2>👥 '+zh('mpTitle')+(tl('mpTitle')?'<span class="tl">'+tl('mpTitle')+'</span>':'')+'</h2>'+
     '<p class="lbNote">'+plain('mpIntro')+'</p>'+
     '<div class="grp"><div class="lab">'+plain('secName')+'</div><input class="nameIn" id="mpName" type="text" maxlength="14" autocomplete="off" spellcheck="false"></div>'+
-    '<div class="mpBox"><h3>'+plain('mpMake')+'</h3><div class="seg" id="mpSegLv"></div><div class="btns"><button class="big" id="mpMake" type="button">'+H('mpMakeGo')+'</button></div></div>'+
+    '<div class="mpBox"><h3>'+plain('mpMake')+'</h3><div class="seg" id="mpSegLv"></div><div class="lab" style="margin:8px 0 4px">'+plain('mpNIs')+'</div><div class="seg" id="mpSegN"></div><div class="btns"><button class="big" id="mpMake" type="button">'+H('mpMakeGo')+'</button></div></div>'+
     '<div class="mpBox"><h3>'+plain('mpJoinT')+'</h3><input class="nameIn" id="mpCode" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="'+zh('mpCodePh')+'">'+
     '<label class="mpChk"><input type="checkbox" id="mpWatch"> '+plain('mpWatch')+'</label>'+
     '<div class="btns"><button class="big" id="mpGo" type="button">'+H('mpJoinGo')+'</button></div></div>'+
@@ -951,6 +977,7 @@ function mpOpen(prefill){
   $('mpName').value=getName();
   if(prefill) $('mpCode').value=String(prefill).replace(/\D/g,'').slice(0,4);
   seg('mpSegLv',['easy','normal','hard'].map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),mpLv,function(v){ mpLv=v; mpOpen($('mpCode').value); });
+  seg('mpSegN',NQS.map(function(n){ return {v:n,h:n+'<span class="tl">'+(tl('nUnit')||zh('nUnit'))+'</span>'}; }),mpN,function(v){ mpN=v; mpOpen($('mpCode').value); });
   $('mpName').addEventListener('input',function(){ setName(this.value); if($('inName')) $('inName').value=getName(); });
   $('mpCode').addEventListener('input',function(){ this.value=this.value.replace(/\D/g,'').slice(0,4); });
   $('mpBack').addEventListener('click',function(){ ov.hidden=true; ov.innerHTML=''; });
@@ -965,7 +992,7 @@ function mpMake(){
   mpBusy(true); mpMsg('lbLoading');
   waitRM().then(function(rm){
     if(!rm) throw 0;
-    var me=mpMe(false); me.level=mpLv;
+    var me=mpMe(false); me.level=mpLv; me.nq=mpN;
     return rm.create(me).then(function(code){ mpEnter(code,true); });
   }).catch(function(){ mpBusy(false); mpMsg('mpErr'); });
 }
@@ -1042,7 +1069,8 @@ function mpLink(){ return location.origin==='null'||location.protocol==='file:' 
 function mpLobby(){
   var r=MP.room, ov=$('ov'); ov.hidden=false; $('start').hidden=false; $('play').hidden=true;
   var list=mpPlayersSorted(), n=list.length, roster=list.filter(function(p){ return !p.spec; }).length;
-  var key=JSON.stringify([r.level,list.map(function(p){ return [p.uid,p.name,p.spec]; }),cfg.kb,Settings.script,Settings.lang,roster]);
+  var nq=r.nq||10;
+  var key=JSON.stringify([r.level,nq,list.map(function(p){ return [p.uid,p.name,p.spec]; }),cfg.kb,Settings.script,Settings.lang,roster]);
   if(MP.lobbyKey===key&&$('mpLobby')) return; MP.lobbyKey=key;
   var rows=list.map(function(p){
     var tag=p.uid===r.hostUid?'<span class="plTag">'+zh('mpHostTag')+'</span>':'';
@@ -1050,16 +1078,21 @@ function mpLobby(){
     return '<div class="plRow'+(p.uid===MP.uid?' me':'')+'"><span class="plFig">'+(CHARS[p.g]&&CHARS[p.g][p.ci]||'')+'</span><span class="lbName">'+esc(p.name)+'</span>'+tag+'</div>';
   }).join('');
   var lvl=MP.host?'<div class="seg" id="mpSegLv2"></div>':'<div class="lbSt">'+plain('mpLevelIs')+'：<b>'+plain(r.level)+' · '+LEVELS[r.level].T+' s</b></div>';
+  var nsel=MP.host?'<div class="seg" id="mpSegN2"></div>':'<div class="lbSt">'+plain('mpNIs')+'：<b>'+nq+'</b></div>';
   var act=MP.host?(roster>=2?'<button class="big" id="mpStart" type="button">'+H('mpStartGo')+'</button>':'<button class="big" id="mpStart" type="button" disabled>'+H('mpStartGo')+'</button><p class="lbNote">'+plain('mpNeed2')+'</p>'):'<p class="lbSt">'+plain('mpWaitHost')+'</p>';
   ov.innerHTML='<div class="panel" id="mpLobby"><div class="lab">'+plain('mpRoom')+'</div><div class="codeBig">'+esc(MP.code)+'</div>'+
     '<button class="ghost" id="mpCopy" type="button">'+zh('mpCopy')+(tl('mpCopy')?' · '+tl('mpCopy'):'')+'</button>'+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpLevelIs')+'</div>'+lvl+'</div>'+
+    '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpNIs')+'</div>'+nsel+'</div>'+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpKb')+'</div><div class="seg" id="mpSegKb"></div></div>'+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpPlayers')+' '+n+'/'+MAXP+'</div><div class="plList">'+rows+'</div></div>'+
     '<div class="btns">'+act+'<button class="ghost" id="mpLeaveBtn" type="button">'+H('mpLeave')+'</button></div></div>';
   seg('mpSegKb',[{v:'pinyin',h:'拼音<span class="tl">pīnyīn</span>'},{v:'zhuyin',h:'注音<span class="tl">ㄅㄆㄇㄈ</span>'}],cfg.kb,function(v){ cfg.kb=v; saveCfg(); MP.lobbyKey=''; mpLobby(); });
   if(MP.host) seg('mpSegLv2',['easy','normal','hard'].map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),r.level,function(v){
     if(v!==r.level) waitRM().then(function(rm){ return rm.hostSet(MP.code,{level:v}); }).catch(function(){});
+  });
+  if(MP.host) seg('mpSegN2',NQS.map(function(n){ return {v:n,h:n+'<span class="tl">'+(tl('nUnit')||zh('nUnit'))+'</span>'}; }),nq,function(v){
+    if(v!==nq) waitRM().then(function(rm){ return rm.hostSet(MP.code,{nq:v}); }).catch(function(){});
   });
   $('mpCopy').addEventListener('click',function(){
     var b=this, link=mpLink();
@@ -1069,10 +1102,10 @@ function mpLobby(){
   $('mpLeaveBtn').addEventListener('click',mpLeaveAsk);
   if(MP.host&&$('mpStart')) $('mpStart').addEventListener('click',mpStart);
 }
-function mpPick(level){
+function mpPick(level,n){
   var set={}; LEVELS[level].pool.forEach(function(l){ set[l]=1; });
   var pool=WORDS.filter(function(w){ return w.n ? level==='hard' : set[w.lv]; }), out=[];
-  while(out.length<NSTEP&&pool.length>out.length){ var w=pool[Math.floor(Math.random()*pool.length)]; if(out.indexOf(w.c)<0) out.push(w.c); }
+  while(out.length<n&&pool.length>out.length){ var w=pool[Math.floor(Math.random()*pool.length)]; if(out.indexOf(w.c)<0) out.push(w.c); }
   return out;
 }
 function mpStart(){
@@ -1081,7 +1114,7 @@ function mpStart(){
   if(ro.length<2) return;
   $('mpStart').disabled=true;
   waitRM().then(function(rm){
-    return rm.hostSet(MP.code,{status:'playing',ph:'ready',rd:0,qs:mpPick(r.level),ro:ro,elim:{},final:[]});
+    return rm.hostSet(MP.code,{status:'playing',ph:'ready',rd:0,qs:mpPick(r.level,r.nq||10),ro:ro,elim:{},final:[]});
   }).catch(function(){ if($('mpStart')) $('mpStart').disabled=false; });
 }
 
@@ -1092,7 +1125,7 @@ function mpBackToLobby(){
   $('play').hidden=true; $('start').hidden=false; setStorm(0);
 }
 function mpSetup(){
-  MP.inGame=true; var r=MP.room; setBg(mpBgIdx(r));
+  MP.inGame=true; var r=MP.room; NSTEP=r.nq||10; setBg(mpBgIdx(r));
   P=LEVELS[r.level]; S.running=true; S.paused=false; S.over=false; S.locked=true; S.q=null; S.buf=''; S.phase='wait'; S.step=0; S.strikes=0; S.correct=0; S.T=P.T; S.tLeft=P.T;
   $('start').hidden=true; $('play').hidden=false; $('ov').hidden=true;
   $('player').hidden=true; $('scene').classList.add('mp'); $('btnPause').textContent='✕'; $('mpStrip').hidden=false;
@@ -1100,7 +1133,7 @@ function mpSetup(){
   measure(); mpBuildFigs(); mpLayout(false);
   requestAnimationFrame(function(){ measure(); mpLayout(false); last=performance.now(); requestAnimationFrame(tick); });
   setInfo(''); $('typedTxt').className=''; renderTyped();
-  if(mpAmIn()&&MP.playsN!==r.n){ MP.playsN=r.n; try{ HGPlays.start('room-'+r.level+'-'+cfg.kb,getName()); }catch(e){} }
+  if(mpAmIn()&&MP.playsN!==r.n){ MP.playsN=r.n; try{ HGPlays.start('room-'+r.level+'-'+cfg.kb+(NSTEP===10?'':'-n'+NSTEP),getName()); }catch(e){} }
 }
 function mpBuildFigs(){
   var c=$('crowd'); c.innerHTML=''; MP.figs={};
@@ -1124,8 +1157,10 @@ function mpStepOf(u){
   if(e[u]!==undefined) return +e[u];
   return r.status==='finished'?NSTEP:r.rd;
 }
+function mpCam(){ var m=0; mpRoster().forEach(function(u){ m=Math.max(m,mpStepOf(u)); }); return m; }   // 鏡頭看活著的人（全員同一階）；全員出局就看最高的那階
 function mpLayout(anim){
   var r=MP.room, ro=mpRoster(), N=ro.length; if(!N||!r) return;
+  camTo(mpCam(),anim);
   var fac=N<=2?1:N<=4?.92:N<=7?.82:N<=10?.74:.66;
   var nf=Math.max(9,Math.min(12,12*fac+1)), nch=N>8?3:4, nameW=nch*nf*1.02+8, rowStep=Math.max(11,SPC*geo.s*.95);
   var groups={}; ro.forEach(function(u){ var st=mpStepOf(u); (groups[st]=groups[st]||[]).push(u); });
@@ -1307,13 +1342,14 @@ pickBg();
 renderStart();
 $('btnMulti').addEventListener('click',function(){ mpOpen(); });
 (function(){ var m=/[?&]room=(\d{4})/.exec(location.search); if(m) mpOpen(m[1]); })();
-if(TEST){ window.__nian={S:S,LABELS:LABELS,cfg:cfg,BYCH:BYCH,geo:geo,placePlayer:placePlayer,footPos:footPos,startGame:startGame,setBg:setBg,BGS:BGS,bgIdx:function(){ return bgIdx; },timeUp:timeUp,keyPress:keyPress,advance:advance,MP:function(){ return MP; }}; }
+if(TEST){ window.__nian={S:S,LABELS:LABELS,cfg:cfg,BYCH:BYCH,geo:geo,placePlayer:placePlayer,footPos:footPos,startGame:startGame,setBg:setBg,BGS:BGS,NSTEP:function(){ return NSTEP; },boardId:boardId,bgIdx:function(){ return bgIdx; },timeUp:timeUp,keyPress:keyPress,advance:advance,MP:function(){ return MP; }}; }
 })();
 </script>
 <script type="module">
 // 排行榜：Firebase 專案 memorma-24dab（匿名登入，跟其他遊戲同一個專案）
-// 資料放在 rayo_boards/{easy|normal|hard}/entries/{匿名登入的 uid}，一台裝置一個難度一筆，只留最好成績。
-// 排名數字 rank = (10 - 被雷劈次數) × 100000 + (99999 - 用時秒數)：越大越前面。規則見 firestore.rules.txt。
+// 資料放在 rayo_boards/{榜名}/entries/{匿名登入的 uid}，一台裝置一個榜一筆，只留最好成績。
+// 榜名：10 題＝easy／normal／hard（舊榜），15／20／25 題＝normal_15 這樣（難度＋底線＋題數），共 12 個榜。
+// 排名數字 rank = (題數 - 被雷劈次數) × 100000 + (99999 - 用時秒數)：越大越前面。規則見 firestore.rules.txt。
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {getFirestore,collection,query,orderBy,limit,getDocs,getDoc,doc,setDoc,updateDoc,deleteDoc,onSnapshot,Timestamp,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -1335,8 +1371,10 @@ try{
     const c = await signInAnonymously(auth);
     return c.user.uid;
   }
-  const BOARDS = ['easy','normal','hard'];
-  const rankOf = (strikes, secs) => (10 - strikes) * 100000 + (99999 - secs);
+  const BOARDS = [];
+  ['easy','normal','hard'].forEach(lv => [10,15,20,25].forEach(n => BOARDS.push(n === 10 ? lv : lv + '_' + n)));
+  const nOf = board => { const m = /_(15|20|25)$/.exec(board); return m ? +m[1] : 10; };
+  const rankOf = (n, strikes, secs) => (n - strikes) * 100000 + (99999 - secs);
   window.LB = {
     async top(board){
       if(!BOARDS.includes(board)) return { uid:'', list:[] };
@@ -1348,11 +1386,12 @@ try{
       if(!BOARDS.includes(board)) return { saved:false };
       const name = [...String(e.name || '').trim()].slice(0, 14).join('');
       if(!name) return { saved:false };
-      const strikes = Math.max(0, Math.min(10, Math.round(+e.strikes) || 0));
-      const secs = Math.max(15, Math.min(3600, Math.round(+e.secs) || 15));
+      const n = nOf(board);
+      const strikes = Math.max(0, Math.min(n, Math.round(+e.strikes) || 0));
+      const secs = Math.max(Math.ceil(n * 1.5), Math.min(3600, Math.round(+e.secs) || 15));
       const uid = await ensureUid();
       const ref = doc(db, 'rayo_boards', board, 'entries', uid);
-      const rank = rankOf(strikes, secs);
+      const rank = rankOf(n, strikes, secs);
       const old = await getDoc(ref);
       if(old.exists() && (Number(old.data().rank) || 0) >= rank) return { saved:false };
       const data = { name, strikes, secs, rank, updatedAt: serverTimestamp() };
@@ -1386,7 +1425,7 @@ try{
           if(tsMs(d.expireAt) > Date.now() && d.status !== 'closed') continue;
           // 舊房間留下的玩家資料清掉（房主才能刪，所以要等新房間建好再清）
         }
-        const data = { code, hostUid: uid, hostName: name, level: o.level, status: 'waiting', ph: '', rd: 0, n: 0,
+        const data = { code, hostUid: uid, hostName: name, level: o.level, nq: [10,15,20,25].includes(o.nq) ? o.nq : 10, status: 'waiting', ph: '', rd: 0, n: 0,
           qs: [], ro: [], elim: {}, final: [], createdAt: serverTimestamp(), expireAt: Timestamp.fromMillis(Date.now() + ROOM_MS) };
         await setDoc(roomRef(code), data);
         if(snap.exists()){

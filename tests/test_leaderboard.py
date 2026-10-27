@@ -67,14 +67,16 @@ def route(r):
 def rules_ok(board, uid, data, req_uid='UID1', existing=None):
     def isint(x): return isinstance(x, int) and not isinstance(x, bool)
     keys = set(data)
-    if board not in ('easy', 'normal', 'hard'): return False
+    import re
+    if not re.fullmatch(r'(easy|normal|hard)(_(15|20|25))?', board): return False
+    n = int(board.split('_')[1]) if '_' in board else 10
     if not keys <= {'name', 'strikes', 'secs', 'kb', 'rank', 'updatedAt'}: return False
     if not {'name', 'strikes', 'secs', 'rank', 'updatedAt'} <= keys: return False
     if not (isinstance(data['name'], str) and 1 <= len(data['name']) <= 14): return False
-    if not (isint(data['strikes']) and 0 <= data['strikes'] <= 10): return False
-    if not (isint(data['secs']) and 15 <= data['secs'] <= 3600): return False
+    if not (isint(data['strikes']) and 0 <= data['strikes'] <= n): return False
+    if not (isint(data['secs']) and n * 3 / 2 <= data['secs'] <= 3600): return False
     if 'kb' in keys and data['kb'] not in ('pinyin', 'zhuyin'): return False
-    if not (isint(data['rank']) and data['rank'] == (10 - data['strikes']) * 100000 + (99999 - data['secs'])): return False
+    if not (isint(data['rank']) and data['rank'] == (n - data['strikes']) * 100000 + (99999 - data['secs'])): return False
     if data['updatedAt'] != 'SERVER_TS': return False
     if req_uid != uid: return False
     if existing is not None and data['rank'] < existing['rank']: return False
@@ -197,6 +199,38 @@ with sync_playwright() as p:
     check(rules_ok('easy', 'UID1', sets[-1]['d']), '符合規則')
     check(pg.evaluate("()=>(window.__ops||[]).filter(o=>o.k==='add').length") == 4, '到現在共記了 4 局 plays（3 局普通＋1 局簡單）')
     pg.click('#bHome'); pg.wait_for_timeout(200)
+
+    print('== 15 題：自己一個榜（normal_15），跟 10 題的榜分開')
+    sset(pg, '#segKb button:nth-child(1)', '#segLevel button:nth-child(2)', '#segN button:nth-child(2)')
+    pg.evaluate("""()=>{window.__store=window.__store||{};
+      const mk=(b,u,n,st,se,N)=>{window.__store['rayo_boards/'+b+'/entries/'+u]={name:n,strikes:st,secs:se,rank:(N-st)*100000+(99999-se),updatedAt:'x'}};
+      mk('normal_15','Q','十五題高手',1,150,15); mk('normal_15','R','十五題新手',4,200,15); mk('normal','Z','十題老手',0,50,10);}""")
+    pg.click('#btnLb'); pg.wait_for_timeout(500)
+    check(pg.locator('#lbTabsN button').count() == 4 and pg.locator('#lbTabsN button.on').inner_text().startswith('15'), '排行榜多一排題數分頁（10／15／20／25），預設停在目前選的 15 題')
+    rows = pg.locator('#lbBody .lbRow').all_inner_texts()
+    check(len(rows) == 2 and '十五題高手' in rows[0] and '十五題新手' in rows[1] and not any('十題老手' in r_ for r_ in rows), '15 題榜只有 15 題的成績：%s' % rows)
+    pg.click('#lbTabsN button:nth-child(1)'); pg.wait_for_timeout(400)
+    check('十題老手' in pg.inner_text('#lbBody') and '十五題高手' not in pg.inner_text('#lbBody'), '切到 10 題榜：看到 10 題的成績、不混 15 題')
+    pg.click('#lbTabsN button:nth-child(3)'); pg.wait_for_timeout(400)
+    check(pg.locator('#lbBody .lbRow').count() == 0 and '還沒有人' in pg.inner_text('#lbBody'), '20 題榜還沒有人')
+    pg.click('#bLbBack'); pg.wait_for_timeout(100)
+    pg.click('#btnStart'); pg.wait_for_timeout(500)
+    add = ops(pg, 'add')
+    check(add[-1]['d']['level'] == 'normal-pinyin-n15', '15 題的遊玩紀錄 level 帶上 -n15：%s' % add[-1]['d']['level'])
+    pg.evaluate("()=>{window.__nian.S.t0-=90000}")
+    for i in range(15):
+        answer(pg, 'pinyin', i not in (3, 9)); to_next_q(pg) if i < 14 else skip(pg)
+    skip(pg); pg.wait_for_timeout(500)
+    sets = [o for o in ops(pg, 'set') if o['p'].startswith('rayo_boards/')]
+    check(sets[-1]['p'] == 'rayo_boards/normal_15/entries/UID1' and sets[-1]['d']['strikes'] == 2, '15 題 → 寫到 rayo_boards/normal_15/entries/<裝置編號>，被劈 2 次')
+    check(sets[-1]['d']['rank'] == (15 - 2) * 100000 + (99999 - sets[-1]['d']['secs']), 'rank ＝ (15 − 被劈) × 100000 + (99999 − 秒數)')
+    check(rules_ok('normal_15', 'UID1', sets[-1]['d']), '符合規則')
+    check(not rules_ok('normal_15', 'UID1', dict(sets[-1]['d'], strikes=16, rank=(15 - 16) * 100000 + (99999 - 90))), '規則檢查：15 題被劈 16 次不合法（對照）')
+    check(not rules_ok('normal_30', 'UID1', sets[-1]['d']) and not rules_ok('normal_15', 'UID2', sets[-1]['d']), '規則檢查：沒有 30 題的榜、不能寫別人的（對照）')
+    check('新紀錄' in pg.inner_text('#lbArea') and '十五題高手' in pg.inner_text('#lbArea') and '十題老手' not in pg.inner_text('#lbArea'), '結算畫面顯示的是 15 題的榜')
+    check('8' not in pg.inner_text('#ov .bestline') and '2' in pg.inner_text('#ov .bestline'), '最少被劈 2（15 題自己的紀錄）')
+    pg.click('#bHome'); pg.wait_for_timeout(200)
+    sset(pg, '#segN button:nth-child(1)')
 
     print('== 沒有暱稱：不能開始，要先輸入暱稱；結算不再問暱稱')
     pg.evaluate("()=>{localStorage.removeItem('typingRayo.name')}"); pg.reload(); pg.wait_for_timeout(600)
