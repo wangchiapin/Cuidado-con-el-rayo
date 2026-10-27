@@ -268,7 +268,8 @@ function mpGame(){
   var prev=MP.key; MP.key=key; MP.stall=0; MP.stallShown=false;
   if(r.status==='finished'){ mpFinish(); return; }
   if(r.ph==='ready'){ MP.countT=3; MP.lastC=0; S.phase='wait'; S.locked=true; MP.wait=99; $('kb').classList.add('locked'); setInfo('<div class="tag">'+plain('mpReady')+'</div>'); $('ch').textContent='3'; mpLayout(true); return; }
-  if(r.ph==='ask'){ mpLayout(true); S.phase='wait'; S.locked=true; MP.wait=prev&&r.rd>0?.85:.3; $('kb').classList.add('locked'); $('typedTxt').className=''; S.buf=''; renderTyped(); setInfo(''); setStorm(0); return; }
+  if(r.ph==='ask'){ mpLayout(true); S.phase='wait'; S.locked=true; MP.wait=prev&&r.rd>0?.85:.3; $('kb').classList.add('locked'); $('typedTxt').className=''; S.buf=''; renderTyped(); setInfo(''); setStorm(0);
+    $('ch').textContent='\u00a0'; S.T=S.tLeft=P.T; renderTimer(); return; }   // 等鍵盤升起的這段時間，先清掉上一題的字、時間條補滿，免得先看到舊題目
   if(r.ph==='reveal'){ mpReveal(); return; }
 }
 function mpHud(){
