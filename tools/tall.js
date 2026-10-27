@@ -12,6 +12,7 @@ const y0Of = N => T + SPC * (N - 10) + YB;     // 第 0 階平台在圖上的位
 // 地面顏色：[左, 中, 右]，左右是牆腳、中間是階梯下面的地，橫向漸層（遊戲裡圖片下方用同樣的漸層鋪滿）
 const groundStops = g => `<stop offset="0" stop-color="${g[0]}"/><stop offset=".26" stop-color="${g[0]}"/><stop offset=".38" stop-color="${g[1]}"/><stop offset=".62" stop-color="${g[1]}"/><stop offset=".74" stop-color="${g[2]}"/><stop offset="1" stop-color="${g[2]}"/>`;
 const groundCss = g => `linear-gradient(to right,${g[0]} 0,${g[0]} 26%,${g[1]} 38%,${g[1]} 62%,${g[2]} 74%,${g[2]} 100%)`;
+const detail = require('./detail.js');
 module.exports = { groundCss, TW, HV, T, GB, NS, worldH, y0Of, tall };
 function tall(svg, o, N) {
   o = o || {};
@@ -34,6 +35,8 @@ function tall(svg, o, N) {
   s += `<g transform="translate(0 ${T + E})"><g clip-path="url(#cB)"><use href="#sc"/></g></g>`;                     // 下半段（第 0 階）
   const gy = T + E + HV;
   s += `<rect x="0" y="${gy}" width="${TW}" height="${GB}" fill="url(#gfl)"/>`;
+  const d = detail(o.fx, N, { TW, T, E, H, y0: y0Of(N), gy, SPC, GB });   // 細節層（階梯陰影、霧、光、粒子、色調）
+  s = s.replace('</defs>', d.defs + '</defs>') + d.body;
   if (o.topFog !== false) s += `<rect x="0" y="0" width="${TW}" height="${T + 90}" fill="url(#tfog)"/>`;
   return s + '</svg>';
 }
