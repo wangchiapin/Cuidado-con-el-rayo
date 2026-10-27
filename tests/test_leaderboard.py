@@ -276,14 +276,28 @@ with sync_playwright() as p:
     check('排行榜' in t and 'Clasificación' in t and 'Volver' in t, '排行榜視窗：简体＋西文')
     pg.click('#bLbBack')
 
-    print('== 各尺寸：首頁底部的開始鈕和排行榜鈕都在畫面內')
-    for w_, h_ in [(320, 568), (360, 640), (375, 667), (390, 844), (768, 1024), (1280, 800)]:
+    print('== 各尺寸：首頁不用捲動，開始鈕在畫面內，上排按鈕（連線、🏆、⚙、❓）排整齊')
+    for w_, h_ in [(320, 568), (360, 640), (375, 667), (390, 844), (768, 1024), (1024, 600), (1280, 720), (1366, 768), (1280, 800)]:
         pg2 = ctx.new_page(); pg2.set_viewport_size({'width': w_, 'height': h_}); pg2.route('**/*', route)
         pg2.goto(URL); pg2.wait_for_timeout(300)
-        r = pg2.evaluate("""()=>{const a=document.getElementById('btnStart').getBoundingClientRect(),b=document.getElementById('btnLb').getBoundingClientRect();
-          return {a:[a.left,a.right,a.bottom,a.width],b:[b.left,b.right,b.bottom,b.width],w:innerWidth,h:innerHeight,sx:document.documentElement.scrollWidth}}""")
-        ok = r['a'][2] <= r['h'] + 1 and r['b'][2] <= r['h'] + 1 and r['a'][1] <= r['b'][0] + 1 and r['b'][1] <= r['w'] + 1 and r['a'][3] > 150 and r['sx'] <= r['w']
-        check(ok, f'{w_}x{h_}：開始鈕（寬 {round(r["a"][3])}）和🏆鈕都在畫面內、沒有橫向捲動')
+        r = pg2.evaluate("""()=>{const q=i=>{const e=document.getElementById(i).getBoundingClientRect();return [e.left,e.right,e.top,e.bottom,e.width,e.height]};
+          const st=document.getElementById('start');
+          return {s:q('btnStart'),m:q('btnMulti'),l:q('btnLb'),g:q('btnSet'),w:innerWidth,h:innerHeight,sx:document.documentElement.scrollWidth,sh:st.scrollHeight,ch:st.clientHeight}}""")
+        same = abs(r['m'][4] - r['g'][4]) < 1 and abs(r['l'][4] - r['g'][4]) < 1 and abs(r['m'][5] - r['g'][5]) < 1
+        order = r['m'][1] <= r['l'][0] + 1 and r['l'][1] <= r['g'][0] + 1 and r['m'][0] >= 0
+        fit = r['s'][3] <= r['h'] + 1 and r['sx'] <= r['w']
+        noscroll = r['sh'] <= r['ch'] + 1 or h_ <= 600
+        check(same and order and fit and noscroll and r['s'][4] > 150, f'{w_}x{h_}：開始鈕（寬 {round(r["s"][4])}）在畫面內、連線／🏆跟⚙一樣大且排在左邊、首頁不用捲動')
+        if w_ >= 700: check(r['s'][4] <= 400, f'{w_}x{h_}：電腦版開始鈕不會太寬（{round(r["s"][4])}）')
+        pg2.close()
+
+    print('== 連線頁：各尺寸都不用捲動，名字旁沒有「上排行榜用」')
+    for w_, h_ in [(360, 640), (375, 667), (390, 844), (768, 1024), (1024, 600), (1280, 720), (1366, 768)]:
+        pg2 = ctx.new_page(); pg2.set_viewport_size({'width': w_, 'height': h_}); pg2.route('**/*', route)
+        pg2.goto(URL); pg2.wait_for_timeout(300); pg2.click('#btnMulti'); pg2.wait_for_selector('#mpMake')
+        r = pg2.evaluate("()=>{const o=document.getElementById('ov');return [o.scrollHeight,o.clientHeight,o.innerText]}")
+        check(r[0] <= r[1] + 1, f'{w_}x{h_}：連線頁不用捲動（{r[0]}／{r[1]}）')
+        if (w_, h_) == (360, 640): check('上排行榜' not in r[2] and '名字' in r[2] and 'Nombre' in r[2], '連線頁名字欄標籤只剩「名字 · Nombre」')
         pg2.close()
 
     check(errs == [], f'JS 沒有錯誤 {errs}')

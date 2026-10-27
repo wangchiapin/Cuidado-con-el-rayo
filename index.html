@@ -25,23 +25,28 @@ button{font-family:inherit;color:inherit}
 #heroWrap{position:relative;width:100%;aspect-ratio:360/290;background:var(--paper2);border:1px solid var(--line);border-radius:8px;margin-top:6px;overflow:hidden}
 #start .inner h1{margin-top:0}
 #start .inner .nameIn{margin-top:12px;text-align:center}
+#start .inner #segGender{align-self:stretch;margin-top:10px}
 @media(max-width:560px){#start .inner{padding-top:52px}}
 /* 手機版首頁：標題放大、圖片吃掉中間剩下的空間（最高到寬度的 1.02 倍，人物不要比階梯大太多），名字欄加高 */
 @media(max-width:699px){
   #start h1{font-size:38px}
   #start .sub{font-size:16px}
-  #heroWrap{aspect-ratio:auto;flex:1 1 auto;min-height:calc((100vw - 36px)*.8056);max-height:calc((100vw - 36px)*1.02)}
+  #heroWrap{aspect-ratio:auto;flex:1 1 auto;min-height:calc((100vw - 36px)*.6);max-height:calc((100vw - 36px)*1.02)}
   #heroChar{height:min(52%,calc((100vw - 36px)*.5))}
   #start .inner .nameIn{min-height:58px;font-size:19px}
 }
-/* 電腦版首頁：欄放寬、標題和圖片放大（圖片的高度跟著視窗高度，不會頂到下面的開始鈕） */
+/* 電腦版首頁：欄放寬、標題放大；圖片高度算到剛好整頁不用捲動（--hh），名字欄、男女選項跟圖片同寬，開始鈕不要太寬 */
 @media(min-width:700px){
   #app:has(#start:not([hidden])){max-width:820px}
-  #start .inner{padding-top:26px}
-  #start h1{font-size:50px;margin-top:6px}
-  #start .sub{font-size:19px}
-  #heroWrap{max-width:calc((100dvh - 360px)*1.24);min-width:420px;margin-left:auto;margin-right:auto}
-  #start .inner .nameIn{max-width:calc((100dvh - 360px)*1.24);min-width:420px;margin-left:auto;margin-right:auto;min-height:60px;font-size:20px}
+  #start{--hh:clamp(210px,calc(100dvh - 400px),560px);--hw:calc(var(--hh)*1.24)}
+  #start .inner{padding-top:20px}
+  #start h1{font-size:46px;margin-top:4px}
+  #start .sub{font-size:18px;margin:4px 0 6px}
+  #heroWrap{aspect-ratio:auto;flex:none;height:var(--hh);width:var(--hw);margin:6px auto 0}
+  #start .inner .nameIn{width:var(--hw);margin-left:auto;margin-right:auto;min-height:56px;font-size:20px}
+  #start .inner #segGender{align-self:center;width:var(--hw)}
+  #startBar{display:flex;justify-content:center}
+  #start #startBar .big{flex:0 1 340px;width:340px}
 }
 /* 街景只畫一次：整張當成背景圖（手機不用一直重畫上百個向量圖形，避免 iPhone 記憶體不夠、整頁被系統重開） */
 .streetBg{background-repeat:no-repeat;background-position:50% 85%;background-size:cover}
@@ -181,7 +186,6 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .nameHint{margin:6px 0 0;font-size:13px;color:var(--red);text-align:center}
 #startBar{display:flex;gap:8px}
 #startBar .big{flex:1}
-#btnLb{flex:0 0 auto;width:auto;min-width:54px;min-height:54px;padding:0 8px;border-radius:10px;font-size:22px}
 .lbBox{margin-top:12px;text-align:left}
 .lbBox .lbSt{font-size:13px;color:var(--ink2);text-align:center;margin:6px 0;line-height:1.4}
 .lbBox .lbSt b{color:var(--red)}
@@ -202,13 +206,30 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .lbAsk .ghost{flex:0 0 auto}
 
 /* ---------- 連線 ---------- */
-#btnMulti{flex:0 0 auto;min-width:54px;min-height:54px;padding:0 8px;border-radius:10px;font-size:22px;line-height:1.1}
-#btnMulti .tl{font-size:11px;margin-top:0}
 .mpBox{margin-top:12px;padding:10px;background:var(--paper);border:1px solid var(--line);border-radius:8px;text-align:left}
 .mpBox h3{margin:0 0 8px;font-size:14px;color:var(--ink2);font-weight:600}
 .mpBox .btns{margin-top:10px}
 .mpChk{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:14px;color:var(--ink2)}
 .mpChk input{width:18px;height:18px}
+.mpP{padding:12px 14px}
+.mpP h2{margin:0 0 2px;font-size:21px}
+.mpP h2 .tl{display:inline;margin-left:8px;font-size:13px}
+.mpP .lbNote{margin:0 0 4px;font-size:12px}
+.mpP .grp{margin-top:6px}
+.mpP .grp .lab{margin-bottom:3px}
+.mpP .nameIn{min-height:46px;font-size:17px}
+.mpP .mpBox{margin-top:8px;padding:8px 10px}
+.mpP .mpBox h3{margin:0 0 6px}
+.mpP .seg button{min-height:40px;padding:4px}
+.mpP .big{min-height:46px;font-size:18px}
+.mpP .mpBox .btns{margin-top:8px}
+.mpP .mpRow{display:flex;gap:8px;align-items:stretch}
+.mpP .mpRow .nameIn{flex:1;min-width:0}
+.mpP .mpRow .big{flex:0 0 36%;width:auto}
+.mpP .mpChk{margin-top:6px}
+.mpP .lbSt{min-height:0;margin:4px 0}
+.mpP .ghost{min-height:42px;padding:4px 14px}
+.mpP>.btns{margin-top:6px}
 .codeBig{font-size:46px;font-weight:700;letter-spacing:.2em;margin:2px 0 8px;padding-left:.2em}
 .lab{font-size:12px;color:var(--ink3)}
 .plList{display:flex;flex-direction:column;gap:4px;max-height:34vh;overflow-y:auto}
@@ -241,6 +262,8 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #topBar{position:absolute;top:10px;right:58px;display:flex;gap:8px;z-index:3}
 .ib{width:40px;height:40px;border-radius:50%;border:1px solid rgba(0,0,0,.28);background:rgba(255,255,255,.88);color:#222;font-size:19px;line-height:1;padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .ib:active{transform:scale(.94)}
+.ib.sq{border-radius:10px;background:var(--key);border:1px solid var(--keyb);box-shadow:none;font-size:13px;font-weight:600;color:var(--ink);letter-spacing:0}
+#btnLb{font-size:19px}
 .setPanel{text-align:left}
 .setPanel h2{text-align:center}
 .setPanel .how{margin-top:0}
@@ -251,7 +274,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 
 <!-- 首頁 -->
 <section id="start" class="screen">
-  <div id="topBar"><button class="ib" id="btnSet" type="button">⚙</button><button class="ib" id="btnHelp" type="button">❓</button></div>
+  <div id="topBar"><button class="ib sq" id="btnMulti" type="button"></button><button class="ib sq" id="btnLb" type="button"></button><button class="ib" id="btnSet" type="button">⚙</button><button class="ib" id="btnHelp" type="button">❓</button></div>
   <div class="inner">
     <h1 id="tTitle"></h1>
     <p class="sub" id="tSub"></p>
@@ -264,10 +287,10 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
     </div>
     <input class="nameIn" id="inName" type="text" maxlength="14" autocomplete="off" autocapitalize="off" spellcheck="false">
     <p class="nameHint" id="nameHint" hidden></p>
+    <div class="seg" id="segGender"></div>
   </div>
   <div id="holder" hidden>
     <div id="setBody">
-      <div class="grp"><div class="lab" id="lGender"></div><div class="seg" id="segGender"></div></div>
       <div class="grp"><div class="lab" id="lScript"></div><div class="seg" id="segScript"></div></div>
       <div class="grp"><div class="lab" id="lLang"></div><div class="seg" id="segLang"></div></div>
       <div class="grp"><div class="lab" id="lKb"></div><div class="seg" id="segKb"></div></div>
@@ -276,7 +299,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
     </div>
     <div id="helpBody"><div class="how" id="tHow"></div></div>
   </div>
-  <div id="startBar"><button class="big" id="btnStart"></button><button class="ghost" id="btnMulti" type="button"></button><button class="ghost" id="btnLb" type="button"></button></div>
+  <div id="startBar"><button class="big" id="btnStart"></button></div>
 </section>
 
 <!-- 遊戲 -->
@@ -361,7 +384,6 @@ var TXT = {
   how4:['爬完 %n 階，看你被劈幾次','爬完 %n 阶，看你被劈几次','Al llegar a los %n escalones se cuentan tus rayos','After %n steps we count your strikes'],
   secN:['題數（階梯數）','题数（阶梯数）','Preguntas (escalones)','Questions (steps)'],
   nUnit:['題','题','preguntas','questions'],
-  secGender:['選角色','选角色','Elige tu personaje','Choose your character'],
   boy:['男生','男生','Chico','Boy'], girl:['女生','女生','Chica','Girl'], roll:['換一個','换一个','Otro','Another'],
   secScript:['字形','字形','Escritura','Script'],
   secLang:['介面語言','界面语言','Idioma','Language'],
@@ -381,7 +403,7 @@ var TXT = {
   struck:['被雷劈了！','被雷劈了！','¡Te cayó un rayo!','Struck by lightning!'],
   timeup:['時間到！','时间到！','¡Se acabó el tiempo!','Time’s up!'],
   empty:['先打字，再按聲調鍵','先打字，再按声调键','Escribe primero y luego pulsa el tono','Type first, then press a tone'],
-  secName:['名字（上排行榜用）','名字（上排行榜用）','Nombre (para la clasificación)','Name (for the leaderboard)'],
+  secName:['名字','名字','Nombre','Name'],
   namePh:['輸入名字','输入名字','Tu nombre','Your name'],
   lbTitle:['排行榜','排行榜','Clasificación','Leaderboard'],
   lbNote:['被雷劈越少排越前面，一樣就比誰爬得快（每種題數、每個難度各一個榜）','被雷劈越少排越前面，一样就比谁爬得快（每种题数、每个难度各一个榜）','Menos rayos va primero; si empatan, gana quien suba más rápido (una clasificación por nº de preguntas y nivel)','Fewer strikes rank higher; ties go to the faster climb (one board per question count and level)'],
@@ -398,7 +420,7 @@ var TXT = {
   setDone:['完成','完成','Listo','Done'],
   mpBtn:['連線','联机','En línea','Online'],
   mpTitle:['連線對戰','联机对战','Partida en línea','Online match'],
-  mpIntro:['最多 15 人同題比賽，一條命：打錯或時間到就被雷劈、出局。','最多 15 人同题比赛，一条命：打错或时间到就被雷劈、出局。','Hasta 15 jugadores con las mismas preguntas. Una sola vida: si fallas o se acaba el tiempo, te cae un rayo y quedas fuera.','Up to 15 players, same questions, one life: a wrong answer or timeout gets you struck and out.'],
+  mpIntro:['最多 15 人同題比賽，一條命，打錯就出局。','最多 15 人同题比赛，一条命，打错就出局。','Hasta 15 jugadores, las mismas preguntas, una sola vida.','Up to 15 players, same questions, one life.'],
   mpNeedName:['請先輸入名字','请先输入名字','Escribe primero tu nombre','Enter a name first'],
   mpMake:['開一間房','开一间房','Crear una sala','Create a room'],
   mpMakeGo:['建立房間','建立房间','Crear','Create'],
@@ -562,7 +584,7 @@ function renderStart(){
   document.documentElement.lang = Settings.script==='simp'?'zh-Hans':'zh-Hant';
   $('tTitle').innerHTML=H('title'); $('tSub').innerHTML=Settings.lang==='zh'?zh('sub'):zh('sub')+'<span class="tl">'+tl('sub')+'</span>';
   $('tHow').innerHTML='<div>'+H('how1')+'</div><div>'+H('tone')+'</div><div>'+H('how2')+'</div><div>'+H('how3')+'</div><div>'+H('how4').replace(/%n/g,cfg.n)+'</div><div>'+H('kbhint')+'</div>';
-  $('lGender').innerHTML=plain('secGender'); $('lScript').innerHTML=plain('secScript'); $('lLang').innerHTML=plain('secLang'); $('lKb').innerHTML=plain('secKb'); $('lLevel').innerHTML=plain('secLevel'); $('lN').innerHTML=plain('secN');
+  $('lScript').innerHTML=plain('secScript'); $('lLang').innerHTML=plain('secLang'); $('lKb').innerHTML=plain('secKb'); $('lLevel').innerHTML=plain('secLevel'); $('lN').innerHTML=plain('secN');
   seg('segGender',[{v:'m',h:H('boy')},{v:'f',h:H('girl')}],cfg.g,function(v){ if(v!==cfg.g){ cfg.g=v; ci=Math.floor(Math.random()*5); saveCfg(); } renderStart(); });
   seg('segScript',[{v:'trad',h:'繁體'},{v:'simp',h:'简体'}],Settings.script,function(v){ Settings.script=v; writeSettings(Settings); renderStart(); });
   seg('segLang',[{v:'zh',h:'中文'},{v:'es',h:'Español'},{v:'en',h:'English'}],Settings.lang,function(v){ Settings.lang=v; writeSettings(Settings); renderStart(); });
@@ -572,7 +594,7 @@ function renderStart(){
   $('btnStart').innerHTML=H('start');
   $('inName').placeholder=plain('namePh'); if($('inName').value!==getName()) $('inName').value=getName();
   $('btnLb').innerHTML='🏆'; $('btnLb').setAttribute('aria-label',plain('lbTitle'));
-  $('btnMulti').innerHTML='👥<span class="tl">'+(tl('mpBtn')||zh('mpBtn'))+'</span>'; $('btnMulti').setAttribute('aria-label',plain('mpTitle'));
+  $('btnMulti').innerHTML=zh('mpBtn'); $('btnMulti').setAttribute('aria-label',plain('mpTitle'));
   $('btnSet').setAttribute('aria-label',plain('setTitle')); $('btnHelp').setAttribute('aria-label',plain('helpTitle'));
   if($('setTtl')) $('setTtl').innerHTML='⚙ '+zh('setTitle')+(tl('setTitle')?'<span class="tl">'+tl('setTitle')+'</span>':'');
   if($('helpTtl')) $('helpTtl').innerHTML='❓ '+zh('helpTitle')+(tl('helpTitle')?'<span class="tl">'+tl('helpTitle')+'</span>':'');
@@ -982,19 +1004,18 @@ function mpTs(t){ return t&&typeof t.toMillis==='function'?t.toMillis():(+t||0);
 /* ---------- 首頁入口 ---------- */
 function mpOpen(prefill){
   var ov=$('ov'); ov.hidden=false; if(!mpLv||!LEVELS[mpLv]) mpLv=cfg.lv; if(NQS.indexOf(mpN)<0) mpN=cfg.n;
-  ov.innerHTML='<div class="panel"><h2>👥 '+zh('mpTitle')+(tl('mpTitle')?'<span class="tl">'+tl('mpTitle')+'</span>':'')+'</h2>'+
+  ov.innerHTML='<div class="panel mpP"><h2>👥 '+zh('mpTitle')+(tl('mpTitle')?'<span class="tl">'+tl('mpTitle')+'</span>':'')+'</h2>'+
     '<p class="lbNote">'+plain('mpIntro')+'</p>'+
     '<div class="grp"><div class="lab">'+plain('secName')+'</div><input class="nameIn" id="mpName" type="text" maxlength="14" autocomplete="off" spellcheck="false"></div>'+
-    '<div class="mpBox"><h3>'+plain('mpMake')+'</h3><div class="seg" id="mpSegLv"></div><div class="lab" style="margin:8px 0 4px">'+plain('mpNIs')+'</div><div class="seg" id="mpSegN"></div><div class="btns"><button class="big" id="mpMake" type="button">'+H('mpMakeGo')+'</button></div></div>'+
-    '<div class="mpBox"><h3>'+plain('mpJoinT')+'</h3><input class="nameIn" id="mpCode" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="'+zh('mpCodePh')+'">'+
-    '<label class="mpChk"><input type="checkbox" id="mpWatch"> '+plain('mpWatch')+'</label>'+
-    '<div class="btns"><button class="big" id="mpGo" type="button">'+H('mpJoinGo')+'</button></div></div>'+
+    '<div class="mpBox"><h3>'+plain('mpMake')+'</h3><div class="seg" id="mpSegLv"></div><div class="lab" style="margin:6px 0 3px">'+plain('mpNIs')+'</div><div class="seg" id="mpSegN"></div><div class="btns"><button class="big" id="mpMake" type="button">'+H('mpMakeGo')+'</button></div></div>'+
+    '<div class="mpBox"><h3>'+plain('mpJoinT')+'</h3><div class="mpRow"><input class="nameIn" id="mpCode" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="'+zh('mpCodePh')+'"><button class="big" id="mpGo" type="button">'+H('mpJoinGo')+'</button></div>'+
+    '<label class="mpChk"><input type="checkbox" id="mpWatch"> '+plain('mpWatch')+'</label></div>'+
     '<p class="lbSt" id="mpMsg"></p>'+
     '<div class="btns"><button class="ghost" id="mpBack" type="button">'+H('lbBack')+'</button></div></div>';
   $('mpName').value=getName();
   if(prefill) $('mpCode').value=String(prefill).replace(/\D/g,'').slice(0,4);
   seg('mpSegLv',['easy','normal','hard'].map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),mpLv,function(v){ mpLv=v; mpOpen($('mpCode').value); });
-  seg('mpSegN',NQS.map(function(n){ return {v:n,h:n+'<span class="tl">'+(tl('nUnit')||zh('nUnit'))+'</span>'}; }),mpN,function(v){ mpN=v; mpOpen($('mpCode').value); });
+  seg('mpSegN',NQS.map(function(n){ return {v:n,h:String(n)}; }),mpN,function(v){ mpN=v; mpOpen($('mpCode').value); });
   $('mpName').addEventListener('input',function(){ setName(this.value); if($('inName')) $('inName').value=getName(); });
   $('mpCode').addEventListener('input',function(){ this.value=this.value.replace(/\D/g,'').slice(0,4); });
   $('mpBack').addEventListener('click',function(){ ov.hidden=true; ov.innerHTML=''; });
@@ -1057,7 +1078,7 @@ function mpLeave(){
 }
 function mpLeaveAsk(){
   var ov=$('ov'); ov.hidden=false;
-  ov.innerHTML='<div class="panel"><h2>'+plain('mpLeaveAsk')+'</h2>'+(MP.host?'<p class="lbNote">'+plain('mpLeaveHost')+'</p>':'')+
+  ov.innerHTML='<div class="panel mpP"><h2>'+plain('mpLeaveAsk')+'</h2>'+(MP.host?'<p class="lbNote">'+plain('mpLeaveHost')+'</p>':'')+
     '<div class="btns"><button class="big" id="mpStay" type="button">'+H('mpStay')+'</button><button class="ghost" id="mpOut" type="button">'+H('mpLeave')+'</button></div></div>';
   $('mpStay').addEventListener('click',function(){ ov.hidden=true; ov.innerHTML=''; mpSyncOverlay(); });
   $('mpOut').addEventListener('click',mpLeave);
@@ -1108,7 +1129,7 @@ function mpLobby(){
   if(MP.host) seg('mpSegLv2',['easy','normal','hard'].map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),r.level,function(v){
     if(v!==r.level) waitRM().then(function(rm){ return rm.hostSet(MP.code,{level:v}); }).catch(function(){});
   });
-  if(MP.host) seg('mpSegN2',NQS.map(function(n){ return {v:n,h:n+'<span class="tl">'+(tl('nUnit')||zh('nUnit'))+'</span>'}; }),nq,function(v){
+  if(MP.host) seg('mpSegN2',NQS.map(function(n){ return {v:n,h:String(n)}; }),nq,function(v){
     if(v!==nq) waitRM().then(function(rm){ return rm.hostSet(MP.code,{nq:v}); }).catch(function(){});
   });
   $('mpCopy').addEventListener('click',function(){
@@ -1293,7 +1314,7 @@ function mpResults(){
     var rk=1+fin.filter(function(y){ return y.r>x.r; }).length;
     return '<div class="lbRow'+(x.uid===MP.uid?' me':'')+'"><span class="lbRank">'+(rk<=3?medals[rk-1]:rk)+'</span><span class="lbName">'+esc(x.name)+'</span><span class="lbVal"><b>'+(x.r>=NSTEP?'🏔 '+zh('mpTop'):mpTxt('mpSteps',x.r))+'</b></span></div>';
   }).join('');
-  ov.innerHTML='<div class="panel"><h2>'+plain('mpResult')+'</h2><div class="lbBox"><div class="lbList">'+rows+'</div></div><div class="btns">'+
+  ov.innerHTML='<div class="panel mpP"><h2>'+plain('mpResult')+'</h2><div class="lbBox"><div class="lbList">'+rows+'</div></div><div class="btns">'+
     (MP.host?'<button class="big" id="mpAgain" type="button">'+H('mpAgain')+'</button>':'<p class="lbSt">'+plain('mpWaitAgain')+'</p>')+
     '<button class="ghost" id="mpLeaveBtn" type="button">'+H('mpLeave')+'</button></div></div>';
   if(MP.host) $('mpAgain').addEventListener('click',function(){

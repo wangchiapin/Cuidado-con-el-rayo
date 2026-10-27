@@ -31,19 +31,18 @@ function mpTs(t){ return t&&typeof t.toMillis==='function'?t.toMillis():(+t||0);
 /* ---------- 首頁入口 ---------- */
 function mpOpen(prefill){
   var ov=$('ov'); ov.hidden=false; if(!mpLv||!LEVELS[mpLv]) mpLv=cfg.lv; if(NQS.indexOf(mpN)<0) mpN=cfg.n;
-  ov.innerHTML='<div class="panel"><h2>👥 '+zh('mpTitle')+(tl('mpTitle')?'<span class="tl">'+tl('mpTitle')+'</span>':'')+'</h2>'+
+  ov.innerHTML='<div class="panel mpP"><h2>👥 '+zh('mpTitle')+(tl('mpTitle')?'<span class="tl">'+tl('mpTitle')+'</span>':'')+'</h2>'+
     '<p class="lbNote">'+plain('mpIntro')+'</p>'+
     '<div class="grp"><div class="lab">'+plain('secName')+'</div><input class="nameIn" id="mpName" type="text" maxlength="14" autocomplete="off" spellcheck="false"></div>'+
-    '<div class="mpBox"><h3>'+plain('mpMake')+'</h3><div class="seg" id="mpSegLv"></div><div class="lab" style="margin:8px 0 4px">'+plain('mpNIs')+'</div><div class="seg" id="mpSegN"></div><div class="btns"><button class="big" id="mpMake" type="button">'+H('mpMakeGo')+'</button></div></div>'+
-    '<div class="mpBox"><h3>'+plain('mpJoinT')+'</h3><input class="nameIn" id="mpCode" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="'+zh('mpCodePh')+'">'+
-    '<label class="mpChk"><input type="checkbox" id="mpWatch"> '+plain('mpWatch')+'</label>'+
-    '<div class="btns"><button class="big" id="mpGo" type="button">'+H('mpJoinGo')+'</button></div></div>'+
+    '<div class="mpBox"><h3>'+plain('mpMake')+'</h3><div class="seg" id="mpSegLv"></div><div class="lab" style="margin:6px 0 3px">'+plain('mpNIs')+'</div><div class="seg" id="mpSegN"></div><div class="btns"><button class="big" id="mpMake" type="button">'+H('mpMakeGo')+'</button></div></div>'+
+    '<div class="mpBox"><h3>'+plain('mpJoinT')+'</h3><div class="mpRow"><input class="nameIn" id="mpCode" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="'+zh('mpCodePh')+'"><button class="big" id="mpGo" type="button">'+H('mpJoinGo')+'</button></div>'+
+    '<label class="mpChk"><input type="checkbox" id="mpWatch"> '+plain('mpWatch')+'</label></div>'+
     '<p class="lbSt" id="mpMsg"></p>'+
     '<div class="btns"><button class="ghost" id="mpBack" type="button">'+H('lbBack')+'</button></div></div>';
   $('mpName').value=getName();
   if(prefill) $('mpCode').value=String(prefill).replace(/\D/g,'').slice(0,4);
   seg('mpSegLv',['easy','normal','hard'].map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),mpLv,function(v){ mpLv=v; mpOpen($('mpCode').value); });
-  seg('mpSegN',NQS.map(function(n){ return {v:n,h:n+'<span class="tl">'+(tl('nUnit')||zh('nUnit'))+'</span>'}; }),mpN,function(v){ mpN=v; mpOpen($('mpCode').value); });
+  seg('mpSegN',NQS.map(function(n){ return {v:n,h:String(n)}; }),mpN,function(v){ mpN=v; mpOpen($('mpCode').value); });
   $('mpName').addEventListener('input',function(){ setName(this.value); if($('inName')) $('inName').value=getName(); });
   $('mpCode').addEventListener('input',function(){ this.value=this.value.replace(/\D/g,'').slice(0,4); });
   $('mpBack').addEventListener('click',function(){ ov.hidden=true; ov.innerHTML=''; });
@@ -106,7 +105,7 @@ function mpLeave(){
 }
 function mpLeaveAsk(){
   var ov=$('ov'); ov.hidden=false;
-  ov.innerHTML='<div class="panel"><h2>'+plain('mpLeaveAsk')+'</h2>'+(MP.host?'<p class="lbNote">'+plain('mpLeaveHost')+'</p>':'')+
+  ov.innerHTML='<div class="panel mpP"><h2>'+plain('mpLeaveAsk')+'</h2>'+(MP.host?'<p class="lbNote">'+plain('mpLeaveHost')+'</p>':'')+
     '<div class="btns"><button class="big" id="mpStay" type="button">'+H('mpStay')+'</button><button class="ghost" id="mpOut" type="button">'+H('mpLeave')+'</button></div></div>';
   $('mpStay').addEventListener('click',function(){ ov.hidden=true; ov.innerHTML=''; mpSyncOverlay(); });
   $('mpOut').addEventListener('click',mpLeave);
@@ -157,7 +156,7 @@ function mpLobby(){
   if(MP.host) seg('mpSegLv2',['easy','normal','hard'].map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),r.level,function(v){
     if(v!==r.level) waitRM().then(function(rm){ return rm.hostSet(MP.code,{level:v}); }).catch(function(){});
   });
-  if(MP.host) seg('mpSegN2',NQS.map(function(n){ return {v:n,h:n+'<span class="tl">'+(tl('nUnit')||zh('nUnit'))+'</span>'}; }),nq,function(v){
+  if(MP.host) seg('mpSegN2',NQS.map(function(n){ return {v:n,h:String(n)}; }),nq,function(v){
     if(v!==nq) waitRM().then(function(rm){ return rm.hostSet(MP.code,{nq:v}); }).catch(function(){});
   });
   $('mpCopy').addEventListener('click',function(){
@@ -342,7 +341,7 @@ function mpResults(){
     var rk=1+fin.filter(function(y){ return y.r>x.r; }).length;
     return '<div class="lbRow'+(x.uid===MP.uid?' me':'')+'"><span class="lbRank">'+(rk<=3?medals[rk-1]:rk)+'</span><span class="lbName">'+esc(x.name)+'</span><span class="lbVal"><b>'+(x.r>=NSTEP?'🏔 '+zh('mpTop'):mpTxt('mpSteps',x.r))+'</b></span></div>';
   }).join('');
-  ov.innerHTML='<div class="panel"><h2>'+plain('mpResult')+'</h2><div class="lbBox"><div class="lbList">'+rows+'</div></div><div class="btns">'+
+  ov.innerHTML='<div class="panel mpP"><h2>'+plain('mpResult')+'</h2><div class="lbBox"><div class="lbList">'+rows+'</div></div><div class="btns">'+
     (MP.host?'<button class="big" id="mpAgain" type="button">'+H('mpAgain')+'</button>':'<p class="lbSt">'+plain('mpWaitAgain')+'</p>')+
     '<button class="ghost" id="mpLeaveBtn" type="button">'+H('mpLeave')+'</button></div></div>';
   if(MP.host) $('mpAgain').addEventListener('click',function(){
