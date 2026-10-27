@@ -275,6 +275,15 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .plFig svg{width:100%;height:100%;display:block}
 .plTag{flex:0 0 auto;font-size:11px;padding:1px 6px;border-radius:9px;background:var(--ink);color:var(--paper2)}
 .plTag.w{background:var(--keyb);color:var(--ink)}
+/* 階梯底下那塊空地：站滿觀看的人（背影），跟著背景一起捲動，只在爬到低階、看得到空地時才看得到 */
+#crowdFg{position:absolute;left:0;top:0;width:100%;height:0;z-index:1;pointer-events:none}
+#scene.mp #crowdFg{display:none}
+.cw{position:absolute;transform-origin:50% 100%;animation:cwBob var(--d,.8s) ease-in-out var(--dl,0s) infinite alternate}
+.cw svg{display:block;width:100%;height:auto}
+.cw.r1{filter:brightness(.82) saturate(.85)}.cw.r2{filter:brightness(.74) saturate(.85)}.cw.r3{filter:brightness(.68) saturate(.85)}.cw.r4{filter:brightness(.62) saturate(.85)}.cw.r5{filter:brightness(.58) saturate(.85)}.cw.r6{filter:brightness(.56) saturate(.85)}
+.cw.pop svg{animation:cwPop .28s ease-out}
+@keyframes cwBob{from{transform:translateY(0) rotate(-1.6deg)}to{transform:translateY(-2.6%) rotate(1.2deg)}}
+@keyframes cwPop{from{transform:scale(.86,.82)}to{transform:none}}
 #crowd{position:absolute;inset:0;pointer-events:none}
 #scene.mp #player{display:none}
 .fig{position:absolute;left:0;top:0;transform-origin:50% 95.6%}
@@ -354,7 +363,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
     <button id="btnPause" aria-label="pause">❚❚</button>
   </div>
   <div id="scene">
-    <div id="world"></div>
+    <div id="world"><div id="crowdFg" aria-hidden="true"></div></div>
     <div id="player"></div>
     <div id="crowd"></div>
     <div id="veil"></div>
@@ -751,9 +760,43 @@ function noise(dur,vol,ftype,freq,delay){
 function sfx(k){
   if(k==='ok'){ tone(784,.16,'sine',.06,0); tone(1175,.26,'sine',.05,.09); }
   else if(k==='tick'){ tone(900,.05,'square',.025,0); }
-  else if(k==='hit'){ noise(.12,.3,'highpass',2500,0); noise(1.1,.4,'lowpass',380,.06); tone(55,.8,'sine',.2,.08); }
-  else if(k==='done'){ tone(523,.18,'sine',.06,0); tone(659,.18,'sine',.06,.14); tone(784,.18,'sine',.06,.28); tone(1047,.4,'sine',.06,.42); }
+  else if(k==='hit'){ bgDuck(.1,1.3); noise(.12,.3,'highpass',2500,0); noise(1.1,.4,'lowpass',380,.06); tone(55,.8,'sine',.2,.08); }
+  else if(k==='done'){ bgDuck(.35,1.0); tone(523,.18,'sine',.06,0); tone(659,.18,'sine',.06,.14); tone(784,.18,'sine',.06,.28); tone(1047,.4,'sine',.06,.42); }
 }
+/* ---------- 背景音樂（用 Web Audio 現場合成，明快的五聲音階小調；閃電時會自動壓低，不跟雷聲打架）---------- */
+var BG={on:false,step:0,next:0,duck:null,fade:null};
+var BG_MEL=[76,0,79,0,81,79,76,0, 74,0,76,0,79,76,74,0, 72,0,74,76,79,0,81,0, 79,0,76,0,74,0,72,0,
+            81,0,84,0,81,79,76,0, 79,0,81,0,79,76,74,0, 76,79,81,0,84,81,79,0, 81,0,79,0,76,0,72,0];
+var BG_BASS=[48,55,57,55,48,55,57,52];     // 每小節的低音（比雷聲的低頻高，而且很短）
+function mf(m){ return 440*Math.pow(2,(m-69)/12); }
+function bgNode(){
+  var a=ac(); if(!a) return null;
+  if(!BG.duck){ BG.duck=a.createGain(); BG.fade=a.createGain(); BG.fade.gain.value=0; BG.duck.connect(BG.fade); BG.fade.connect(a.destination); }
+  return a;
+}
+function bgPluck(f,t0,dur,type,vol){
+  var a=AC, o=a.createOscillator(), g=a.createGain();
+  o.type=type; o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,t0); g.gain.exponentialRampToValueAtTime(vol,t0+.012); g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
+  o.connect(g); g.connect(BG.duck); o.start(t0); o.stop(t0+dur+.03);
+}
+function bgStep(st,t0){
+  var bar=Math.floor(st/8), i=st%8, m=BG_MEL[st];
+  if(m){ bgPluck(mf(m),t0,.34,'triangle',.05); bgPluck(mf(m+12),t0,.2,'sine',.012); }
+  if(i===0||i===4) bgPluck(mf(BG_BASS[bar]),t0,.4,'triangle',.06);
+  if(i===2||i===6) bgPluck(2300,t0,.03,'triangle',.014);       // 輕輕的木魚聲當節拍
+}
+function bgDuck(depth,dur){     // 閃電、登頂音效時，音樂先退到後面再慢慢回來
+  var a=AC; if(!a||!BG.duck) return; var t=a.currentTime;
+  BG.duck.gain.cancelScheduledValues(t); BG.duck.gain.setTargetAtTime(depth,t,.02); BG.duck.gain.setTargetAtTime(1,t+dur,.35);
+}
+function bgWant(){ return !!S.running && !S.over && !S.paused && !document.hidden && !$('play').hidden && $('ov').hidden; }
+setInterval(function(){
+  var want=bgWant(), a;
+  if(want&&!BG.on){ a=bgNode(); if(!a||a.state!=='running') return; BG.on=true; BG.next=a.currentTime+.1; BG.fade.gain.cancelScheduledValues(a.currentTime); BG.fade.gain.setTargetAtTime(1,a.currentTime,.4); }
+  else if(!want&&BG.on){ BG.on=false; a=AC; if(a&&BG.fade){ BG.fade.gain.cancelScheduledValues(a.currentTime); BG.fade.gain.setTargetAtTime(0,a.currentTime,.12); } }
+  if(BG.on){ a=AC; var dur=60/118/2; while(BG.next<a.currentTime+.35){ bgStep(BG.step,BG.next); BG.next+=dur; BG.step=(BG.step+1)%64; } }
+},90);
 /* 念字：只用台灣華語（zh-TW）或 cmn 的聲音，不用粵語／香港 */
 function speak(txt){
   try{
@@ -900,6 +943,7 @@ function measure(){
   geo.ay=Math.max(64+geo.hC+30,Math.min(Hh-sh-14,.62*Hh));   // 人物腳底的高度：在作答欄上面一點
   var w=$('world'); w.style.width=(WV*s).toFixed(1)+'px'; w.style.marginLeft=(-WV*s/2).toFixed(1)+'px'; w.style.height=(worldH()*s+Hh+40).toFixed(1)+'px'; w.style.setProperty('--ih',(worldH()*s).toFixed(1)+'px');
   var pl=$('player'); pl.style.width=geo.wC.toFixed(1)+'px'; pl.style.height=geo.hC.toFixed(1)+'px';
+  layoutCrowd();
   camTo(geo.c,false);
 }
 function camTo(c,anim){   // 鏡頭看第 c 階（可以是小數）
@@ -915,6 +959,58 @@ function placePlayer(anim){
   var f=footPos(S.step), pl=$('player'); pl.classList.toggle('mv',!!anim);
   pl.style.transform='translate('+(f.x-geo.wC/2).toFixed(1)+'px,'+(f.y-.956*geo.hC).toFixed(1)+'px) scale('+f.sc.toFixed(3)+')';
 }
+/* ---------- 空地上的人群（背影）---------- */
+var CROWD_V=[
+  {h:'#2E2A28',k:'#C99A78',c:'#8FA3A0',t:'short',p:'#6A6F73'},{h:'#3A2F2A',k:'#A87654',c:'#C98F7C',t:'bun',p:'#5F6670'},
+  {h:'#1F1D1D',k:'#D9B08C',c:'#D8CBB0',t:'long',p:'#74706A'},{h:'#6B5238',k:'#E2BE9C',c:'#6F7480',t:'cap',p:'#4F5560'},
+  {h:'#2A2523',k:'#7E5238',c:'#A6BAA5',t:'curly',p:'#7B7F86'},{h:'#B8924A',k:'#EBC9A8',c:'#9AA3B5',t:'short',p:'#6F7480'},
+  {h:'#2B2B2E',k:'#C99A78',c:'#B5584A',t:'long',p:'#3F4348'},{h:'#4A3A32',k:'#B98A68',c:'#D9B96F',t:'cap',p:'#5C5A55'}
+];
+function crowdSVG(v){
+  var hair='', t=v.t;
+  if(t==='long') hair='<path d="M10.5 15Q10 3 20 3.5Q30 3 29.5 15L31 34Q31 37 27.5 37H12.5Q9 37 9 34Z" fill="'+v.h+'"/>';
+  else if(t==='bun') hair='<ellipse cx="20" cy="14.5" rx="9.4" ry="10.6" fill="'+v.h+'"/><circle cx="20" cy="3.4" r="4.2" fill="'+v.h+'"/>';
+  else if(t==='curly') hair='<circle cx="20" cy="9" r="6.5" fill="'+v.h+'"/><circle cx="13" cy="13" r="5.6" fill="'+v.h+'"/><circle cx="27" cy="13" r="5.6" fill="'+v.h+'"/><circle cx="14.5" cy="19.5" r="4.6" fill="'+v.h+'"/><circle cx="25.5" cy="19.5" r="4.6" fill="'+v.h+'"/>';
+  else if(t==='cap') hair='<ellipse cx="20" cy="15" rx="9" ry="10" fill="'+v.h+'"/><path d="M10.6 13Q11 4 20 4Q29 4 29.4 13Q20 10.5 10.6 13Z" fill="'+v.c+'"/><rect x="18.8" y="10.4" width="2.4" height="2.2" fill="#2A2523" opacity=".55"/>';
+  else hair='<ellipse cx="20" cy="14.5" rx="9.2" ry="10.4" fill="'+v.h+'"/>';
+  var ln='stroke="#2A2420" stroke-width=".7"';
+  return '<svg viewBox="0 0 40 92" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'+
+    '<rect x="8" y="50" width="11.6" height="37" rx="2.6" fill="'+v.p+'" '+ln+'/><rect x="20.4" y="50" width="11.6" height="37" rx="2.6" fill="'+v.p+'" '+ln+'/>'+
+    '<ellipse cx="13.6" cy="88.6" rx="6" ry="3" fill="#2A2420"/><ellipse cx="26.4" cy="88.6" rx="6" ry="3" fill="#2A2420"/>'+
+    '<rect x="1.5" y="27" width="5.2" height="22" rx="2.4" fill="'+v.c+'" '+ln+'/><rect x="33.3" y="27" width="5.2" height="22" rx="2.4" fill="'+v.c+'" '+ln+'/>'+
+    '<circle cx="4.1" cy="51.6" r="2.5" fill="'+v.k+'"/><circle cx="35.9" cy="51.6" r="2.5" fill="'+v.k+'"/>'+
+    '<path d="M5.5 28Q7 25 20 25Q33 25 34.5 28L33.5 53H6.5Z" fill="'+v.c+'" '+ln+'/>'+
+    '<rect x="17" y="21" width="6" height="6" fill="'+v.k+'"/><circle cx="10.6" cy="17" r="1.9" fill="'+v.k+'"/><circle cx="29.4" cy="17" r="1.9" fill="'+v.k+'"/>'+hair+'</svg>';
+}
+var CROWD=[], CROWD_ROWS=[[28,16],[48,21],[72,28],[102,37],[138,48],[182,62]];   // [腳底在第 0 階下面幾單位, 人物寬度單位]
+function buildCrowd(){
+  var box=$('crowdFg'); box.innerHTML=''; CROWD=[];
+  CROWD_ROWS.forEach(function(r,ri){
+    var gap=r[1]*.86, n=Math.ceil(WV/gap)+1, off=(ri%2)*gap*.5;
+    for(var i=0;i<n;i++){
+      var d=document.createElement('div'); d.className='cw r'+(ri+1);
+      d.innerHTML=crowdSVG(CROWD_V[Math.floor(Math.random()*CROWD_V.length)]);
+      d.style.setProperty('--d',(.55+Math.random()*.7).toFixed(2)+'s'); d.style.setProperty('--dl',(-Math.random()*1.2).toFixed(2)+'s');
+      box.appendChild(d); CROWD.push({e:d,x:i*gap-off+(Math.random()-.5)*gap*.3,ri:ri});
+    }
+  });
+}
+function layoutCrowd(){
+  var s=geo.s, y0u=y0();
+  CROWD.forEach(function(o){
+    var r=CROWD_ROWS[o.ri], w=r[1]*s, e=o.e;
+    e.style.width=w.toFixed(1)+'px'; e.style.left=(o.x*s).toFixed(1)+'px'; e.style.top=((y0u+r[0])*s-w*92/40).toFixed(1)+'px';
+  });
+}
+/* 「兩三種不同的背影輪流閃動」：每隔一下，隨機幾個人換成另一種背影 */
+setInterval(function(){
+  if($('play').hidden||!S.running||S.paused||S.over||MP.on||S.step>NSTEP*.62) return;
+  for(var k=0;k<5;k++){
+    var o=CROWD[Math.floor(Math.random()*CROWD.length)]; if(!o) return;
+    o.e.innerHTML=crowdSVG(CROWD_V[Math.floor(Math.random()*CROWD_V.length)]);
+    o.e.classList.remove('pop'); void o.e.offsetWidth; o.e.classList.add('pop');
+  }
+},380);
 window.addEventListener('resize',function(){ if(S.running&&!MP.on){ measure(); placePlayer(false); } });
 
 /* ---------- 主迴圈 ---------- */
@@ -961,7 +1057,7 @@ function startTired(pl){
 /* 登頂慶祝：人物開心連跳約 3 秒、落彩帶、顯示「登頂！」，然後才跳出結算（含排行榜） */
 var CHEER_T=3;
 function startCheer(){
-  sfx('done');
+  sfx('done'); setInfo('');
   var pl=$('player');
   if(S.strikes*2>NSTEP){ startTired(pl); return; } pl.classList.remove('cheer'); void pl.offsetWidth; pl.classList.add('cheer');
   zoomTop(true);
@@ -1465,11 +1561,12 @@ function mpHostFrame(dt){
 
 
 /* ---------- 啟動 ---------- */
+buildCrowd();
 pickBg();
 renderStart();
 $('btnMulti').addEventListener('click',function(){ mpOpen(); });
 (function(){ var m=/[?&]room=(\d{4})/.exec(location.search); if(m) mpOpen(m[1]); })();
-if(TEST){ window.__nian={S:S,LABELS:LABELS,cfg:cfg,BYCH:BYCH,geo:geo,placePlayer:placePlayer,footPos:footPos,startGame:startGame,setBg:setBg,BGS:BGS,NSTEP:function(){ return NSTEP; },boardId:boardId,bgIdx:function(){ return bgIdx; },timeUp:timeUp,keyPress:keyPress,advance:advance,MP:function(){ return MP; }}; }
+if(TEST){ window.__nian={BG:BG,S:S,LABELS:LABELS,cfg:cfg,BYCH:BYCH,geo:geo,placePlayer:placePlayer,footPos:footPos,startGame:startGame,setBg:setBg,BGS:BGS,NSTEP:function(){ return NSTEP; },boardId:boardId,bgIdx:function(){ return bgIdx; },timeUp:timeUp,keyPress:keyPress,advance:advance,MP:function(){ return MP; }}; }
 })();
 </script>
 <script type="module">
