@@ -26,6 +26,14 @@ button{font-family:inherit;color:inherit}
 #start .inner h1{margin-top:0}
 #start .inner .nameIn{margin-top:12px;text-align:center}
 @media(max-width:560px){#start .inner{padding-top:52px}}
+/* 手機版首頁：標題放大、圖片吃掉中間剩下的空間（最高到寬度的 1.02 倍，人物不要比階梯大太多），名字欄加高 */
+@media(max-width:699px){
+  #start h1{font-size:38px}
+  #start .sub{font-size:16px}
+  #heroWrap{aspect-ratio:auto;flex:1 1 auto;min-height:calc((100vw - 36px)*.8056);max-height:calc((100vw - 36px)*1.02)}
+  #heroChar{height:min(52%,calc((100vw - 36px)*.5))}
+  #start .inner .nameIn{min-height:58px;font-size:19px}
+}
 /* 電腦版首頁：欄放寬、標題和圖片放大（圖片的高度跟著視窗高度，不會頂到下面的開始鈕） */
 @media(min-width:700px){
   #app:has(#start:not([hidden])){max-width:820px}
