@@ -246,8 +246,17 @@ function mpLayout(anim){
       MP.pos[u]={x:cx,y:fy,h:h};
     });
   });
-  var e=mpElim(); ro.forEach(function(u){ var d=MP.figs[u]; if(d){ d.classList.toggle('hit',e[u]!==undefined); d.classList.toggle('out',e[u]!==undefined); } });
+  var e=mpElim(); ro.forEach(function(u){ var d=MP.figs[u]; if(d){ var o=e[u]!==undefined; d.classList.toggle('hit',o); d.classList.toggle('out',o); mpLean(d,u,e[u]); } });
 }
+/* 倒下的姿勢：用「名字＋被劈那一題」算出固定的左右方向與傾斜角度（18～75 度），每支手機算出來都一樣、不用傳資料，也不會每次重畫就變 */
+function mpLean(d,u,rd){
+  if(rd===undefined){ d.style.removeProperty('--fa'); d.style.removeProperty('--fx'); return; }
+  var str=u+'|'+rd, h=0; for(var i=0;i<str.length;i++) h=(h*31+str.charCodeAt(i))>>>0;
+  var sg=(h&1)?1:-1, mag=18+((h>>>1)%58);
+  d.style.setProperty('--fa',(sg*mag)+'deg'); d.style.setProperty('--fx',(sg*2)+'px');
+}
+/* 結算畫面出現時，倒下的人（連名字）全部收掉 */
+function mpClearCorpses(){ Object.keys(MP.figs).forEach(function(u){ var d=MP.figs[u]; if(d&&d.classList.contains('out')) d.classList.add('gone'); }); }
 window.addEventListener('resize',function(){ if(MP.on&&MP.inGame){ measure(); mpLayout(false); } });
 
 function mpGame(){
@@ -336,6 +345,7 @@ function mpFinish(){
 function mpResults(){
   var r=MP.room, fin=(r.final||[]).slice().sort(function(a,b){ return b.r-a.r; });
   var ov=$('ov'); ov.hidden=false; MP.resultsUp=true;
+  mpClearCorpses();
   var medals=['🥇','🥈','🥉'];
   var rows=fin.map(function(x){
     var rk=1+fin.filter(function(y){ return y.r>x.r; }).length;

@@ -106,7 +106,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #hud .sp{flex:1}
 #btnPause{width:40px;height:40px;border-radius:50%;border:1px solid var(--keyb);background:var(--key);font-size:15px;line-height:1;cursor:pointer;padding:0}
 
-#scene{position:absolute;inset:0;background:#CDBFA8;overflow:hidden;--storm:0}
+#scene{position:absolute;inset:0;z-index:0;background:#CDBFA8;overflow:hidden;--storm:0}
 #world{position:absolute;left:50%;top:0;pointer-events:none;background-repeat:no-repeat;background-position:0 0,0 0;background-size:100% auto,100% 100%;will-change:transform}
 #world.mv{transition:transform .75s cubic-bezier(.4,.1,.25,1)}
 #world::after{content:'';position:absolute;left:0;right:0;top:var(--ih,100%);bottom:0;background:linear-gradient(rgba(42,36,32,0),rgba(42,36,32,.55) 60%)}   /* 圖片下面鋪滿的地面，越下面越暗 */
@@ -138,7 +138,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .topTxt .tl{display:block;font-size:.38em;letter-spacing:0;margin-top:2px;color:#fff;font-weight:600}
 @keyframes topPop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes hop{0%{transform:translateY(0)}40%{transform:translateY(-12px)}100%{transform:translateY(0)}}
-@keyframes zap{0%{transform:translateX(0)}12%{transform:translateX(-3px)}24%{transform:translateX(3px)}36%{transform:translateX(-2px)}48%{transform:translateX(2px)}100%{transform:rotate(24deg) translateX(2px)}}
+@keyframes zap{0%{transform:translateX(0)}12%{transform:translateX(-3px)}24%{transform:translateX(3px)}36%{transform:translateX(-2px)}48%{transform:translateX(2px)}100%{transform:rotate(var(--fa,24deg)) translateX(var(--fx,2px))}}
 .ex,.mx,.soot{display:none}
 .hit .en,.hit .mn{display:none}
 .hit .ex,.hit .mx{display:inline}
@@ -291,8 +291,8 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .fig svg{display:block;width:100%;height:100%;transform-origin:50% 100%}
 .fig.hop svg{animation:hop .4s ease-out}
 .fig.zap svg{animation:zap .6s linear forwards}
-.fig.hit svg{transform:rotate(24deg) translateX(2px)}
-.fig.hit:nth-child(even) svg{transform:rotate(-24deg) translateX(-2px)}
+.fig.hit svg{transform:rotate(var(--fa,24deg)) translateX(var(--fx,2px))}
+.fig.gone{display:none}
 .fig .nm{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);white-space:nowrap;font-size:var(--nf,10px);line-height:1;color:var(--ink);background:rgba(251,248,240,.85);padding:1px 3px;border-radius:3px;margin-bottom:1px}
 .fig.me .nm{background:var(--red);color:#fff;font-weight:700}
 .fig.out .nm{color:var(--ink3)}
