@@ -247,7 +247,7 @@ with sync_playwright() as p:
     D.fill('#mpCode', '12'); D.click('#mpGo'); D.wait_for_timeout(200)
     check('找不到' in D.inner_text('#mpMsg'), '房號不是 4 位數也一樣')
     D.fill('#mpName', ''); D.fill('#mpCode', code); D.click('#mpGo'); D.wait_for_timeout(200)
-    check('暱稱' in D.inner_text('#mpMsg'), '沒有暱稱 → 先請你輸入暱稱')
+    check('名字' in D.inner_text('#mpMsg'), '沒有暱稱 → 先請你輸入暱稱')
     D.close()
 
     print('== 開賽：同題、倒數')

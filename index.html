@@ -26,6 +26,15 @@ button{font-family:inherit;color:inherit}
 #start .inner h1{margin-top:0}
 #start .inner .nameIn{margin-top:12px;text-align:center}
 @media(max-width:560px){#start .inner{padding-top:52px}}
+/* 電腦版首頁：欄放寬、標題和圖片放大（圖片的高度跟著視窗高度，不會頂到下面的開始鈕） */
+@media(min-width:700px){
+  #app:has(#start:not([hidden])){max-width:820px}
+  #start .inner{padding-top:26px}
+  #start h1{font-size:50px;margin-top:6px}
+  #start .sub{font-size:19px}
+  #heroWrap{max-width:calc((100dvh - 360px)*1.24);min-width:420px;margin-left:auto;margin-right:auto}
+  #start .inner .nameIn{max-width:calc((100dvh - 360px)*1.24);min-width:420px;margin-left:auto;margin-right:auto;min-height:60px;font-size:20px}
+}
 /* 街景只畫一次：整張當成背景圖（手機不用一直重畫上百個向量圖形，避免 iPhone 記憶體不夠、整頁被系統重開） */
 .streetBg{background-repeat:no-repeat;background-position:50% 85%;background-size:cover}
 #heroWrap>.streetBg{position:absolute;inset:0;background-position:50% 0,0 0;background-size:100% auto,100% 100%}
@@ -158,7 +167,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .newbest{color:var(--red);font-weight:700;font-size:14px;margin-top:6px}
 .bestline{font-size:12px;color:var(--ink3);margin-top:6px}
 /* ---------- 暱稱、排行榜 ---------- */
-.nameIn{width:100%;min-height:44px;padding:6px 12px;border-radius:8px;border:1px solid var(--keyb);background:var(--paper2);font-size:16px;font-family:inherit;color:var(--ink);-webkit-user-select:text;user-select:text}
+.nameIn{width:100%;min-height:54px;padding:8px 14px;border-radius:8px;border:1px solid var(--keyb);background:var(--paper2);font-size:18px;font-family:inherit;color:var(--ink);-webkit-user-select:text;user-select:text}
 .nameIn::placeholder{color:var(--ink3)}
 .nameIn.need{border-color:var(--red);animation:shk .3s linear}
 .nameHint{margin:6px 0 0;font-size:13px;color:var(--red);text-align:center}
@@ -364,8 +373,8 @@ var TXT = {
   struck:['被雷劈了！','被雷劈了！','¡Te cayó un rayo!','Struck by lightning!'],
   timeup:['時間到！','时间到！','¡Se acabó el tiempo!','Time’s up!'],
   empty:['先打字，再按聲調鍵','先打字，再按声调键','Escribe primero y luego pulsa el tono','Type first, then press a tone'],
-  secName:['暱稱（上排行榜用）','昵称（上排行榜用）','Apodo (para la clasificación)','Nickname (for the leaderboard)'],
-  namePh:['輸入暱稱','输入昵称','Tu apodo','Your nickname'],
+  secName:['名字（上排行榜用）','名字（上排行榜用）','Nombre (para la clasificación)','Name (for the leaderboard)'],
+  namePh:['輸入名字','输入名字','Tu nombre','Your name'],
   lbTitle:['排行榜','排行榜','Clasificación','Leaderboard'],
   lbNote:['被雷劈越少排越前面，一樣就比誰爬得快（每種題數、每個難度各一個榜）','被雷劈越少排越前面，一样就比谁爬得快（每种题数、每个难度各一个榜）','Menos rayos va primero; si empatan, gana quien suba más rápido (una clasificación por nº de preguntas y nivel)','Fewer strikes rank higher; ties go to the faster climb (one board per question count and level)'],
   lbLoading:['載入中…','载入中…','Cargando…','Loading…'],
@@ -373,7 +382,7 @@ var TXT = {
   lbError:['排行榜暫時無法使用','排行榜暂时无法使用','La clasificación no está disponible ahora','The leaderboard is unavailable right now'],
   lbNew:['新紀錄！已更新排行榜','新纪录！已更新排行榜','¡Nuevo récord! Clasificación actualizada','New record! Leaderboard updated'],
   lbNotBetter:['沒有超過你的最佳成績，排行榜保留最好的一次','没有超过你的最佳成绩，排行榜保留最好的一次','No superaste tu mejor marca; se guarda la mejor','Not better than your best; the best one stays'],
-  lbNeedName:['輸入暱稱才能上排行榜','输入昵称才能上排行榜','Escribe un apodo para entrar en la clasificación','Enter a nickname to join the leaderboard'],
+  lbNeedName:['輸入名字才能上排行榜','输入名字才能上排行榜','Escribe tu nombre para entrar en la clasificación','Enter a name to join the leaderboard'],
   lbSubmit:['上榜','上榜','Subir','Submit'],
   lbBack:['返回','返回','Volver','Back'],
   setTitle:['設定','设置','Ajustes','Settings'],
@@ -382,7 +391,7 @@ var TXT = {
   mpBtn:['連線','联机','En línea','Online'],
   mpTitle:['連線對戰','联机对战','Partida en línea','Online match'],
   mpIntro:['最多 15 人同題比賽，一條命：打錯或時間到就被雷劈、出局。','最多 15 人同题比赛，一条命：打错或时间到就被雷劈、出局。','Hasta 15 jugadores con las mismas preguntas. Una sola vida: si fallas o se acaba el tiempo, te cae un rayo y quedas fuera.','Up to 15 players, same questions, one life: a wrong answer or timeout gets you struck and out.'],
-  mpNeedName:['請先輸入暱稱','请先输入昵称','Escribe primero tu apodo','Enter a nickname first'],
+  mpNeedName:['請先輸入名字','请先输入名字','Escribe primero tu nombre','Enter a name first'],
   mpMake:['開一間房','开一间房','Crear una sala','Create a room'],
   mpMakeGo:['建立房間','建立房间','Crear','Create'],
   mpJoinT:['加入房間','加入房间','Unirse a una sala','Join a room'],
