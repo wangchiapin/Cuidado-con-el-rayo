@@ -80,7 +80,10 @@ with sync_playwright() as p:
     check(pg.locator('#btnRoll').count() == 0, '骰子鈕已拿掉')
     pg.click('#segGender button:nth-child(2)'); pg.wait_for_timeout(100)
     check(pg.inner_html('#heroChar') in chars['f'], '選女生：預覽換成女生人物')
-    check(pg.locator('#btnSet').is_visible() and pg.locator('#btnHelp').is_visible() and pg.locator('#hgMute').is_visible(), '右上角有 ⚙ ❓ 🔊')
+    check(pg.locator('#btnSet').is_visible() and pg.locator('#btnHelp').is_visible() and pg.locator('#btnSnd').is_visible(), '首頁底下有 ⚙ ❓ 🔊')
+    pg.click('#btnSnd'); pg.wait_for_timeout(100)
+    check(pg.inner_text('#btnSnd') == '🔇' and pg.evaluate("()=>document.getElementById('hgMute').textContent") == '🔇', '首頁的 🔊 鈕按下去會靜音（跟遊戲裡的 🔊 同步）')
+    pg.click('#btnSnd'); pg.wait_for_timeout(100)
     check(pg.locator('#segKb').is_hidden() and pg.locator('#inName').is_visible() and pg.locator('#sumLine').count() == 0, '首頁：設定收在 ⚙，暱稱欄直接放在首頁，中間的摘要鈕已拿掉')
     pg.screenshot(path=SHOTS + '/1_start.png')
 

@@ -26,7 +26,7 @@ button{font-family:inherit;color:inherit}
 #start .inner h1{margin-top:0}
 #start .inner .nameIn{margin-top:12px;text-align:center}
 #start .inner #segGender{align-self:stretch;margin-top:10px}
-@media(max-width:560px){#start .inner{padding-top:52px}}
+@media(max-width:560px){#start .inner{padding-top:16px}}
 /* 手機版首頁：標題放大、圖片吃掉中間剩下的空間（最高到寬度的 1.02 倍，人物不要比階梯大太多），名字欄加高 */
 @media(max-width:699px){
   #start h1{font-size:38px}
@@ -38,7 +38,7 @@ button{font-family:inherit;color:inherit}
 /* 電腦版首頁：欄放寬、標題放大；圖片高度算到剛好整頁不用捲動（--hh），名字欄、男女選項跟圖片同寬，開始鈕不要太寬 */
 @media(min-width:700px){
   #app:has(#start:not([hidden])){max-width:820px}
-  #start{--hh:clamp(210px,calc(100dvh - 400px),560px);--hw:calc(var(--hh)*1.24)}
+  #start{--hh:clamp(210px,calc(100dvh - 465px),560px);--hw:calc(var(--hh)*1.24)}
   #start .inner{padding-top:20px}
   #start h1{font-size:46px;margin-top:4px}
   #start .sub{font-size:18px;margin:4px 0 6px}
@@ -46,7 +46,21 @@ button{font-family:inherit;color:inherit}
   #start .inner .nameIn{width:var(--hw);margin-left:auto;margin-right:auto;min-height:56px;font-size:20px}
   #start .inner #segGender{align-self:center;width:var(--hw)}
   #startBar{display:flex;justify-content:center}
-  #start #startBar .big{flex:0 1 340px;width:340px}
+  #start #startBar .big{width:340px;align-self:center}
+}
+/* 矮視窗（電腦視窗不高、小手機）：標題縮小、拿掉副標的西文行，讓整頁還是不用捲動 */
+@media(min-width:700px) and (max-height:680px){
+  #start{--hh:clamp(170px,calc(100dvh - 440px),560px)}
+  #start h1{font-size:36px}
+  #start .sub{margin:2px 0 4px;font-size:16px}
+  #start .sub .tl{display:none}
+}
+@media(max-width:699px) and (max-height:620px){
+  #start h1{font-size:32px}
+  #start .sub{margin:2px 0 6px;font-size:14px}
+  #start .sub .tl{display:none}
+  #heroWrap{min-height:calc((100vw - 36px)*.42)}
+  #start .inner .nameIn{min-height:50px}
 }
 /* 街景只畫一次：整張當成背景圖（手機不用一直重畫上百個向量圖形，避免 iPhone 記憶體不夠、整頁被系統重開） */
 .streetBg{background-repeat:no-repeat;background-position:50% 85%;background-size:cover}
@@ -57,6 +71,7 @@ button{font-family:inherit;color:inherit}
 #heroChar svg{height:100%;width:auto}
 h1{font-size:30px;margin:14px 0 2px;font-weight:700;letter-spacing:.08em;text-align:center}
 h1 .bolt{display:inline-block;height:1.15em;width:auto;vertical-align:-.2em;margin-right:.1em;transform:rotate(8deg)}
+h1 .zapman{display:inline-block;height:1.15em;width:auto;vertical-align:-.2em;margin-left:.1em}
 h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .sub{font-size:14px;color:var(--ink2);text-align:center;margin:6px 0 10px;line-height:1.5}
 .how{align-self:stretch;margin:0 0 6px;padding:10px 12px;background:var(--paper2);border:1px solid var(--line);border-radius:8px;font-size:13px;line-height:1.45;color:var(--ink2)}
@@ -185,8 +200,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .nameIn::placeholder{color:var(--ink3)}
 .nameIn.need{border-color:var(--red);animation:shk .3s linear}
 .nameHint{margin:6px 0 0;font-size:13px;color:var(--red);text-align:center}
-#startBar{display:flex;gap:8px}
-#startBar .big{flex:1}
+#startBar{display:flex;flex-direction:column;align-items:stretch}
 .lbBox{margin-top:12px;text-align:left}
 .lbBox .lbSt{font-size:13px;color:var(--ink2);text-align:center;margin:6px 0;line-height:1.4}
 .lbBox .lbSt b{color:var(--red)}
@@ -260,7 +274,10 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #info .wt{color:var(--ink2)}
 
 /* ---------- 首頁右上角：設定、說明 ---------- */
-#topBar{position:absolute;top:10px;right:58px;display:flex;gap:8px;z-index:3}
+#iconRow{display:flex;justify-content:center;gap:12px;margin-top:10px}
+#iconRow .ib{width:44px;height:44px}
+/* 首頁的 🔊 放在底下那排；遊戲裡的 🔊 還是在右上角。首頁上有視窗（排行榜、連線）時，右上角的 🔊 照常顯示 */
+#app:has(#start:not([hidden])):has(#ov[hidden]) ~ #hgMute{display:none}
 .ib{width:40px;height:40px;border-radius:50%;border:1px solid rgba(0,0,0,.28);background:rgba(255,255,255,.88);color:#222;font-size:19px;line-height:1;padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .ib:active{transform:scale(.94)}
 .ib.sq{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1;border-radius:10px;background:var(--key);border:1px solid var(--keyb);box-shadow:none;font-size:13px;font-weight:600;color:var(--ink);letter-spacing:0}
@@ -277,7 +294,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 
 <!-- 首頁 -->
 <section id="start" class="screen">
-  <div id="topBar"><button class="ib sq" id="btnMulti" type="button"></button><button class="ib sq" id="btnLb" type="button"></button><button class="ib" id="btnSet" type="button">⚙</button><button class="ib" id="btnHelp" type="button">❓</button></div>
+  
   <div class="inner">
     <h1 id="tTitle"></h1>
     <p class="sub" id="tSub"></p>
@@ -300,7 +317,8 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
     </div>
     <div id="helpBody"><div class="how" id="tHow"></div></div>
   </div>
-  <div id="startBar"><button class="big" id="btnStart"></button></div>
+  <div id="startBar"><button class="big" id="btnStart"></button>
+    <div id="iconRow"><button class="ib sq" id="btnMulti" type="button"></button><button class="ib sq" id="btnLb" type="button"></button><button class="ib" id="btnSet" type="button">⚙</button><button class="ib" id="btnHelp" type="button">❓</button><button class="ib" id="btnSnd" type="button"></button></div></div>
 </section>
 
 <!-- 遊戲 -->
@@ -546,6 +564,7 @@ function paintLb(){
   .catch(function(){ if(wantKey===lbTab+'/'+lbN&&$('lbBody')===body) body.innerHTML='<p class="lbSt">'+plain('lbError')+'</p>'; });
 }
 $('btnLb').addEventListener('click',showLb);
+$('btnSnd').addEventListener('click',function(){ var hm=$('hgMute'); if(hm){ hm.click(); this.textContent=hm.textContent; } });
 $('inName').addEventListener('input',function(){ setName(this.value); });
 
 /* ---------- 首頁 ---------- */
@@ -560,7 +579,7 @@ function seg(id,opts,cur,fn){
 function secLabel(k,sec){ var t=tl(k); return zh(k)+'<span class="tl">'+(t?t+' · ':'')+sec+' s</span>'; }
 function renderStart(){
   document.documentElement.lang = Settings.script==='simp'?'zh-Hans':'zh-Hant';
-  $('tTitle').innerHTML='<svg class="bolt" viewBox="0 0 40 64" aria-hidden="true"><defs><linearGradient id="boltG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF3B8"/><stop offset=".55" stop-color="#F1C94B"/><stop offset="1" stop-color="#D9962F"/></linearGradient></defs><path d="M25 3 8 35h11l-6 26 22-33H22.5L31 3Z" fill="url(#boltG)" stroke="#3B3B38" stroke-width="3" stroke-linejoin="round"/><path d="M24 9 14 31h8.5" fill="none" stroke="#FFFBE6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/></svg>'+H('title'); $('tSub').innerHTML=Settings.lang==='zh'?zh('sub'):zh('sub')+'<span class="tl">'+tl('sub')+'</span>';
+  $('tTitle').innerHTML='<svg class="bolt" viewBox="0 0 40 64" aria-hidden="true"><defs><linearGradient id="boltG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF3B8"/><stop offset=".55" stop-color="#F1C94B"/><stop offset="1" stop-color="#D9962F"/></linearGradient></defs><path d="M25 3 8 35h11l-6 26 22-33H22.5L31 3Z" fill="url(#boltG)" stroke="#3B3B38" stroke-width="3" stroke-linejoin="round"/><path d="M24 9 14 31h8.5" fill="none" stroke="#FFFBE6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/></svg>'+zh('title')+'<svg class="zapman" viewBox="0 0 48 64" aria-hidden="true"><g stroke="#3B3B38" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">  <path d="M18 46v13M30 46v13" stroke="#3B3B38" stroke-width="6.4" fill="none"/> <path d="M18 46v13M30 46v13" stroke="#7A8088" stroke-width="3" fill="none"/> <ellipse cx="17" cy="60.5" rx="5" ry="2.6" fill="#3B3B38" stroke="none"/><ellipse cx="31" cy="60.5" rx="5" ry="2.6" fill="#3B3B38" stroke="none"/>  <path d="M13 33 6 22M35 33l7-11" stroke="#3B3B38" stroke-width="6.2" fill="none"/> <path d="M13 33 6 22M35 33l7-11" stroke="#C9A98B" stroke-width="3" fill="none"/> <circle cx="5.5" cy="21" r="3.2" fill="#C9A98B"/><circle cx="42.5" cy="21" r="3.2" fill="#C9A98B"/>  <rect x="13" y="30" width="22" height="19" rx="6" fill="#A9B7AE"/>  <circle cx="24" cy="21" r="11.5" fill="#C9A98B"/>  <path d="M12.5 17 8 8l7 4 1-8 5 7 3-9 3 9 5-7 1 8 7-4-4.5 9Q24 9 12.5 17Z" fill="#3B3B38"/></g><g stroke="#3B3B38" stroke-width="2" stroke-linecap="round" fill="none"><path d="M17.5 18.5l4 4m0-4-4 4M26.5 18.5l4 4m0-4-4 4"/></g><ellipse cx="24" cy="28" rx="2.8" ry="2.2" fill="#3B3B38"/><g fill="none" stroke="#F1C94B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 38l4-3-2.4 5 4-2"/><path d="M45 38l-4-3 2.4 5-4-2"/><path d="M9 52l3-2.4-1.8 3.8 3-1.6"/><path d="M39 52l-3-2.4 1.8 3.8-3-1.6"/></g></svg>'+(tl('title')?'<span class="tl">'+tl('title')+'</span>':''); $('tSub').innerHTML=Settings.lang==='zh'?zh('sub'):zh('sub')+'<span class="tl">'+tl('sub')+'</span>';
   $('tHow').innerHTML='<div>'+H('how1')+'</div><div>'+H('tone')+'</div><div>'+H('how2')+'</div><div>'+H('how3')+'</div><div>'+H('how4').replace(/%n/g,cfg.n)+'</div><div>'+H('kbhint')+'</div>';
   $('lScript').innerHTML=plain('secScript'); $('lLang').innerHTML=plain('secLang'); $('lKb').innerHTML=plain('secKb'); $('lLevel').innerHTML=plain('secLevel'); $('lN').innerHTML=plain('secN');
   seg('segGender',[{v:'m',h:H('boy')},{v:'f',h:H('girl')}],cfg.g,function(v){ if(v!==cfg.g){ cfg.g=v; ci=Math.floor(Math.random()*5); saveCfg(); } renderStart(); });
@@ -571,6 +590,7 @@ function renderStart(){
   seg('segN',NQS.map(function(n){ return {v:n,h:n+'<span class="tl">'+(tl('nUnit')||zh('nUnit'))+'</span>'}; }),cfg.n,function(v){ cfg.n=v; saveCfg(); renderStart(); preloadBgs(); });
   $('btnStart').innerHTML=H('start');
   $('inName').placeholder=plain('namePh'); if($('inName').value!==getName()) $('inName').value=getName();
+  var hm=$('hgMute'); $('btnSnd').textContent=hm?hm.textContent:'🔊'; $('btnSnd').setAttribute('aria-label','靜音 · Silenciar');
   $('btnLb').innerHTML='🏆'; $('btnLb').setAttribute('aria-label',plain('lbTitle'));
   $('btnMulti').innerHTML='<span class="ic">👥</span><span class="lb">'+zh('mpBtn')+'</span>'; $('btnMulti').setAttribute('aria-label',plain('mpTitle'));
   $('btnSet').setAttribute('aria-label',plain('setTitle')); $('btnHelp').setAttribute('aria-label',plain('helpTitle'));
