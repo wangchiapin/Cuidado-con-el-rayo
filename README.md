@@ -34,7 +34,7 @@
   - 欄位：`name`、`strikes`（被劈次數 0～題數）、`secs`（用時秒數）、`kb`（`pinyin`／`zhuyin`）、`rank`、`updatedAt`
   - `rank = (題數 − 被劈次數) × 100000 + (99999 − 用時秒數)`，越大越前面。
   - 本機最佳紀錄：10 題沿用 `typingRayo.best.難度.鍵盤`，其他題數多一段 `.題數`。
-- **安全規則**：完整版在 `firestore.rules.txt`（是 memorma 現行規則加上這個遊戲的 `rayo_boards`（排行榜）和 `rayo_rooms`（連線房間）兩個區塊，其他一個字都沒動）。要上線時，把整份貼到 Firebase 主控台 → Firestore → 規則 → 發布。也請把同一份蓋到 Memorama repo 的 `firestore-rules-full.txt`，才不會下次改規則時把這一段弄丟。
+- **安全規則**：正本在 game-kit（私人 repo）的 `firebase-rules/``memorma-24dab.rules.txt`（含這個遊戲的 `rayo_boards` 排行榜和 `rayo_rooms` 連線房間；這個 repo 不再放規則檔）。要改規則，先改正本，再整份貼到 Firebase 主控台 → Firestore → 規則 → 發布。
 
 ## 連線模式（最多 15 人，一條命）
 

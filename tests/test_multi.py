@@ -1,5 +1,5 @@
 # 連線模式測試：python3 tests/test_multi.py
-# 不連網。用「假的 Firebase」：頁面對 http://fake.local 發請求，由這支測試程式扮演資料庫（含 firestore.rules.txt 裡 rayo_rooms 規則的 Python 版），
+# 不連網。用「假的 Firebase」：頁面對 http://fake.local 發請求，由這支測試程式扮演資料庫（含 rayo_rooms 規則（正本在 game-kit）的 Python 版），
 # 多個瀏覽器分頁各當一個玩家，檢查：開房、加入、觀賽、同題同時作答、淘汰落雷、結算、再來一局、房主離開、15 人上限、版面。
 import os, re, json, time, random, string
 from playwright.sync_api import sync_playwright

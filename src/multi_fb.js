@@ -1,7 +1,7 @@
   /* ===== 連線房間 window.RM =====
      rayo_rooms/{4位數房號}            ← 房主寫（難度、題目、第幾題、誰被淘汰…）
      rayo_rooms/{房號}/players/{uid}   ← 每個人只寫自己的（暱稱、角色、答題結果 a）
-     規則見 firestore.rules.txt。一間房最多 15 人，房間 6 小時後過期。 */
+     規則見 game-kit 的 firebase-rules/memorma-24dab.rules.txt。一間房最多 15 人，房間 6 小時後過期。 */
   const MAXP = 15, ROOM_MS = 6 * 3600 * 1000;
   const roomRef = code => doc(db, 'rayo_rooms', code);
   const meRef = (code, uid) => doc(db, 'rayo_rooms', code, 'players', uid);

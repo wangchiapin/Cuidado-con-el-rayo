@@ -1,5 +1,5 @@
 # 排行榜＋遊玩紀錄測試：python3 tests/test_leaderboard.py
-# 用假的 Firebase（不連網），檢查：暱稱、遊玩紀錄 visits／plays、排行榜寫入的資料是否符合 firestore.rules.txt 的 rayo_boards 規則、
+# 用假的 Firebase（不連網），檢查：暱稱、遊玩紀錄 visits／plays、排行榜寫入的資料是否符合 game-kit 規則正本的 rayo_boards 規則、
 # 前 10 名顯示、較差成績不蓋掉最好成績、沒有暱稱時先問暱稱、首頁排行榜三個分頁。
 import os, re, json
 from playwright.sync_api import sync_playwright
@@ -63,7 +63,7 @@ def route(r):
         return r.fulfill(status=200, content_type='application/javascript', body=body, headers={'access-control-allow-origin': '*'})
     r.continue_() if u.startswith('file:') else r.abort()
 
-# ---- 把 firestore.rules.txt 裡 rayo_boards 的規則用 Python 重做一次，檢查送出的資料過不過 ----
+# ---- 把規則正本裡 rayo_boards 的規則用 Python 重做一次，檢查送出的資料過不過 ----
 def rules_ok(board, uid, data, req_uid='UID1', existing=None):
     def isint(x): return isinstance(x, int) and not isinstance(x, bool)
     keys = set(data)
@@ -168,7 +168,7 @@ with sync_playwright() as p:
     check(len(sets) == 1 and sets[0]['p'] == 'rayo_boards/normal/entries/UID1', '排行榜寫到 rayo_boards/normal/entries/<裝置編號>')
     d = sets[0]['d'] if sets else {}
     check(d.get('name') == '小明' and d.get('strikes') == 2 and d.get('kb') == 'pinyin' and 59 <= d.get('secs', 0) <= 75, '資料：暱稱、被劈 2 次、鍵盤、用時：%s' % d)
-    check(rules_ok('normal', 'UID1', d), '這筆資料符合 firestore.rules.txt 的規則（create）')
+    check(rules_ok('normal', 'UID1', d), '這筆資料符合 game-kit 規則正本的規則（create）')
     check(set(d) <= {'name', 'strikes', 'secs', 'kb', 'rank', 'updatedAt'}, '沒有多餘欄位')
     txt = pg.inner_text('#lbArea')
     check('新紀錄' in txt and '小明' in txt, '結算畫面顯示「新紀錄」和榜單（有小明）')

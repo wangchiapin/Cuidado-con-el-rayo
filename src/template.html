@@ -1094,7 +1094,7 @@ if(TEST){ window.__nian={BG:BG,S:S,LABELS:LABELS,cfg:cfg,BYCH:BYCH,geo:geo,place
 // 排行榜：Firebase 專案 memorma-24dab（匿名登入，跟其他遊戲同一個專案）
 // 資料放在 rayo_boards/{榜名}/entries/{匿名登入的 uid}，一台裝置一個榜一筆，只留最好成績。
 // 榜名：10 題＝easy／normal／hard（舊榜），15／20／25 題＝normal_15 這樣（難度＋底線＋題數），共 12 個榜。
-// 排名數字 rank = (題數 - 被雷劈次數) × 100000 + (99999 - 用時秒數)：越大越前面。規則見 firestore.rules.txt。
+// 排名數字 rank = (題數 - 被雷劈次數) × 100000 + (99999 - 用時秒數)：越大越前面。規則見 game-kit 的 firebase-rules/memorma-24dab.rules.txt。
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {getFirestore,collection,query,orderBy,limit,getDocs,getDoc,doc,setDoc,updateDoc,deleteDoc,onSnapshot,Timestamp,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";

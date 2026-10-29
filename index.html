@@ -1534,7 +1534,7 @@ if(TEST){ window.__nian={BG:BG,S:S,LABELS:LABELS,cfg:cfg,BYCH:BYCH,geo:geo,place
 // 排行榜：Firebase 專案 memorma-24dab（匿名登入，跟其他遊戲同一個專案）
 // 資料放在 rayo_boards/{榜名}/entries/{匿名登入的 uid}，一台裝置一個榜一筆，只留最好成績。
 // 榜名：10 題＝easy／normal／hard（舊榜），15／20／25 題＝normal_15 這樣（難度＋底線＋題數），共 12 個榜。
-// 排名數字 rank = (題數 - 被雷劈次數) × 100000 + (99999 - 用時秒數)：越大越前面。規則見 firestore.rules.txt。
+// 排名數字 rank = (題數 - 被雷劈次數) × 100000 + (99999 - 用時秒數)：越大越前面。規則見 game-kit 的 firebase-rules/memorma-24dab.rules.txt。
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {getFirestore,collection,query,orderBy,limit,getDocs,getDoc,doc,setDoc,updateDoc,deleteDoc,onSnapshot,Timestamp,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -1588,7 +1588,7 @@ try{
   /* ===== 連線房間 window.RM =====
      rayo_rooms/{4位數房號}            ← 房主寫（難度、題目、第幾題、誰被淘汰…）
      rayo_rooms/{房號}/players/{uid}   ← 每個人只寫自己的（暱稱、角色、答題結果 a）
-     規則見 firestore.rules.txt。一間房最多 15 人，房間 6 小時後過期。 */
+     規則見 game-kit 的 firebase-rules/memorma-24dab.rules.txt。一間房最多 15 人，房間 6 小時後過期。 */
   const MAXP = 15, ROOM_MS = 6 * 3600 * 1000;
   const roomRef = code => doc(db, 'rayo_rooms', code);
   const meRef = (code, uid) => doc(db, 'rayo_rooms', code, 'players', uid);
