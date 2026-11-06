@@ -439,12 +439,14 @@ var TXT = {
   nUnit:['題','题','preguntas','questions'],
   boy:['男生','男生','Chico','Boy'], girl:['女生','女生','Chica','Girl'], roll:['換一個','换一个','Otro','Another'],
   secScript:['字形','字形','Escritura','Script'],
-  secLang:['介面語言','界面语言','Idioma','Language'],
+  secLang:['介面語言','介面语言','Idioma','Language'],
   secKb:['鍵盤','键盘','Teclado','Keyboard'],
   secLevel:['難度','难度','Nivel','Level'],
   easy:['簡單','简单','Fácil','Easy'], normal:['普通','普通','Normal','Normal'], hard:['進階','进阶','Difícil','Hard'],
   start:['開始','开始','Empezar','Start'],
-  pause:['暫停','暂停','Pausa','Paused'], resume:['繼續','继续','Continuar','Resume'], home:['回首頁','回首页','Inicio','Home'], again:['再玩一次','再玩一次','Jugar otra vez','Play again'],
+  pause:['暫停','暂停','Pausa','Paused'], resume:['繼續','继续','Continuar','Resume'], home:['主選單','主选单','Menú principal','Main menu'],
+  homeAsk:['要回主選單嗎？目前的進度不會保留。','要回主选单吗？目前的进度不会保留。','¿Volver al menú principal? Se perderá el progreso actual.','Go back to the main menu? Your current progress will be lost.'],
+  homeYes:['回主選單','回主选单','Ir al menú','Main menu'], homeStay:['繼續留下','继续留下','Quedarme','Stay'], again:['再玩一次','再玩一次','Jugar otra vez','Play again'],
   qLab:['題','题','Pregunta','Question'], sStrike:['被雷劈','被雷劈','Rayos','Strikes'],
   done:['爬上來了！','爬上来了！','¡Llegaste arriba!','You made it up!'],
   perfect:['全部答對！','全部答对！','¡Todo correcto!','All correct!'],
@@ -468,11 +470,11 @@ var TXT = {
   lbNeedName:['輸入名字才能上排行榜','输入名字才能上排行榜','Escribe tu nombre para entrar en la clasificación','Enter a name to join the leaderboard'],
   lbSubmit:['上榜','上榜','Subir','Submit'],
   lbBack:['返回','返回','Volver','Back'],
-  setTitle:['設定','设置','Ajustes','Settings'],
+  setTitle:['設定','设定','Ajustes','Settings'],
   helpTitle:['遊戲說明','游戏说明','Cómo se juega','How to play'],
   setDone:['完成','完成','Listo','Done'],
-  mpBtn:['連線','联机','En línea','Online'],
-  mpTitle:['連線對戰','联机对战','Partida en línea','Online match'],
+  mpBtn:['連線','连线','En línea','Online'],
+  mpTitle:['連線對戰','连线对战','Partida en línea','Online match'],
   mpIntro:['最多 15 人同題比賽，一條命，打錯就出局。','最多 15 人同题比赛，一条命，打错就出局。','Hasta 15 jugadores, las mismas preguntas, una sola vida.','Up to 15 players, same questions, one life.'],
   mpNeedName:['請先輸入名字','请先输入名字','Escribe primero tu nombre','Enter a name first'],
   mpMake:['開一間房','开一间房','Crear una sala','Create a room'],
@@ -482,7 +484,7 @@ var TXT = {
   mpWatch:['我只觀賽','我只观赛','Solo mirar','Just watch'],
   mpJoinGo:['加入','加入','Entrar','Join'],
   mpRoom:['房號','房号','Sala','Room'],
-  mpCopy:['複製邀請連結','复制邀请链接','Copiar enlace','Copy invite link'],
+  mpCopy:['複製邀請連結','复制邀请连结','Copiar enlace','Copy invite link'],
   mpCopied:['已複製！','已复制！','¡Copiado!','Copied!'],
   mpPlayers:['玩家','玩家','Jugadores','Players'],
   mpHostTag:['房主','房主','Anfitrión','Host'],
@@ -1063,9 +1065,18 @@ function startGame(){
 function pauseGame(){
   if(MP.on){ if(MP.inGame) mpLeaveAsk(); return; }
   if(!S.running||S.over||S.paused) return; S.paused=true;
+  showPausePanel();
+}
+function showPausePanel(){
   var ov=$('ov'); ov.hidden=false;
   ov.innerHTML='<div class="panel"><h2>'+zh('pause')+(tl('pause')?'<span class="tl">'+tl('pause')+'</span>':'')+'</h2><div class="btns"><button class="big" id="bResume">'+H('resume')+'</button><button class="ghost" id="bHome">'+H('home')+'</button></div></div>';
-  $('bResume').addEventListener('click',resumeGame); $('bHome').addEventListener('click',goHome);
+  $('bResume').addEventListener('click',resumeGame); $('bHome').addEventListener('click',goHomeAsk);
+}
+/* 暫停時按「主選單」：先出現警語，確定才回去（遊戲結束畫面的「主選單」不用問） */
+function goHomeAsk(){
+  var ov=$('ov'); ov.hidden=false;
+  ov.innerHTML='<div class="panel"><h2>'+plain('homeAsk')+'</h2><div class="btns"><button class="big" id="bHomeStay" type="button">'+H('homeStay')+'</button><button class="ghost" id="bHomeYes" type="button">'+H('homeYes')+'</button></div></div>';
+  $('bHomeStay').addEventListener('click',showPausePanel); $('bHomeYes').addEventListener('click',goHome);
 }
 function resumeGame(){ if(!S.paused) return; S.paused=false; $('ov').hidden=true; last=performance.now(); }
 function goHome(){
@@ -1723,10 +1734,10 @@ try{
   function cfg(){ var s={}; try{ s=JSON.parse(localStorage.getItem('hanziGames.settings')||'{}')||{}; }catch(e){} return s; }
   function isMandarin(v){ var l=String((v&&v.lang)||'').toLowerCase().replace(/_/g,'-'); if(l.indexOf('yue')===0||l.indexOf('zh-hk')===0) return false; return l==='zh'||l.indexOf('zh-')===0||l.indexOf('cmn')===0; }
   var T={
-    none:{ zh:['這個裝置找不到中文（台灣）語音，聽不到念的內容。請到手機設定安裝「中文（台灣）」語音，或換一個裝置。','这个装置找不到中文（台湾）语音，听不到念的内容。请到手机设置安装「中文（台湾）」语音，或换一个装置。'],
+    none:{ zh:['這個裝置找不到中文（台灣）語音，聽不到念的內容。請到手機設定安裝「中文（台灣）」語音，或換一個裝置。','这个装置找不到中文（台湾）语音，听不到念的内容。请到手机设定安装「中文（台湾）」语音，或换一个装置。'],
            es:'No se encontró una voz de chino (Taiwán) en este dispositivo, así que no se oirá el audio. Instala la voz «chino (Taiwán)» en los ajustes del móvil o usa otro dispositivo.',
            en:'No Chinese (Taiwan) voice was found on this device, so you won’t hear the audio. Install the “Chinese (Taiwan)” voice in your phone settings, or use another device.' },
-    nosynth:{ zh:['這個瀏覽器不支援語音，聽不到念的內容。請換一個瀏覽器（例如 Chrome、Safari）。','这个浏览器不支持语音，听不到念的内容。请换一个浏览器（例如 Chrome、Safari）。'],
+    nosynth:{ zh:['這個瀏覽器不支援語音，聽不到念的內容。請換一個瀏覽器（例如 Chrome、Safari）。','这个浏览器不支援语音，听不到念的内容。请换一个浏览器（例如 Chrome、Safari）。'],
            es:'Este navegador no admite voz, así que no se oirá el audio. Usa otro navegador (por ejemplo Chrome o Safari).',
            en:'This browser does not support speech, so you won’t hear the audio. Try another browser (for example Chrome or Safari).' }
   };

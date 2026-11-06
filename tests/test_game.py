@@ -174,8 +174,28 @@ with sync_playwright() as p:
     pg.click('.k[data-k="n"]'); pg.click('.k[data-k="v"]'); pg.click('.k[data-k="T3"]'); pg.wait_for_timeout(100)
     check(S(pg, 'S.correct') == 3 and 'ü' in pg.inner_text('#typedTxt'), '「女」打 nü3（ü 鍵）算對，輸入列顯示 ü')
 
+    print('== 暫停 → 主選單：先出現警語')
+    pg.click('#btnPause'); pg.click('#bHome'); pg.wait_for_timeout(100)
+    t = pg.inner_text('#ov')
+    check('要回主選單嗎' in t and '進度不會保留' in t, '按「主選單」先出現警語（繁體）')
+    check(pg.evaluate("()=>document.getElementById('start').hidden") is True, '警語出現時還沒回首頁')
+    pg.click('#bHomeStay'); pg.wait_for_timeout(100)
+    check('暫停' in pg.inner_text('#ov') and '主選單' in pg.inner_text('#ov'), '按「繼續留下」回到暫停畫面')
+    pg.click('#bResume'); pg.wait_for_timeout(100)
+    check(pg.evaluate("()=>document.getElementById('ov').hidden") is True and S(pg, 'S.paused') is False, '再按「繼續」可以接著玩')
+    for scr, lang, want in [(2, 1, '要回主选单吗'), (1, 2, 'Volver al menú principal'), (1, 3, 'Go back to the main menu')]:
+        pg.click('#btnPause'); pg.click('#bHome'); pg.click('#bHomeYes'); pg.wait_for_timeout(150)
+        sset(pg, f'#segScript button:nth-child({scr})', f'#segLang button:nth-child({lang})')
+        pg.click('#btnStart'); pg.wait_for_timeout(300)
+        pg.click('#btnPause'); pg.click('#bHome'); pg.wait_for_timeout(100)
+        check(want in pg.inner_text('#ov'), f'警語跟語言設定走：{want}')
+        pg.click('#bHomeStay'); pg.click('#bResume'); pg.wait_for_timeout(80)
+    pg.click('#btnPause'); pg.click('#bHome'); pg.click('#bHomeYes'); pg.wait_for_timeout(150)
+    sset(pg, '#segScript button:nth-child(1)', '#segLang button:nth-child(1)')
+    pg.click('#btnStart'); pg.wait_for_timeout(300)
+
     print('== 打完 10 階，結算')
-    pg.click('#btnPause'); pg.click('#bHome'); pg.wait_for_timeout(200)
+    pg.click('#btnPause'); pg.click('#bHome'); pg.click('#bHomeYes'); pg.wait_for_timeout(200)
     pg.click('#btnStart'); pg.wait_for_timeout(300)
     seq = [True, True, False, True, True, True, False, True, True, True]   # 2 次被劈
     for i, ok in enumerate(seq):
@@ -235,7 +255,7 @@ with sync_playwright() as p:
     pg.evaluate("()=>{const n=window.__nian;n.S.q=n.BYCH['的'];n.S.buf='';n.S.locked=false;n.S.phase='ask'}")
     pg.keyboard.type('de'); pg.keyboard.press('Digit1'); pg.wait_for_timeout(100)
     check(S(pg, 'S.strikes') >= 1 and S(pg, 'S.phase') == 'reveal', '拼音：的 打一聲 → 判錯')
-    pg.click('#btnPause'); pg.click('#bHome'); pg.wait_for_timeout(200)
+    pg.click('#btnPause'); pg.click('#bHome'); pg.click('#bHomeYes'); pg.wait_for_timeout(200)
 
     print('== 注音鍵盤')
     sset(pg, '#segKb button:nth-child(2)'); pg.click('#btnStart'); pg.wait_for_timeout(300)
@@ -252,12 +272,12 @@ with sync_playwright() as p:
     to_next_q(pg)
     pg.click('#kbSw [data-kb="pinyin"]'); pg.wait_for_timeout(100)
     check(pg.locator('#kb .k').count() == 32, '遊戲中可切回拼音鍵盤')
-    pg.click('#btnPause'); pg.click('#bHome'); pg.wait_for_timeout(200)
+    pg.click('#btnPause'); pg.click('#bHome'); pg.click('#bHomeYes'); pg.wait_for_timeout(200)
 
     print('== 難度時間、簡體＋西文')
     sset(pg, '#segLevel button:nth-child(1)'); pg.click('#btnStart'); pg.wait_for_timeout(300)
     check(abs(S(pg, 'S.T') - 15) < .01, '簡單：15 秒')
-    pg.click('#btnPause'); pg.click('#bHome'); pg.wait_for_timeout(200)
+    pg.click('#btnPause'); pg.click('#bHome'); pg.click('#bHomeYes'); pg.wait_for_timeout(200)
     sset(pg, '#segLevel button:nth-child(3)', '#segScript button:nth-child(2)', '#segLang button:nth-child(2)')
     check('Cuidado' in pg.inner_text('#tTitle') and '天打雷劈' in pg.inner_text('#tTitle'), '簡體＋西文標題')
     pg.click('#btnStart'); pg.wait_for_timeout(300)
@@ -270,7 +290,7 @@ with sync_playwright() as p:
     check(not errs, 'JS 沒有錯誤 ' + str(errs[:3]))
 
     print('== 10 階全部看得到')
-    pg.click('#btnPause'); pg.click('#bHome'); pg.wait_for_timeout(200); pg.click('#btnStart'); pg.wait_for_timeout(300)
+    pg.click('#btnPause'); pg.click('#bHome'); pg.click('#bHomeYes'); pg.wait_for_timeout(200); pg.click('#btnStart'); pg.wait_for_timeout(300)
     pos = pg.evaluate("""()=>{const n=window.__nian,S=n.S,sc=document.getElementById('scene').getBoundingClientRect(),pl=document.getElementById('player');
       const out=[];for(let i=0;i<=10;i++){S.step=i;n.placePlayer(false);const r=pl.getBoundingClientRect();out.push([r.top-sc.top,r.bottom-sc.top,r.left-sc.left,r.right-sc.left,sc.height,sc.width]);}return out}""")
     check(all(p_[0] >= 0 and p_[1] <= p_[4] and p_[2] >= 0 and p_[3] <= p_[5] for p_ in pos), '第 0～10 階，人物每一階都完整在場景內')
@@ -286,7 +306,7 @@ with sync_playwright() as p:
     check(nb == 7, f'一共 {nb} 個背景')
     seq = []; same = True
     for _ in range(12):
-        pg.click('#btnPause'); pg.click('#bHome'); pg.wait_for_timeout(80)
+        pg.click('#btnPause'); pg.click('#bHome'); pg.click('#bHomeYes'); pg.wait_for_timeout(80)
         a_ = pg.evaluate("()=>[window.__nian.bgIdx(),document.querySelector('#heroWrap>.streetBg').style.backgroundImage===document.getElementById('world').style.backgroundImage]")
         seq.append(a_[0]); same = same and a_[1]
         pg.click('#btnStart'); pg.wait_for_timeout(80)
@@ -305,7 +325,7 @@ with sync_playwright() as p:
     texts = [open(os.path.join(ROOT, u.replace('bg/', 'bg/svg/').replace('.webp', '.svg')), encoding='utf-8').read().count('<text') for u in allb['10']]
     check(texts[:6] == [0]*6 and texts[6] > 0, f'只有夜市（最後一個）有文字，其他都沒有：{texts}')
     print('== 選題數：10／15／20／25')
-    pg.click('#btnPause'); pg.click('#bHome'); pg.wait_for_timeout(150)
+    pg.click('#btnPause'); pg.click('#bHome'); pg.click('#bHomeYes'); pg.wait_for_timeout(150)
     pg.click('#btnSet'); pg.wait_for_selector('#bSetOk')
     check(pg.locator('#segN button').count() == 4 and [pg.locator('#segN button').nth(i).inner_text().split('\n')[0] for i in range(4)] == ['10', '15', '20', '25'], '設定裡有題數選項 10／15／20／25')
     check(pg.evaluate("()=>window.__nian.cfg.n") == 10 and 'on' in pg.get_attribute('#segN button:nth-child(1)', 'class'), '預設 10 題')
