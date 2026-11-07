@@ -10,8 +10,9 @@ function mpFresh(){
 MP=mpFresh();
 var mpLv="normal", mpN=10, MAXP=15;
 /* 用老師題庫（練習連結 ?b=）開房：題數可選 10～30（不超過題庫字數）、難度只有簡單／普通；房間裡多存 bn（題庫名稱）和 bk（這一局題目的字＋讀音，大家都用房間裡的，不用自己有題庫） */
-function mpNList(){ return CUSTOM?nList():NQS; }
-function mpLvList(r){ return (CUSTOM||(r&&r.bn))?['easy','normal']:['easy','normal','hard']; }
+function mpNList(){ var l=CUSTOM?nList():NQS; return LOCK.n&&l.indexOf(LOCK.n)>=0?[LOCK.n]:l; }   // 班級房間：老師鎖的題數、難度房主不能改
+function mpMax(r){ return (r&&r.mx)||MAXP; }      // 這間房最多幾人：一般 15；老師班級房間 35
+function mpLvList(r){ var l=(CUSTOM||(r&&r.bn))?['easy','normal']:['easy','normal','hard']; return LOCK.lv&&l.indexOf(LOCK.lv)>=0?[LOCK.lv]:l; }
 function mpWordStr(c){ var w=BYCH[c]; return w?[w.c,w.s||w.c,w.r.join(',')].join('\t'):c; }
 function mpBank(r){      // 房間裡有自訂題目（bk）→ 加進查詢表，大家同一份讀音
   if(!r||!r.bk||!r.bk.length) return;
@@ -71,9 +72,10 @@ function mpMake(){
   mpBusy(true); mpMsg('lbLoading');
   waitRM().then(function(rm){
     if(!rm) throw 0;
-    var me=mpMe(false); me.level=mpLv; me.nq=mpN; if(CUSTOM) me.bn=CUSTOM.name||'自訂題庫';
+    var me=mpMe(false); me.level=mpLv; me.nq=mpN; if(CUSTOM){ me.bn=CUSTOM.name||'自訂題庫'; me.bs=BANK_SID.slice(0,8); }
+    if(CLASS_MODE&&CLS){ me.cid=CLASS_ID; me.mx=35; if(CLS.rc) me.code=CLS.rc; }   // 老師的班級房間：成績回傳到班級、最多 35 人、有固定房號就用固定的
     return rm.create(me).then(function(code){ mpEnter(code,true); });
-  }).catch(function(){ mpBusy(false); mpMsg('mpErr'); });
+  }).catch(function(e){ mpBusy(false); mpMsg(e&&e.message==='busy'?'mpBusy':'mpErr'); });
 }
 function mpJoin(code,want){
   if(!getName()){ mpMsg('mpNeedName'); return; }
@@ -164,7 +166,7 @@ function mpLobby(){
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpLevelIs')+'</div>'+lvl+'</div>'+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpNIs')+'</div>'+nsel+'</div>'+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpKb')+'</div><div class="seg" id="mpSegKb"></div></div>'+
-    '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpPlayers')+' '+n+'/'+MAXP+'</div><div class="plList">'+rows+'</div></div>'+
+    '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpPlayers')+' '+n+'/'+mpMax(r)+'</div><div class="plList">'+rows+'</div></div>'+
     '<div class="btns">'+act+'<button class="ghost" id="mpLeaveBtn" type="button">'+H('mpLeave')+'</button></div></div>';
   seg('mpSegKb',[{v:'pinyin',h:'拼音<span class="tl">pīnyīn</span>'},{v:'zhuyin',h:'注音<span class="tl">ㄅㄆㄇㄈ</span>'}],cfg.kb,function(v){ cfg.kb=v; saveCfg(); MP.lobbyKey=''; mpLobby(); });
   if(MP.host) seg('mpSegLv2',mpLvList(r).map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),r.level,function(v){
@@ -189,7 +191,7 @@ function mpPick(level,n,custom){
 }
 function mpStart(){
   var r=MP.room; if(!MP.host||!r||r.status!=='waiting') return;
-  var ro=mpPlayersSorted().filter(function(p){ return !p.spec; }).slice(0,MAXP).map(function(p){ return p.uid; });
+  var ro=mpPlayersSorted().filter(function(p){ return !p.spec; }).slice(0,mpMax(r)).map(function(p){ return p.uid; });
   if(ro.length<2) return;
   $('mpStart').disabled=true;
   waitRM().then(function(rm){
@@ -214,7 +216,7 @@ function mpSetup(){
   measure(); mpBuildFigs(); mpLayout(false);
   requestAnimationFrame(function(){ measure(); mpLayout(false); last=performance.now(); requestAnimationFrame(tick); });
   setInfo(''); $('typedTxt').className=''; renderTyped();
-  if(mpAmIn()&&MP.playsN!==r.n){ MP.playsN=r.n; try{ HGPlays.start('room-'+r.level+'-'+cfg.kb+(NSTEP===10?'':'-n'+NSTEP),getName()); }catch(e){} }
+  if(mpAmIn()&&MP.playsN!==r.n){ MP.playsN=r.n; MP.rt0=Date.now(); try{ HGPlays.start('room-'+r.level+'-'+cfg.kb+(NSTEP===10?'':'-n'+NSTEP),getName()); }catch(e){} }
 }
 function mpBuildFigs(){
   var c=$('crowd'); c.innerHTML=''; MP.figs={};
@@ -242,14 +244,14 @@ function mpCam(){ var m=0; mpRoster().forEach(function(u){ m=Math.max(m,mpStepOf
 function mpLayout(anim){
   var r=MP.room, ro=mpRoster(), N=ro.length; if(!N||!r) return;
   camTo(mpCam(),anim);
-  var fac=N<=2?1:N<=4?.92:N<=7?.82:N<=10?.74:.66;
-  var nf=Math.max(9,Math.min(12,12*fac+1)), nch=N>8?3:4, nameW=nch*nf*1.02+8, rowStep=Math.max(11,SPC*geo.s*.95);
+  var fac=N<=2?1:N<=4?.92:N<=7?.82:N<=10?.74:N<=15?.66:N<=25?.54:.46;      // 人多（班級房間最多 35 人）就縮小
+  var nf=Math.max(8,Math.min(12,12*fac+1)), nch=N>8?3:4, nameW=nch*nf*1.02+8, rowStep=Math.max(11,SPC*geo.s*.95);
   var groups={}; ro.forEach(function(u){ var st=mpStepOf(u); (groups[st]=groups[st]||[]).push(u); });
   MP.pos={};
   Object.keys(groups).forEach(function(st){
     var g=groups[st], k=g.length, f=footPos(+st), h=geo.hC*fac*f.sc, w=h*60/102;
     var span=(310-160*Math.min(+st,NSTEP)/NSTEP)*geo.s;                       // 這一階的石階寬度（越高越窄）
-    var maxCols=Math.max(1,Math.floor(span/nameW)), rows=1; while(Math.ceil(k/rows)>maxCols&&rows<4) rows++;
+    var maxCols=Math.max(1,Math.floor(span/nameW)), rows=1; while(Math.ceil(k/rows)>maxCols&&rows<(N>15?6:4)) rows++;
     var cols=Math.ceil(k/rows), colSp=Math.min(span/cols,Math.max(w*1.4,nameW));
     g.forEach(function(u,i){
       var row=Math.floor(i/cols), col=i%cols, inRow=Math.min(cols,k-row*cols);
@@ -355,10 +357,26 @@ function mpFinish(){
   mpLayout(true); mpStrip(); mpHud(); setStorm(0);
   if(MP.shown==='res'+r.n) return; MP.shown='res'+r.n;
   var e=mpElim(), mineR=e[MP.uid]!==undefined?+e[MP.uid]:NSTEP;
-  if(mpAmIn()){ try{ HGPlays.end({score:mineR,secs:Math.round((Date.now()-MP.t0)/1000),name:getName()}); }catch(x){} }
+  if(mpAmIn()){ try{ HGPlays.end({score:mineR,secs:Math.round((Date.now()-MP.t0)/1000),name:getName()}); }catch(x){}
+    if(r.cid) mpClassSubmit(r,mineR); }
   setTimeout(function(){ if(MP.on&&MP.inGame&&MP.room&&MP.room.status==='finished'&&MP.room.n===r.n) mpResults(); },1500);
   sfx('done');
 }
+/* 老師班級房間：每個人自己把這一局的成績送給老師（走班級成績的同一條路；k 前面加 room-，老師中心分開統計） */
+function mpClassSubmit(r,mineR){
+  var n=NSTEP, struck=mineR<n, secs=Math.max(1,Math.min(3600,Math.round((Date.now()-(MP.rt0||MP.t0))/1000)));
+  var log=[]; for(var i=0;i<n&&i<30&&r.qs[i]!==undefined;i++){ if(i<mineR) log.push({c:r.qs[i],ok:true}); else if(i===mineR&&struck) log.push({c:r.qs[i],ok:false}); }
+  var k='room-'+r.level+'_'+n+'_'+cfg.kb+(r.bs?'_'+r.bs:''), name=getName(), n0=r.n;
+  MP.sent='';
+  waitCEN().then(function(cen){
+    if(!cen) throw 0;
+    return cen.cls(r.cid).then(function(c){
+      return cen.submit({cid:r.cid,owner:c.owner,k:k,nick:name,n:n,s:struck?1:0,c:mineR,t:secs,st:struck?0:3,log:log,best:mineR*100000+(99999-secs)});
+    });
+  }).then(function(){ MP.sent='ok'; },function(e){ console.warn(e); MP.sent=e&&e.code==='permission-denied'?'exp':'fail'; })
+  .then(function(){ var el=$('mpSent'); if(el&&MP.room&&MP.room.n===n0) el.innerHTML=mpSentTxt(); });
+}
+function mpSentTxt(){ return MP.sent==='ok'?plain('sentOk'):MP.sent==='exp'?plain('sentExpired'):MP.sent==='fail'?plain('sentFail'):plain('lbLoading'); }
 function mpResults(){
   var r=MP.room, fin=(r.final||[]).slice().sort(function(a,b){ return b.r-a.r; });
   var ov=$('ov'); ov.hidden=false; MP.resultsUp=true;
@@ -368,7 +386,7 @@ function mpResults(){
     var rk=1+fin.filter(function(y){ return y.r>x.r; }).length;
     return '<div class="lbRow'+(x.uid===MP.uid?' me':'')+'"><span class="lbRank">'+(rk<=3?medals[rk-1]:rk)+'</span><span class="lbName">'+esc(x.name)+'</span><span class="lbVal"><b>'+(x.r>=NSTEP?'🏔 '+zh('mpTop'):mpTxt('mpSteps',x.r))+'</b></span></div>';
   }).join('');
-  ov.innerHTML='<div class="panel mpP"><h2>'+plain('mpResult')+'</h2><div class="lbBox"><div class="lbList">'+rows+'</div></div><div class="btns">'+
+  ov.innerHTML='<div class="panel mpP"><h2>'+plain('mpResult')+'</h2><div class="lbBox"><div class="lbList">'+rows+'</div></div>'+(r.cid&&mpAmIn()?'<p class="lbNote" id="mpSent">'+mpSentTxt()+'</p>':'')+'<div class="btns">'+
     (MP.host?'<button class="big" id="mpAgain" type="button">'+H('mpAgain')+'</button>':'<p class="lbSt">'+plain('mpWaitAgain')+'</p>')+
     '<button class="ghost" id="mpLeaveBtn" type="button">'+H('mpLeave')+'</button></div></div>';
   if(MP.host) $('mpAgain').addEventListener('click',function(){

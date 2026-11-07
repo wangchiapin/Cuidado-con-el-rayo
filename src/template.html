@@ -486,7 +486,8 @@ var TXT = {
   mpStartGo:['開始比賽','开始比赛','Empezar partida','Start match'],
   mpNeed2:['至少要 2 位玩家才能開始','至少要 2 位玩家才能开始','Se necesitan al menos 2 jugadores','At least 2 players needed'],
   mpWaitHost:['等房主開始…','等房主开始…','Esperando al anfitrión…','Waiting for the host…'],
-  mpFull:['房間滿了（最多 15 人）','房间满了（最多 15 人）','La sala está llena (máx. 15)','Room is full (max 15)'],
+  mpFull:['房間滿了','房间满了','La sala está llena','Room is full'],
+  mpBusy:['這個固定房號正在被使用，請稍後再試','这个固定房号正在被使用，请稍后再试','Este código fijo está en uso. Inténtalo más tarde.','This fixed room code is in use. Please try later.'],
   mpNone:['找不到這個房間','找不到这个房间','No se encontró la sala','Room not found'],
   mpClosedMsg:['房主已關閉房間','房主已关闭房间','El anfitrión cerró la sala','The host closed the room'],
   mpErr:['連線失敗，請稍後再試','连线失败，请稍后再试','Error de conexión. Inténtalo de nuevo.','Connection failed. Please try again.'],
@@ -543,6 +544,7 @@ var PHON=/*__PHON__*/;
 var QSP=new URLSearchParams(location.search);
 var CLASS_ID=String(QSP.get('class')||'').toLowerCase(), CLASS_MODE=/^[a-z0-9]{8,32}$/.test(CLASS_ID);
 var BANK_SID=String(QSP.get('b')||'').toLowerCase(), BANK_MODE=/^[a-z0-9]{8,32}$/.test(BANK_SID);
+var ROOM_HOST=CLASS_MODE&&QSP.get('host')==='1';      // 老師的班級房間連結（?class=…&host=1）：留著 👥 連線
 var SPECIAL=CLASS_MODE||BANK_MODE, PREVIEW=QSP.has('preview');
 var LINK_READY=!SPECIAL, CLS=null, CUSTOM=null;      // CLS＝班級資料；CUSTOM＝{name,words}（老師自訂題庫）
 var LOCK={};
@@ -745,7 +747,7 @@ function renderStart(){
   seg('segN',nList().map(function(n){ return {v:n,h:n+'<span class="tl">'+(tl('nUnit')||zh('nUnit'))+'</span>'}; }),cfg.n,function(v){ cfg.n=v; saveCfg(); renderStart(); preloadBgs(); });
   $('btnStart').innerHTML=H('start'); $('btnStart').disabled=!LINK_READY;
   [['lKb',LOCK.kb],['lLevel',LOCK.lv],['lN',LOCK.n]].forEach(function(a){ $(a[0]).parentNode.style.display=a[1]?'none':''; });   // 老師鎖定的設定不給學生改
-  $('btnLb').style.display=SPECIAL?'none':''; $('btnMulti').style.display=CLASS_MODE?'none':''; $('btnTeacher').style.display=SPECIAL?'none':'';
+  $('btnLb').style.display=SPECIAL?'none':''; $('btnMulti').style.display=CLASS_MODE&&!ROOM_HOST?'none':''; $('btnTeacher').style.display=SPECIAL?'none':'';
   var mn=$('modeNote'); if(SPECIAL&&LINK_READY){ mn.hidden=false; mn.innerHTML=modeNoteHtml(); }
   $('btnTeacher').innerHTML='<span class="ic">🏫</span><span class="lb">'+zh('teachBtn')+'</span>'; $('btnTeacher').setAttribute('aria-label',plain('teachTitle'));
   $('inName').placeholder=plain('namePh'); if($('inName').value!==getName()) $('inName').value=getName();
@@ -1359,7 +1361,7 @@ try{
     async submit(o){
       const db = await central(), h = await nickHash(o.nick), ts = serverTimestamp();
       const ref = doc(db, 'class_scores', o.cid + '_rayo_' + o.k + '_' + h);
-      const best = (o.n - o.s) * 100000 + (99999 - o.t), extra = { s: o.s, c: o.c, t: o.t, st: o.st, n: o.n };
+      const best = o.best != null ? o.best : (o.n - o.s) * 100000 + (99999 - o.t), extra = { s: o.s, c: o.c, t: o.t, st: o.st, n: o.n };
       const old = await getDoc(ref);
       if(!old.exists()){
         await setDoc(ref, { cid: o.cid, owner: o.owner, game: 'rayo', k: o.k, h, nick: o.nick, best, plays: 1, lastAt: ts, extra });

@@ -19,15 +19,19 @@ def ts(v): return v['__ts'] if isinstance(v, dict) and '__ts' in v else None
 def isint(x): return isinstance(x, int) and not isinstance(x, bool)
 def okname(n): return isinstance(n, str) and 1 <= len(n) <= 14
 
-ROOM_KEYS = {'code','hostUid','hostName','level','nq','bn','bk','status','ph','rd','n','qs','ro','elim','final','createdAt','expireAt'}   # nq（題數）舊房間可以沒有＝10 題；bn（老師題庫名稱）、bk（這一局題目的字＋讀音）只有用老師題庫開的房間才有
+ROOM_KEYS = {'code','hostUid','hostName','level','nq','bn','bs','cid','mx','bk','status','ph','rd','n','qs','ro','elim','final','createdAt','expireAt'}   # nq（題數）舊房間可以沒有＝10 題；bn（老師題庫名稱）、bk（這一局題目的字＋讀音）只有用老師題庫開的房間才有
 def room_shape(r, now):
-    return ((set(r) - {'nq','bn','bk'}) == (ROOM_KEYS - {'nq','bn','bk'}) and set(r) <= ROOM_KEYS and r.get('nq', 10) in (10, 15, 20, 25, 30) and okname(r['hostName']) and r['level'] in ('easy','normal','hard')
+    mx = r.get('mx', 15)
+    return ((set(r) - {'nq','bn','bs','cid','mx','bk'}) == (ROOM_KEYS - {'nq','bn','bs','cid','mx','bk'}) and set(r) <= ROOM_KEYS and r.get('nq', 10) in (10, 15, 20, 25, 30) and okname(r['hostName']) and r['level'] in ('easy','normal','hard')
+        and (('bs' not in r) or (isinstance(r['bs'], str) and re.fullmatch(r'[a-z0-9]{1,16}', r['bs'])))
+        and (('cid' not in r) or (isinstance(r['cid'], str) and re.fullmatch(r'[a-z0-9]{8,32}', r['cid'])))
+        and mx in (15, 35) and (mx == 15 or 'cid' in r)
         and ('bn' not in r or (isinstance(r['bn'], str) and 1 <= len(r['bn']) <= 40))
         and ('bk' not in r or (isinstance(r['bk'], list) and len(r['bk']) <= 30 and all(isinstance(x, str) and len(x) <= 80 for x in r['bk'])))
         and r['status'] in ('waiting','playing','finished','closed') and r['ph'] in ('','ready','ask','reveal','end')
         and isint(r['rd']) and 0 <= r['rd'] <= 29 and isint(r['n']) and 0 <= r['n'] <= 999
-        and isinstance(r['qs'], list) and len(r['qs']) <= r.get('nq', 10) and isinstance(r['ro'], list) and len(r['ro']) <= 15
-        and isinstance(r['elim'], dict) and len(r['elim']) <= 15 and isinstance(r['final'], list) and len(r['final']) <= 15
+        and isinstance(r['qs'], list) and len(r['qs']) <= r.get('nq', 10) and isinstance(r['ro'], list) and len(r['ro']) <= mx
+        and isinstance(r['elim'], dict) and len(r['elim']) <= mx and isinstance(r['final'], list) and len(r['final']) <= mx
         and ts(r['createdAt']) is not None and ts(r['expireAt']) is not None and ts(r['expireAt']) <= now + H7)
 def room_valid_new(code, uid, r, now):
     return (re.fullmatch(r'[0-9]{4}', code) and r['code'] == code and r['hostUid'] == uid and r['status'] == 'waiting' and r['ph'] == ''
@@ -42,6 +46,7 @@ def room_ok(op, code, uid, old, new, now):
     if recl: return False
     return bool(uid == old['hostUid'] and new['code'] == old['code'] and new['hostUid'] == old['hostUid']
         and new['createdAt'] == old['createdAt'] and new['expireAt'] == old['expireAt']
+        and new.get('cid') == old.get('cid') and new.get('mx', 15) == old.get('mx', 15) and new.get('bs') == old.get('bs')
         and ((new['level'] == old['level'] and new.get('nq', 10) == old.get('nq', 10)) or new['status'] == 'waiting') and room_shape(new, now))
 PL_KEYS = {'name','g','ci','want','spec','a','joinedAt'}
 def pl_shape(p):
@@ -503,6 +508,76 @@ with sync_playwright() as p:
     check(BJ.evaluate("()=>!window.__nian.BYCH['饕']") and not BJ.evaluate("()=>window.__nian.BYCH['饕']"), '學生離開房間後，「饕」不留在單人遊戲的字表裡')
     AH.click('#btnPause'); AH.wait_for_selector('#mpOut'); AH.click('#mpOut'); AH.wait_for_timeout(500)
     check(AH.evaluate("()=>window.__nian.BYCH['饕'].r[0]") == 'tao1', '老師回到自己的題庫頁面，題庫的字還在（練習連結照用）')
+
+
+    print('== 老師班級房間：固定房號、35 人、成績進老師中心')
+    CLS = 'clsroom1234'
+    BE.docs['classes/' + CLS] = {'owner': 'T1', 'slot': 0, 'name': '週三班', 'showBoard': False, 'rc': '7312', 'updatedAt': 'x'}
+    for c_ in list(b.contexts): c_.close()
+    QC = '&class=%s&host=1&b=%s&lv=normal&n=10' % (CLS, BANK)
+    CH = open_page(ctx, 81, '老師', scale=1, q=QC)
+    check(CH.is_visible('#btnMulti'), '班級開房連結（host=1）：首頁留著 👥 連線鈕')
+    CH.click('#btnMulti'); CH.wait_for_selector('#mpMake')
+    check(CH.locator('#mpSegLv button').count() == 1 and CH.locator('#mpSegN button').count() == 1, '班級鎖定的難度和題數：房主只剩一個選項')
+    CH.click('#mpMake'); CH.wait_for_selector('#mpLobby', timeout=8000)
+    codeC = CH.inner_text('.codeBig').strip(); roomC = BE.docs['rayo_rooms/' + codeC]
+    check(codeC == '7312' and roomC.get('cid') == CLS and roomC.get('mx') == 35 and roomC.get('bs') == BANK[:8] and roomC['level'] == 'normal' and roomC['nq'] == 10, '用班級的固定房號 7312 開房，房間記班級、35 人、題庫碼：%s' % {k: roomC.get(k) for k in ('cid', 'mx', 'bs', 'level', 'nq')})
+    check('0/35' in CH.inner_text('#mpLobby') or '1/35' in CH.inner_text('#mpLobby'), '等人畫面顯示人數 /35')
+    CH.close()
+    CH = open_page(ctx, 81, '老師', scale=1, q=QC)      # 同一支手機重開：自己上次沒關的固定房間，接回去
+    CH.click('#btnMulti'); CH.wait_for_selector('#mpMake'); CH.click('#mpMake'); CH.wait_for_selector('#mpLobby', timeout=8000)
+    check(CH.inner_text('.codeBig').strip() == '7312' and BE.docs['rayo_rooms/7312']['hostUid'] == 'U81', '房主重開連結：接回自己沒關的固定房間')
+    CX = open_page(ctx, 89, '別人', scale=1, q=QC); CX.click('#btnMulti'); CX.wait_for_selector('#mpMake'); CX.click('#mpMake'); CX.wait_for_timeout(1500)
+    check(CX.locator('#mpLobby').count() == 0 and BE.docs['rayo_rooms/7312']['hostUid'] == 'U81', '別人拿同一個班級連結想搶固定房號：被擋下、房間還是原房主的')
+    CX.close()
+    SJ = open_page(ctx, 82, '學生', scale=1); join_room(SJ, '7312')
+    check('2/35' in CH.inner_text('#mpLobby'), '學生用房號加入（沒有班級連結也行）：2/35')
+    CH.click('#mpStart')
+    for pg in (CH, SJ): pg.wait_for_function("()=>window.__nian.MP().room&&window.__nian.MP().room.status==='playing'", timeout=8000)
+    for rd in range(0, 10):
+        for pg in (CH, SJ):
+            if rd <= 2 or pg is CH: wait_q(pg, rd, 30000)
+        wait_ask(CH, 20000)
+        if rd <= 2: wait_ask(SJ, 20000)
+        answer(CH, True)
+        if rd <= 2: answer(SJ, rd != 2)       # 學生在第 3 題答錯，被劈
+        for pg in (CH, SJ): wait_ph(pg, 'reveal', rd, 30000)
+    CH.wait_for_selector('#ov .panel .lbRow', timeout=30000); SJ.wait_for_selector('#ov .panel .lbRow', timeout=30000)
+    CH.wait_for_function("()=>document.getElementById('mpSent')&&/已送|送出|enviad|sent/i.test(document.getElementById('mpSent').textContent)", timeout=8000)
+    sc = {k: v for k, v in BE.docs.items() if k.startswith('class_scores/')}
+    check(len(sc) == 2 and all(k.startswith('class_scores/%s_rayo_room-normal_10_pinyin_%s_' % (CLS, BANK[:8])) for k in sc), '兩個人的成績都送進這個班級，設定代碼前面是 room-：%s' % list(sc))
+    byn = {v['nick']: v for v in sc.values()}
+    check(byn['老師']['extra']['c'] == 10 and byn['老師']['extra']['s'] == 0 and byn['老師']['extra']['n'] == 10 and byn['老師']['owner'] == 'T1', '登頂的人：答對 10、被劈 0，owner＝班級老師：%s' % byn['老師'])
+    check(byn['學生']['extra']['c'] == 2 and byn['學生']['extra']['s'] == 1 and byn['學生']['best'] < byn['老師']['best'], '被劈的人：爬了 2 階、被劈 1，分數比登頂的低：%s' % byn['學生'])
+    cp = [v for k, v in BE.docs.items() if k.startswith('class_plays/') or k.startswith('class_plays/')]
+    cp = [v for k, v in BE.docs.items() if k.startswith('class_plays/')]
+    st = [v for v in cp if v['nick'] == '學生']
+    check(len(cp) == 2 and st and [x['ok'] for x in st[0]['qs']] == [True, True, False] and st[0]['k'].startswith('room-'), '逐題紀錄：被劈的人是 對、對、錯：%s' % (st[0]['qs'] if st else cp))
+    check(BE.denied == [], '班級房間整段沒有寫入被規則擋下：%s' % BE.denied[:5])
+    CH.click('#mpLeaveBtn'); CH.wait_for_timeout(500); SJ.close()
+
+    print('== 老師班級房間：35 人上限、人多時版面')
+    CLS2 = 'clsroom5678'
+    BE.docs['classes/' + CLS2] = {'owner': 'T1', 'slot': 1, 'name': '週五班', 'showBoard': False, 'updatedAt': 'x'}
+    for c_ in list(b.contexts): c_.close()
+    H2 = open_page(ctx, 91, '老師', scale=8, q='&class=%s&host=1' % CLS2)
+    H2.click('#btnMulti'); H2.wait_for_selector('#mpMake'); H2.click('#mpMake'); H2.wait_for_selector('#mpLobby', timeout=8000)
+    code2 = H2.inner_text('.codeBig').strip(); room2 = BE.docs['rayo_rooms/' + code2]
+    check(re.fullmatch(r'[1-4][0-9]{3}', code2) and room2['mx'] == 35, '沒有固定房號：隨機房號只用 1000～4999（%s），人數上限 35' % code2)
+    now = int(time.time() * 1000)
+    for i in range(33):
+        BE.docs['rayo_rooms/%s/players/F%02d' % (code2, i)] = {'name': '同學%02d' % i, 'g': 'm' if i % 2 else 'f', 'ci': i % 5, 'want': False, 'spec': False, 'a': {}, 'joinedAt': {'__ts': now + i}}
+    J1 = open_page(ctx, 92, '第35位', scale=8); join_room(J1, code2)
+    check('35/35' in H2.inner_text('#mpLobby'), '加到 35 人：35/35')
+    J2 = open_page(ctx, 93, '第36位', scale=8); J2.click('#btnMulti'); J2.wait_for_selector('#mpGo'); J2.fill('#mpCode', code2); J2.click('#mpGo'); J2.wait_for_timeout(1200)
+    check(J2.locator('#mpLobby').count() == 0 and ('滿' in J2.inner_text('#mpMsg')) and len([k for k in BE.docs if k.startswith('rayo_rooms/%s/players/' % code2)]) == 35, '第 36 位被擋：房間滿了')
+    H2.click('#mpStart')
+    for pg in (H2, J1): pg.wait_for_function("()=>window.__nian.MP().room&&window.__nian.MP().room.status==='playing'", timeout=8000)
+    for pg in (H2, J1): wait_q(pg, 0, 30000)
+    check(len(BE.docs['rayo_rooms/' + code2]['ro']) == 35 and H2.locator('#crowd .fig').count() == 35, '35 人一起開賽：場上 35 個小人')
+    box = H2.evaluate("""()=>{const sc=document.getElementById('scene').getBoundingClientRect();return [...document.querySelectorAll('#crowd .fig')].every(f=>{const r=f.getBoundingClientRect();return r.left>=sc.left-2&&r.right<=sc.right+2&&r.top>=sc.top-2&&r.bottom<=sc.bottom+2})}""")
+    check(box, '35 個小人都在畫面裡')
+    check(BE.denied == [], '35 人開賽沒有寫入被規則擋下：%s' % BE.denied[:5])
 
     print('== 頁面錯誤')
     check(errs == [], '所有分頁都沒有 JS 錯誤 %s' % errs[:3])

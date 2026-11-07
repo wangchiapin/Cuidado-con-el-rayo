@@ -511,7 +511,8 @@ var TXT = {
   mpStartGo:['開始比賽','开始比赛','Empezar partida','Start match'],
   mpNeed2:['至少要 2 位玩家才能開始','至少要 2 位玩家才能开始','Se necesitan al menos 2 jugadores','At least 2 players needed'],
   mpWaitHost:['等房主開始…','等房主开始…','Esperando al anfitrión…','Waiting for the host…'],
-  mpFull:['房間滿了（最多 15 人）','房间满了（最多 15 人）','La sala está llena (máx. 15)','Room is full (max 15)'],
+  mpFull:['房間滿了','房间满了','La sala está llena','Room is full'],
+  mpBusy:['這個固定房號正在被使用，請稍後再試','这个固定房号正在被使用，请稍后再试','Este código fijo está en uso. Inténtalo más tarde.','This fixed room code is in use. Please try later.'],
   mpNone:['找不到這個房間','找不到这个房间','No se encontró la sala','Room not found'],
   mpClosedMsg:['房主已關閉房間','房主已关闭房间','El anfitrión cerró la sala','The host closed the room'],
   mpErr:['連線失敗，請稍後再試','连线失败，请稍后再试','Error de conexión. Inténtalo de nuevo.','Connection failed. Please try again.'],
@@ -611,6 +612,7 @@ return {toZhuyin:toZhuyin,toPinyin:toPinyin};})();
 var QSP=new URLSearchParams(location.search);
 var CLASS_ID=String(QSP.get('class')||'').toLowerCase(), CLASS_MODE=/^[a-z0-9]{8,32}$/.test(CLASS_ID);
 var BANK_SID=String(QSP.get('b')||'').toLowerCase(), BANK_MODE=/^[a-z0-9]{8,32}$/.test(BANK_SID);
+var ROOM_HOST=CLASS_MODE&&QSP.get('host')==='1';      // 老師的班級房間連結（?class=…&host=1）：留著 👥 連線
 var SPECIAL=CLASS_MODE||BANK_MODE, PREVIEW=QSP.has('preview');
 var LINK_READY=!SPECIAL, CLS=null, CUSTOM=null;      // CLS＝班級資料；CUSTOM＝{name,words}（老師自訂題庫）
 var LOCK={};
@@ -813,7 +815,7 @@ function renderStart(){
   seg('segN',nList().map(function(n){ return {v:n,h:n+'<span class="tl">'+(tl('nUnit')||zh('nUnit'))+'</span>'}; }),cfg.n,function(v){ cfg.n=v; saveCfg(); renderStart(); preloadBgs(); });
   $('btnStart').innerHTML=H('start'); $('btnStart').disabled=!LINK_READY;
   [['lKb',LOCK.kb],['lLevel',LOCK.lv],['lN',LOCK.n]].forEach(function(a){ $(a[0]).parentNode.style.display=a[1]?'none':''; });   // 老師鎖定的設定不給學生改
-  $('btnLb').style.display=SPECIAL?'none':''; $('btnMulti').style.display=CLASS_MODE?'none':''; $('btnTeacher').style.display=SPECIAL?'none':'';
+  $('btnLb').style.display=SPECIAL?'none':''; $('btnMulti').style.display=CLASS_MODE&&!ROOM_HOST?'none':''; $('btnTeacher').style.display=SPECIAL?'none':'';
   var mn=$('modeNote'); if(SPECIAL&&LINK_READY){ mn.hidden=false; mn.innerHTML=modeNoteHtml(); }
   $('btnTeacher').innerHTML='<span class="ic">🏫</span><span class="lb">'+zh('teachBtn')+'</span>'; $('btnTeacher').setAttribute('aria-label',plain('teachTitle'));
   $('inName').placeholder=plain('namePh'); if($('inName').value!==getName()) $('inName').value=getName();
@@ -1325,8 +1327,9 @@ function mpFresh(){
 MP=mpFresh();
 var mpLv="normal", mpN=10, MAXP=15;
 /* 用老師題庫（練習連結 ?b=）開房：題數可選 10～30（不超過題庫字數）、難度只有簡單／普通；房間裡多存 bn（題庫名稱）和 bk（這一局題目的字＋讀音，大家都用房間裡的，不用自己有題庫） */
-function mpNList(){ return CUSTOM?nList():NQS; }
-function mpLvList(r){ return (CUSTOM||(r&&r.bn))?['easy','normal']:['easy','normal','hard']; }
+function mpNList(){ var l=CUSTOM?nList():NQS; return LOCK.n&&l.indexOf(LOCK.n)>=0?[LOCK.n]:l; }   // 班級房間：老師鎖的題數、難度房主不能改
+function mpMax(r){ return (r&&r.mx)||MAXP; }      // 這間房最多幾人：一般 15；老師班級房間 35
+function mpLvList(r){ var l=(CUSTOM||(r&&r.bn))?['easy','normal']:['easy','normal','hard']; return LOCK.lv&&l.indexOf(LOCK.lv)>=0?[LOCK.lv]:l; }
 function mpWordStr(c){ var w=BYCH[c]; return w?[w.c,w.s||w.c,w.r.join(',')].join('\t'):c; }
 function mpBank(r){      // 房間裡有自訂題目（bk）→ 加進查詢表，大家同一份讀音
   if(!r||!r.bk||!r.bk.length) return;
@@ -1386,9 +1389,10 @@ function mpMake(){
   mpBusy(true); mpMsg('lbLoading');
   waitRM().then(function(rm){
     if(!rm) throw 0;
-    var me=mpMe(false); me.level=mpLv; me.nq=mpN; if(CUSTOM) me.bn=CUSTOM.name||'自訂題庫';
+    var me=mpMe(false); me.level=mpLv; me.nq=mpN; if(CUSTOM){ me.bn=CUSTOM.name||'自訂題庫'; me.bs=BANK_SID.slice(0,8); }
+    if(CLASS_MODE&&CLS){ me.cid=CLASS_ID; me.mx=35; if(CLS.rc) me.code=CLS.rc; }   // 老師的班級房間：成績回傳到班級、最多 35 人、有固定房號就用固定的
     return rm.create(me).then(function(code){ mpEnter(code,true); });
-  }).catch(function(){ mpBusy(false); mpMsg('mpErr'); });
+  }).catch(function(e){ mpBusy(false); mpMsg(e&&e.message==='busy'?'mpBusy':'mpErr'); });
 }
 function mpJoin(code,want){
   if(!getName()){ mpMsg('mpNeedName'); return; }
@@ -1479,7 +1483,7 @@ function mpLobby(){
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpLevelIs')+'</div>'+lvl+'</div>'+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpNIs')+'</div>'+nsel+'</div>'+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpKb')+'</div><div class="seg" id="mpSegKb"></div></div>'+
-    '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpPlayers')+' '+n+'/'+MAXP+'</div><div class="plList">'+rows+'</div></div>'+
+    '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpPlayers')+' '+n+'/'+mpMax(r)+'</div><div class="plList">'+rows+'</div></div>'+
     '<div class="btns">'+act+'<button class="ghost" id="mpLeaveBtn" type="button">'+H('mpLeave')+'</button></div></div>';
   seg('mpSegKb',[{v:'pinyin',h:'拼音<span class="tl">pīnyīn</span>'},{v:'zhuyin',h:'注音<span class="tl">ㄅㄆㄇㄈ</span>'}],cfg.kb,function(v){ cfg.kb=v; saveCfg(); MP.lobbyKey=''; mpLobby(); });
   if(MP.host) seg('mpSegLv2',mpLvList(r).map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),r.level,function(v){
@@ -1504,7 +1508,7 @@ function mpPick(level,n,custom){
 }
 function mpStart(){
   var r=MP.room; if(!MP.host||!r||r.status!=='waiting') return;
-  var ro=mpPlayersSorted().filter(function(p){ return !p.spec; }).slice(0,MAXP).map(function(p){ return p.uid; });
+  var ro=mpPlayersSorted().filter(function(p){ return !p.spec; }).slice(0,mpMax(r)).map(function(p){ return p.uid; });
   if(ro.length<2) return;
   $('mpStart').disabled=true;
   waitRM().then(function(rm){
@@ -1529,7 +1533,7 @@ function mpSetup(){
   measure(); mpBuildFigs(); mpLayout(false);
   requestAnimationFrame(function(){ measure(); mpLayout(false); last=performance.now(); requestAnimationFrame(tick); });
   setInfo(''); $('typedTxt').className=''; renderTyped();
-  if(mpAmIn()&&MP.playsN!==r.n){ MP.playsN=r.n; try{ HGPlays.start('room-'+r.level+'-'+cfg.kb+(NSTEP===10?'':'-n'+NSTEP),getName()); }catch(e){} }
+  if(mpAmIn()&&MP.playsN!==r.n){ MP.playsN=r.n; MP.rt0=Date.now(); try{ HGPlays.start('room-'+r.level+'-'+cfg.kb+(NSTEP===10?'':'-n'+NSTEP),getName()); }catch(e){} }
 }
 function mpBuildFigs(){
   var c=$('crowd'); c.innerHTML=''; MP.figs={};
@@ -1557,14 +1561,14 @@ function mpCam(){ var m=0; mpRoster().forEach(function(u){ m=Math.max(m,mpStepOf
 function mpLayout(anim){
   var r=MP.room, ro=mpRoster(), N=ro.length; if(!N||!r) return;
   camTo(mpCam(),anim);
-  var fac=N<=2?1:N<=4?.92:N<=7?.82:N<=10?.74:.66;
-  var nf=Math.max(9,Math.min(12,12*fac+1)), nch=N>8?3:4, nameW=nch*nf*1.02+8, rowStep=Math.max(11,SPC*geo.s*.95);
+  var fac=N<=2?1:N<=4?.92:N<=7?.82:N<=10?.74:N<=15?.66:N<=25?.54:.46;      // 人多（班級房間最多 35 人）就縮小
+  var nf=Math.max(8,Math.min(12,12*fac+1)), nch=N>8?3:4, nameW=nch*nf*1.02+8, rowStep=Math.max(11,SPC*geo.s*.95);
   var groups={}; ro.forEach(function(u){ var st=mpStepOf(u); (groups[st]=groups[st]||[]).push(u); });
   MP.pos={};
   Object.keys(groups).forEach(function(st){
     var g=groups[st], k=g.length, f=footPos(+st), h=geo.hC*fac*f.sc, w=h*60/102;
     var span=(310-160*Math.min(+st,NSTEP)/NSTEP)*geo.s;                       // 這一階的石階寬度（越高越窄）
-    var maxCols=Math.max(1,Math.floor(span/nameW)), rows=1; while(Math.ceil(k/rows)>maxCols&&rows<4) rows++;
+    var maxCols=Math.max(1,Math.floor(span/nameW)), rows=1; while(Math.ceil(k/rows)>maxCols&&rows<(N>15?6:4)) rows++;
     var cols=Math.ceil(k/rows), colSp=Math.min(span/cols,Math.max(w*1.4,nameW));
     g.forEach(function(u,i){
       var row=Math.floor(i/cols), col=i%cols, inRow=Math.min(cols,k-row*cols);
@@ -1670,10 +1674,26 @@ function mpFinish(){
   mpLayout(true); mpStrip(); mpHud(); setStorm(0);
   if(MP.shown==='res'+r.n) return; MP.shown='res'+r.n;
   var e=mpElim(), mineR=e[MP.uid]!==undefined?+e[MP.uid]:NSTEP;
-  if(mpAmIn()){ try{ HGPlays.end({score:mineR,secs:Math.round((Date.now()-MP.t0)/1000),name:getName()}); }catch(x){} }
+  if(mpAmIn()){ try{ HGPlays.end({score:mineR,secs:Math.round((Date.now()-MP.t0)/1000),name:getName()}); }catch(x){}
+    if(r.cid) mpClassSubmit(r,mineR); }
   setTimeout(function(){ if(MP.on&&MP.inGame&&MP.room&&MP.room.status==='finished'&&MP.room.n===r.n) mpResults(); },1500);
   sfx('done');
 }
+/* 老師班級房間：每個人自己把這一局的成績送給老師（走班級成績的同一條路；k 前面加 room-，老師中心分開統計） */
+function mpClassSubmit(r,mineR){
+  var n=NSTEP, struck=mineR<n, secs=Math.max(1,Math.min(3600,Math.round((Date.now()-(MP.rt0||MP.t0))/1000)));
+  var log=[]; for(var i=0;i<n&&i<30&&r.qs[i]!==undefined;i++){ if(i<mineR) log.push({c:r.qs[i],ok:true}); else if(i===mineR&&struck) log.push({c:r.qs[i],ok:false}); }
+  var k='room-'+r.level+'_'+n+'_'+cfg.kb+(r.bs?'_'+r.bs:''), name=getName(), n0=r.n;
+  MP.sent='';
+  waitCEN().then(function(cen){
+    if(!cen) throw 0;
+    return cen.cls(r.cid).then(function(c){
+      return cen.submit({cid:r.cid,owner:c.owner,k:k,nick:name,n:n,s:struck?1:0,c:mineR,t:secs,st:struck?0:3,log:log,best:mineR*100000+(99999-secs)});
+    });
+  }).then(function(){ MP.sent='ok'; },function(e){ console.warn(e); MP.sent=e&&e.code==='permission-denied'?'exp':'fail'; })
+  .then(function(){ var el=$('mpSent'); if(el&&MP.room&&MP.room.n===n0) el.innerHTML=mpSentTxt(); });
+}
+function mpSentTxt(){ return MP.sent==='ok'?plain('sentOk'):MP.sent==='exp'?plain('sentExpired'):MP.sent==='fail'?plain('sentFail'):plain('lbLoading'); }
 function mpResults(){
   var r=MP.room, fin=(r.final||[]).slice().sort(function(a,b){ return b.r-a.r; });
   var ov=$('ov'); ov.hidden=false; MP.resultsUp=true;
@@ -1683,7 +1703,7 @@ function mpResults(){
     var rk=1+fin.filter(function(y){ return y.r>x.r; }).length;
     return '<div class="lbRow'+(x.uid===MP.uid?' me':'')+'"><span class="lbRank">'+(rk<=3?medals[rk-1]:rk)+'</span><span class="lbName">'+esc(x.name)+'</span><span class="lbVal"><b>'+(x.r>=NSTEP?'🏔 '+zh('mpTop'):mpTxt('mpSteps',x.r))+'</b></span></div>';
   }).join('');
-  ov.innerHTML='<div class="panel mpP"><h2>'+plain('mpResult')+'</h2><div class="lbBox"><div class="lbList">'+rows+'</div></div><div class="btns">'+
+  ov.innerHTML='<div class="panel mpP"><h2>'+plain('mpResult')+'</h2><div class="lbBox"><div class="lbList">'+rows+'</div></div>'+(r.cid&&mpAmIn()?'<p class="lbNote" id="mpSent">'+mpSentTxt()+'</p>':'')+'<div class="btns">'+
     (MP.host?'<button class="big" id="mpAgain" type="button">'+H('mpAgain')+'</button>':'<p class="lbSt">'+plain('mpWaitAgain')+'</p>')+
     '<button class="ghost" id="mpLeaveBtn" type="button">'+H('mpLeave')+'</button></div></div>';
   if(MP.host) $('mpAgain').addEventListener('click',function(){
@@ -1811,7 +1831,7 @@ try{
   /* ===== 連線房間 window.RM =====
      rayo_rooms/{4位數房號}            ← 房主寫（難度、題目、第幾題、誰被淘汰…）
      rayo_rooms/{房號}/players/{uid}   ← 每個人只寫自己的（暱稱、角色、答題結果 a）
-     規則見 game-kit 的 firebase-rules/memorma-24dab.rules.txt。一間房最多 15 人，房間 6 小時後過期。 */
+     規則見 game-kit 的 firebase-rules/memorma-24dab.rules.txt。一間房最多 15 人（老師班級房間 35 人），房間 6 小時後過期。 */
   const MAXP = 15, ROOM_MS = 6 * 3600 * 1000;
   const roomRef = code => doc(db, 'rayo_rooms', code);
   const meRef = (code, uid) => doc(db, 'rayo_rooms', code, 'players', uid);
@@ -1825,16 +1845,27 @@ try{
     async create(o){
       const uid = await ensureUid(), name = cleanName(o.name);
       if(!name) throw new Error('noname');
+      const fixed = /^[0-9]{4}$/.test(o.code || '') ? o.code : '';      // 老師班級的固定房號（5000～9999）；一般隨機房號只用 1000～4999，不會撞到
       for(let i = 0; i < 12; i++){
-        const code = String(Math.floor(1000 + Math.random() * 9000));
+        const code = fixed || String(Math.floor(1000 + Math.random() * 4000));
         const snap = await getDoc(roomRef(code));
         if(snap.exists()){
           const d = snap.data();
-          if(tsMs(d.expireAt) > Date.now() && d.status !== 'closed') continue;
+          if(tsMs(d.expireAt) > Date.now() && d.status !== 'closed'){
+            if(fixed && d.hostUid === uid && d.cid === o.cid){      // 自己上次開的固定房間還沒關：接回去當房主
+              const mine = await getDoc(meRef(code, uid));
+              if(!mine.exists()) await setDoc(meRef(code, uid), { name, g: o.g, ci: o.ci, want: !!o.want, spec: !!o.want, a: {}, joinedAt: serverTimestamp() });
+              return code;
+            }
+            if(fixed) throw new Error('busy');
+            continue;
+          }
           // 舊房間留下的玩家資料清掉（房主才能刪，所以要等新房間建好再清）
         }
         const data = { code, hostUid: uid, hostName: name, level: o.level, nq: [10,15,20,25,30].includes(o.nq) ? o.nq : 10, status: 'waiting', ph: '', rd: 0, n: 0,
           qs: [], ro: [], elim: {}, final: [], createdAt: serverTimestamp(), expireAt: Timestamp.fromMillis(Date.now() + ROOM_MS) };
+        if(o.cid){ data.cid = String(o.cid); data.mx = 35; }   // 老師班級房間：成績送到這個班級、最多 35 人
+        if(o.bs) data.bs = String(o.bs).slice(0, 16);
         if(o.bn) data.bn = String(o.bn).slice(0, 40);   // 用老師題庫開的房間：題庫名稱（開始時房主再把這一局的題目字與讀音寫進 bk）
         await setDoc(roomRef(code), data);
         if(snap.exists()){
@@ -1856,7 +1887,7 @@ try{
       if(r.status === 'closed' || tsMs(r.expireAt) < Date.now()) return { ok:false, why:'closed' };
       const ps = await getDocs(collection(db, 'rayo_rooms', code, 'players'));
       const mine = ps.docs.find(d => d.id === uid);
-      if(!mine && ps.size >= MAXP) return { ok:false, why:'full' };
+      if(!mine && ps.size >= (r.mx || MAXP)) return { ok:false, why:'full' };
       if(mine) return { ok:true, spec: !!mine.data().spec, again:true };
       const spec = !!o.want || r.status !== 'waiting';
       await setDoc(meRef(code, uid), { name, g: o.g, ci: o.ci, want: !!o.want, spec, a: {}, joinedAt: serverTimestamp() });
@@ -1926,7 +1957,7 @@ try{
     async submit(o){
       const db = await central(), h = await nickHash(o.nick), ts = serverTimestamp();
       const ref = doc(db, 'class_scores', o.cid + '_rayo_' + o.k + '_' + h);
-      const best = (o.n - o.s) * 100000 + (99999 - o.t), extra = { s: o.s, c: o.c, t: o.t, st: o.st, n: o.n };
+      const best = o.best != null ? o.best : (o.n - o.s) * 100000 + (99999 - o.t), extra = { s: o.s, c: o.c, t: o.t, st: o.st, n: o.n };
       const old = await getDoc(ref);
       if(!old.exists()){
         await setDoc(ref, { cid: o.cid, owner: o.owner, game: 'rayo', k: o.k, h, nick: o.nick, best, plays: 1, lastAt: ts, extra });

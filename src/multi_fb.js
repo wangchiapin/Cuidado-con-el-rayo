@@ -1,7 +1,7 @@
   /* ===== 連線房間 window.RM =====
      rayo_rooms/{4位數房號}            ← 房主寫（難度、題目、第幾題、誰被淘汰…）
      rayo_rooms/{房號}/players/{uid}   ← 每個人只寫自己的（暱稱、角色、答題結果 a）
-     規則見 game-kit 的 firebase-rules/memorma-24dab.rules.txt。一間房最多 15 人，房間 6 小時後過期。 */
+     規則見 game-kit 的 firebase-rules/memorma-24dab.rules.txt。一間房最多 15 人（老師班級房間 35 人），房間 6 小時後過期。 */
   const MAXP = 15, ROOM_MS = 6 * 3600 * 1000;
   const roomRef = code => doc(db, 'rayo_rooms', code);
   const meRef = (code, uid) => doc(db, 'rayo_rooms', code, 'players', uid);
@@ -15,16 +15,27 @@
     async create(o){
       const uid = await ensureUid(), name = cleanName(o.name);
       if(!name) throw new Error('noname');
+      const fixed = /^[0-9]{4}$/.test(o.code || '') ? o.code : '';      // 老師班級的固定房號（5000～9999）；一般隨機房號只用 1000～4999，不會撞到
       for(let i = 0; i < 12; i++){
-        const code = String(Math.floor(1000 + Math.random() * 9000));
+        const code = fixed || String(Math.floor(1000 + Math.random() * 4000));
         const snap = await getDoc(roomRef(code));
         if(snap.exists()){
           const d = snap.data();
-          if(tsMs(d.expireAt) > Date.now() && d.status !== 'closed') continue;
+          if(tsMs(d.expireAt) > Date.now() && d.status !== 'closed'){
+            if(fixed && d.hostUid === uid && d.cid === o.cid){      // 自己上次開的固定房間還沒關：接回去當房主
+              const mine = await getDoc(meRef(code, uid));
+              if(!mine.exists()) await setDoc(meRef(code, uid), { name, g: o.g, ci: o.ci, want: !!o.want, spec: !!o.want, a: {}, joinedAt: serverTimestamp() });
+              return code;
+            }
+            if(fixed) throw new Error('busy');
+            continue;
+          }
           // 舊房間留下的玩家資料清掉（房主才能刪，所以要等新房間建好再清）
         }
         const data = { code, hostUid: uid, hostName: name, level: o.level, nq: [10,15,20,25,30].includes(o.nq) ? o.nq : 10, status: 'waiting', ph: '', rd: 0, n: 0,
           qs: [], ro: [], elim: {}, final: [], createdAt: serverTimestamp(), expireAt: Timestamp.fromMillis(Date.now() + ROOM_MS) };
+        if(o.cid){ data.cid = String(o.cid); data.mx = 35; }   // 老師班級房間：成績送到這個班級、最多 35 人
+        if(o.bs) data.bs = String(o.bs).slice(0, 16);
         if(o.bn) data.bn = String(o.bn).slice(0, 40);   // 用老師題庫開的房間：題庫名稱（開始時房主再把這一局的題目字與讀音寫進 bk）
         await setDoc(roomRef(code), data);
         if(snap.exists()){
@@ -46,7 +57,7 @@
       if(r.status === 'closed' || tsMs(r.expireAt) < Date.now()) return { ok:false, why:'closed' };
       const ps = await getDocs(collection(db, 'rayo_rooms', code, 'players'));
       const mine = ps.docs.find(d => d.id === uid);
-      if(!mine && ps.size >= MAXP) return { ok:false, why:'full' };
+      if(!mine && ps.size >= (r.mx || MAXP)) return { ok:false, why:'full' };
       if(mine) return { ok:true, spec: !!mine.data().spec, again:true };
       const spec = !!o.want || r.status !== 'waiting';
       await setDoc(meRef(code, uid), { name, g: o.g, ci: o.ci, want: !!o.want, spec, a: {}, joinedAt: serverTimestamp() });
