@@ -309,19 +309,16 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #info .wt{color:var(--ink2)}
 
 /* ---------- 首頁右上角：設定、說明 ---------- */
-#iconRow{display:flex;justify-content:center;gap:12px;margin-top:10px}
+#iconRow{display:flex;justify-content:center;gap:6px;margin-top:10px}
 .cpr{font-size:9px;line-height:1.35;color:rgba(120,120,120,.85);text-align:center;margin-top:6px}
-#iconRow .ib{width:44px;height:44px}
+#iconRow .ib{flex:0 1 52px;min-width:0;width:52px;height:50px}
 /* 首頁的 🔊 放在底下那排；遊戲裡的 🔊 還是在右上角。首頁上有視窗（排行榜、連線）時，右上角的 🔊 照常顯示 */
 #app:has(#start:not([hidden])):has(#ov[hidden]) ~ #hgMute{display:none}
 .ib{width:40px;height:40px;border-radius:50%;border:1px solid rgba(0,0,0,.28);background:rgba(255,255,255,.88);color:#222;font-size:19px;line-height:1;padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .ib:active{transform:scale(.94)}
 .ib.sq{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1;border-radius:10px;background:var(--key);border:1px solid var(--keyb);box-shadow:none;font-size:13px;font-weight:600;color:var(--ink);letter-spacing:0}
-#btnLb{font-size:19px}
-#btnMulti .ic{font-size:17px}
-#btnMulti .lb{font-size:10px;font-weight:600}
-#btnTeacher .ic{font-size:17px}
-#btnTeacher .lb{font-size:9px;font-weight:600;white-space:nowrap}
+#iconRow .ic{font-size:19px;line-height:1}
+#iconRow .lb{font-size:10px;font-weight:600;white-space:nowrap;line-height:1.1}
 .setPanel{text-align:left}
 .setPanel h2{text-align:center}
 .setPanel .how{margin-top:0}
@@ -359,7 +356,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
     <div id="helpBody"><div class="how" id="tHow"></div></div>
   </div>
   <div id="startBar"><button class="big" id="btnStart"></button>
-    <div id="iconRow"><button class="ib sq" id="btnMulti" type="button"></button><button class="ib sq" id="btnLb" type="button"></button><button class="ib" id="btnSet" type="button">⚙</button><button class="ib" id="btnHelp" type="button">❓</button><button class="ib" id="btnSnd" type="button"></button><button class="ib sq" id="btnTeacher" type="button"></button></div><div class="cpr">© 2026 @cadadiaunosminutos_ben_chino<br>保留所有權利 / Todos los derechos reservados</div></div>
+    <div id="iconRow"><button class="ib sq" id="btnMulti" type="button"></button><button class="ib sq" id="btnLb" type="button"></button><button class="ib sq" id="btnSet" type="button"></button><button class="ib sq" id="btnHelp" type="button"></button><button class="ib sq" id="btnSnd" type="button"></button><button class="ib sq" id="btnTeacher" type="button"></button></div><div class="cpr">© 2026 @cadadiaunosminutos_ben_chino<br>保留所有權利 / Todos los derechos reservados</div></div>
 </section>
 
 <!-- 遊戲 -->
@@ -481,7 +478,11 @@ var TXT = {
   helpTitle:['遊戲說明','游戏说明','Cómo se juega','How to play'],
   setDone:['完成','完成','Listo','Done'],
   mpBtn:['連線','连线','En línea','Online'],
-  teachBtn:['老師中心','老师中心','Profesor','Teacher'],
+  teachBtn:['老師','老师','Profesor','Teacher'],
+  lbBtn:['排行榜','排行榜','Ranking','Ranking'],
+  setBtn:['設定','设定','Ajustes','Settings'],
+  helpBtn:['說明','说明','Ayuda','Help'],
+  sndBtn:['聲音','声音','Sonido','Sound'],
   teachTitle:['老師中心（老師專用）','老师中心（老师专用）','Centro del profesor (para profesores)','Teacher center (for teachers)'],
   noteClass:['班級連結：成績會自動送給老師','班级连结：成绩会自动送给老师','Enlace de clase: tu resultado se envía al profesor','Class link: your result goes to your teacher'],
   notePractice:['練習連結：不記成績、不上排行榜','练习连结：不记成绩、不上排行榜','Enlace de práctica: no guarda puntaje ni entra a la clasificación','Practice link: no scores saved, no leaderboard'],
@@ -792,7 +793,7 @@ function paintLb(){
 }
 $('btnLb').addEventListener('click',showLb);
 $('btnTeacher').addEventListener('click',function(){ try{ window.open('https://wangchiapin.github.io/profesor/#/home','_blank','noopener'); }catch(e){} });
-$('btnSnd').addEventListener('click',function(){ var hm=$('hgMute'); if(hm){ hm.click(); this.textContent=hm.textContent; } });
+$('btnSnd').addEventListener('click',function(){ var hm=$('hgMute'); if(hm){ hm.click(); var ic=this.querySelector('.ic'); if(ic) ic.textContent=hm.textContent; } });
 $('inName').addEventListener('input',function(){ setName(this.value); });
 
 /* ---------- 首頁 ---------- */
@@ -822,10 +823,10 @@ function renderStart(){
   var mn=$('modeNote'); if(SPECIAL&&LINK_READY){ mn.hidden=false; mn.innerHTML=modeNoteHtml(); }
   $('btnTeacher').innerHTML='<span class="ic">🏫</span><span class="lb">'+zh('teachBtn')+'</span>'; $('btnTeacher').setAttribute('aria-label',plain('teachTitle'));
   $('inName').placeholder=plain('namePh'); if($('inName').value!==getName()) $('inName').value=getName();
-  var hm=$('hgMute'); $('btnSnd').textContent=hm?hm.textContent:'🔊'; $('btnSnd').setAttribute('aria-label','靜音 · Silenciar');
-  $('btnLb').innerHTML='🏆'; $('btnLb').setAttribute('aria-label',plain('lbTitle'));
+  var hm=$('hgMute'); $('btnSnd').innerHTML='<span class="ic">'+(hm?hm.textContent:'🔊')+'</span><span class="lb">'+zh('sndBtn')+'</span>'; $('btnSnd').setAttribute('aria-label','靜音 · Silenciar');
+  $('btnLb').innerHTML='<span class="ic">🏆</span><span class="lb">'+zh('lbBtn')+'</span>'; $('btnLb').setAttribute('aria-label',plain('lbTitle'));
   $('btnMulti').innerHTML='<span class="ic">👥</span><span class="lb">'+zh('mpBtn')+'</span>'; $('btnMulti').setAttribute('aria-label',plain('mpTitle'));
-  $('btnSet').setAttribute('aria-label',plain('setTitle')); $('btnHelp').setAttribute('aria-label',plain('helpTitle'));
+  $('btnSet').innerHTML='<span class="ic">⚙</span><span class="lb">'+zh('setBtn')+'</span>'; $('btnHelp').innerHTML='<span class="ic">❓</span><span class="lb">'+zh('helpBtn')+'</span>'; $('btnSet').setAttribute('aria-label',plain('setTitle')); $('btnHelp').setAttribute('aria-label',plain('helpTitle'));
   if($('setTtl')) $('setTtl').innerHTML='⚙ '+zh('setTitle')+(tl('setTitle')?'<span class="tl">'+tl('setTitle')+'</span>':'');
   if($('helpTtl')) $('helpTtl').innerHTML='❓ '+zh('helpTitle')+(tl('helpTitle')?'<span class="tl">'+tl('helpTitle')+'</span>':'');
   $('heroChar').innerHTML=CHARS[cfg.g][ci];

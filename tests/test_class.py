@@ -146,7 +146,7 @@ with sync_playwright() as p:
 
     print('== 公開頁：多一顆「老師中心」鈕，其他照舊')
     ctx, pg, errs = open_page(b, '', {})
-    check(pg.is_visible('#btnTeacher') and '老師中心' in pg.inner_text('#btnTeacher'), '首頁上排最後多一顆「老師中心」方塊鈕')
+    check(pg.is_visible('#btnTeacher') and '老師' in pg.inner_text('#btnTeacher'), '首頁上排最後多一顆「老師」方塊鈕')
     names = pg.evaluate("()=>[...document.querySelectorAll('#iconRow>button')].map(b=>b.id)")
     check(names == ['btnMulti', 'btnLb', 'btnSet', 'btnHelp', 'btnSnd', 'btnTeacher'], '上排順序：連線、🏆、⚙、❓、🔊、老師中心：%s' % names)
     bx = pg.evaluate("()=>[...document.querySelectorAll('#iconRow>button')].map(b=>{const r=b.getBoundingClientRect();return [Math.round(r.left),Math.round(r.right),Math.round(r.top),Math.round(r.width)]})")
