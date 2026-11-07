@@ -19,11 +19,13 @@ def ts(v): return v['__ts'] if isinstance(v, dict) and '__ts' in v else None
 def isint(x): return isinstance(x, int) and not isinstance(x, bool)
 def okname(n): return isinstance(n, str) and 1 <= len(n) <= 14
 
-ROOM_KEYS = {'code','hostUid','hostName','level','nq','status','ph','rd','n','qs','ro','elim','final','createdAt','expireAt'}   # nq（題數）舊房間可以沒有＝10 題
+ROOM_KEYS = {'code','hostUid','hostName','level','nq','bn','bk','status','ph','rd','n','qs','ro','elim','final','createdAt','expireAt'}   # nq（題數）舊房間可以沒有＝10 題；bn（老師題庫名稱）、bk（這一局題目的字＋讀音）只有用老師題庫開的房間才有
 def room_shape(r, now):
-    return ((set(r) - {'nq'}) == (ROOM_KEYS - {'nq'}) and set(r) <= ROOM_KEYS and r.get('nq', 10) in (10, 15, 20, 25) and okname(r['hostName']) and r['level'] in ('easy','normal','hard')
+    return ((set(r) - {'nq','bn','bk'}) == (ROOM_KEYS - {'nq','bn','bk'}) and set(r) <= ROOM_KEYS and r.get('nq', 10) in (10, 15, 20, 25, 30) and okname(r['hostName']) and r['level'] in ('easy','normal','hard')
+        and ('bn' not in r or (isinstance(r['bn'], str) and 1 <= len(r['bn']) <= 40))
+        and ('bk' not in r or (isinstance(r['bk'], list) and len(r['bk']) <= 30 and all(isinstance(x, str) and len(x) <= 80 for x in r['bk'])))
         and r['status'] in ('waiting','playing','finished','closed') and r['ph'] in ('','ready','ask','reveal','end')
-        and isint(r['rd']) and 0 <= r['rd'] <= 24 and isint(r['n']) and 0 <= r['n'] <= 999
+        and isint(r['rd']) and 0 <= r['rd'] <= 29 and isint(r['n']) and 0 <= r['n'] <= 999
         and isinstance(r['qs'], list) and len(r['qs']) <= r.get('nq', 10) and isinstance(r['ro'], list) and len(r['ro']) <= 15
         and isinstance(r['elim'], dict) and len(r['elim']) <= 15 and isinstance(r['final'], list) and len(r['final']) <= 15
         and ts(r['createdAt']) is not None and ts(r['expireAt']) is not None and ts(r['expireAt']) <= now + H7)
@@ -44,7 +46,7 @@ def room_ok(op, code, uid, old, new, now):
 PL_KEYS = {'name','g','ci','want','spec','a','joinedAt'}
 def pl_shape(p):
     return (set(p) == PL_KEYS and okname(p['name']) and p['g'] in ('m','f') and isint(p['ci']) and 0 <= p['ci'] <= 4
-        and isinstance(p['want'], bool) and isinstance(p['spec'], bool) and isinstance(p['a'], dict) and len(p['a']) <= 25)
+        and isinstance(p['want'], bool) and isinstance(p['spec'], bool) and isinstance(p['a'], dict) and len(p['a']) <= 30)
 def player_ok(op, code, uid, req_uid, old, new, room, now):
     if op == 'delete': return req_uid == uid or (room is not None and req_uid == room['hostUid'])
     if req_uid != uid or not pl_shape(new): return False
@@ -124,7 +126,7 @@ async function call(op,args){
 export function getFirestore(app){return {app}}
 export const collection=(db,...p)=>({path:p.join('/'),isCol:true});
 export const doc=(db,...p)=>({path:p.join('/'),id:p[p.length-1]});
-export const orderBy=(f,d)=>({orderBy:[f,d]}), limit=n=>({limit:n});
+export const orderBy=(f,d)=>({orderBy:[f,d]}), limit=n=>({limit:n}), where=(f,o,v)=>({where:[f,o,v]});
 export const query=(c,...m)=>({...c,m});
 export async function setDoc(r,d){ await call('set',{path:r.path,data:enc(d)}); }
 export async function addDoc(c,d){ const j=await call('add',{path:c.path,data:enc(d)}); return {id:j.id}; }
@@ -193,13 +195,13 @@ def wait_ph(pg, ph, rd=None, t=20000):
     pg.wait_for_function("([ph,rd])=>{const M=window.__nian.MP();return M.room&&M.room.ph===ph&&(rd===null||M.room.rd===rd)&&window.__nian.S.phase==='reveal'}", arg=[ph, rd], timeout=t)
 def sname(pg, v):
     pg.fill('#inName', v); pg.wait_for_timeout(60)
-def open_page(ctx, i, name, scale=8, vp=None, poll=100):
+def open_page(ctx, i, name, scale=8, vp=None, poll=100, q=''):
     ctx = ctx.browser.new_context(viewport=vp or {'width': 390, 'height': 844}); ctx.add_init_script(FAKE_SPEECH)
     pg = ctx.new_page(); pg.add_init_script(f"window.__uid='U{i}';window.__poll={poll}")
     if vp: pg.set_viewport_size(vp)
     pg.on('pageerror', lambda e: errs.append(f'U{i}: ' + str(e)[:200]))
     pg.on('console', lambda m: errs.append(f'U{i} console: ' + m.text[:200]) if m.type == 'error' and 'Failed to load resource' not in m.text and 'ERR_FAILED' not in m.text else None)
-    pg.route('**/*', route); pg.goto(URL); pg.wait_for_timeout(500)
+    pg.route('**/*', route); pg.goto(URL + q); pg.wait_for_timeout(500 if not q else 1500)
     pg.evaluate("s=>{window.__nian.S.timeScale=s}", scale)
     sname(pg, name)
     return pg
@@ -399,9 +401,9 @@ with sync_playwright() as p:
     check(tryw('update', 'rayo_rooms/' + code2, 'U21', {'level': 'hard'}), '非房主不能改房間')
     check(tryw('update', 'rayo_rooms/' + code2, 'U20', {'level': 'hard'}), '比賽開始後房主也不能改難度')
     check(tryw('update', 'rayo_rooms/' + code2, 'U20', {'hostUid': 'U21'}), '房主不能把房主換人')
-    check(tryw('update', 'rayo_rooms/' + code2, 'U20', {'rd': 25}), '回合數不能超過 24')
+    check(tryw('update', 'rayo_rooms/' + code2, 'U20', {'rd': 30}), '回合數不能超過 29（30 題）')
     check(tryw('update', 'rayo_rooms/' + code2, 'U20', {'nq': 15}), '比賽開始後房主也不能改題數')
-    check(tryw('update', 'rayo_rooms/' + code2, 'U20', {'nq': 12}), '題數只能是 10／15／20／25')
+    check(tryw('update', 'rayo_rooms/' + code2, 'U20', {'nq': 12}), '題數只能是 10／15／20／25／30')
     check(tryw('update', 'rayo_rooms/' + code2, 'U20', {'status': 'weird'}), '不合法的狀態被擋')
     check(tryw('update', 'rayo_rooms/%s/players/U22' % code2, 'U21', {'a.0': 1}), '不能改別人的答題結果')
     check(tryw('update', 'rayo_rooms/%s/players/U21' % code2, 'U21', {'name': ''}), '暱稱不能是空的')
@@ -456,6 +458,51 @@ with sync_playwright() as p:
     check(room['status'] == 'finished' and [x['r'] for x in room['final']] == [15, 8], '15 題結束：甲登頂(15)、乙停在第 8 階')
     check('登頂' in A2.locator('#ov .lbRow').first.inner_text() and '爬了 8 階' in A2.locator('#ov .lbRow').nth(1).inner_text(), '結算畫面：甲登頂、乙爬了 8 階')
     check(BE.denied == [], '選題數的整段流程沒有任何寫入被規則擋下：%s' % BE.denied[:5])
+
+
+    print('== 用老師題庫開房：30 題、題庫字音全員一致')
+    BANK = 'bank1234abcd'
+    CHS = ['我','你','他','好','大','小','人','天','水','火','山','饕']
+    COD = ['wo3','ni3','ta1','hao3','da4','xiao3','ren2','tian1','shui3','huo3','shan1','tao1']
+    ex = [chr(0x4e00 + 1000 + i) for i in range(30 - 12)]
+    ch30 = CHS + ex; cd30 = COD + ['ba%d' % (i % 4 + 1) for i in range(18)]
+    BE.docs['portalStatus/center-rayo'] = {'off': False}
+    BE.docs['shared_rayo/' + BANK] = {'owner': 'T1', 'name': '期中複習', 'chars': ['\t'.join([c, c, r, '1' if c == '饕' else '0']) for c, r in zip(ch30, cd30)], 'updatedAt': 'x'}
+    for c_ in list(b.contexts): c_.close()   # 前面開的分頁都關掉：30 階長背景的分頁很吃效能，開太多會讓動畫變慢、答題逾時
+    AH = open_page(ctx, 71, '老師', scale=1, q='&b=' + BANK); BJ = open_page(ctx, 72, '學生', scale=1)
+    AH.click('#btnMulti'); AH.wait_for_selector('#mpMake')
+    ns = [AH.locator('#mpSegN button').nth(i).inner_text() for i in range(AH.locator('#mpSegN button').count())]
+    check(ns == ['10', '15', '20', '25', '30'], '用題庫開房：題數可選到 30：%s' % ns)
+    check(AH.locator('#mpSegLv button').count() == 2 and '期中複習' in AH.inner_text('.mpP'), '難度只有簡單／普通；畫面寫出題庫名稱')
+    AH.click('#mpSegN button:nth-child(5)'); AH.click('#mpMake'); AH.wait_for_selector('#mpLobby', timeout=8000)
+    codeB = AH.inner_text('.codeBig').strip(); roomB = BE.docs['rayo_rooms/' + codeB]
+    check(roomB.get('nq') == 30 and roomB.get('bn') == '期中複習', '房間記 nq=30、bn=題庫名稱：%s' % {k: roomB.get(k) for k in ('nq', 'bn')})
+    check(AH.locator('#mpSegLv2 button').count() == 2 and AH.locator('#mpSegN2 button').count() == 5, '等人時房主可改的難度只有 2 個、題數 5 個')
+    join_room(BJ, codeB)
+    check('期中複習' in BJ.inner_text('#mpLobby') and '30' in BJ.inner_text('#mpLobby'), '學生（沒有題庫的頁面）也看得到題庫名稱和題數 30')
+    AH.click('#mpStart')
+    for pg in (AH, BJ): pg.wait_for_function("()=>window.__nian.MP().room&&window.__nian.MP().room.status==='playing'", timeout=8000)
+    roomB = BE.docs['rayo_rooms/' + codeB]
+    check(len(roomB['qs']) == 30 and len(set(roomB['qs'])) == 30 and set(roomB['qs']) == set(ch30), '開賽：30 個不重複的字，全部出自題庫')
+    check(len(roomB.get('bk', [])) == 30 and all(len(x) <= 80 for x in roomB['bk']) and any(x.startswith('饕\t饕\ttao1') for x in roomB['bk']), '房間 bk 存了這 30 題的字和讀音（含老師自己打的「饕」＝tao1）')
+    for pg in (AH, BJ): wait_q(pg, 0)
+    check(all(pg.evaluate("()=>window.__nian.NSTEP()") == 30 and '_30-' in pg.evaluate("()=>document.getElementById('world').style.backgroundImage") for pg in (AH, BJ)), '兩人都用 30 階、30 階的長背景圖')
+    check(BJ.evaluate("()=>window.__nian.BYCH['饕']&&window.__nian.BYCH['饕'].r[0]") == 'tao1', '學生頁面沒有題庫，但從房間拿到「饕」的讀音')
+    qi = roomB['qs'].index('饕')
+    for rd in range(0, qi + 1):
+        for pg in (AH, BJ): wait_q(pg, rd, 30000)
+        try: wait_ask(AH, 8000); wait_ask(BJ, 8000)
+        except Exception:
+            print('DEBUG', rd, [pg.evaluate("()=>{const S=window.__nian.S,M=window.__nian.MP();return [S.phase,S.locked,!!S.q,M.room.ph,M.room.rd,M.room.status,M.room.level,JSON.stringify(M.room.elim),JSON.stringify(Object.values(M.pl).map(p=>p.a)),S.timeScale,S.T]}") for pg in (AH, BJ)]); raise
+        answer(AH, True); answer(BJ, True)
+        for pg in (AH, BJ): wait_ph(pg, 'reveal', rd, 30000)
+    pls = [v for k, v in BE.docs.items() if k.startswith('rayo_rooms/%s/players/' % codeB)]
+    check(BE.docs['rayo_rooms/' + codeB]['elim'] == {} and len(pls) == 2 and all(len(v['a']) == qi + 1 and all(x == 1 for x in v['a'].values()) for v in pls), '一路到「饕」那題（共 %d 題），兩人每題都答對、沒人出局（含用 tao1 打「饕」）' % (qi + 1))
+    check(BE.denied == [], '整段沒有任何寫入被規則擋下：%s' % BE.denied[:5])
+    BJ.click('#btnPause'); BJ.wait_for_selector('#mpOut'); BJ.click('#mpOut'); BJ.wait_for_timeout(600)
+    check(BJ.evaluate("()=>!window.__nian.BYCH['饕']") and not BJ.evaluate("()=>window.__nian.BYCH['饕']"), '學生離開房間後，「饕」不留在單人遊戲的字表裡')
+    AH.click('#btnPause'); AH.wait_for_selector('#mpOut'); AH.click('#mpOut'); AH.wait_for_timeout(500)
+    check(AH.evaluate("()=>window.__nian.BYCH['饕'].r[0]") == 'tao1', '老師回到自己的題庫頁面，題庫的字還在（練習連結照用）')
 
     print('== 頁面錯誤')
     check(errs == [], '所有分頁都沒有 JS 錯誤 %s' % errs[:3])

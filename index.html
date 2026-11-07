@@ -232,6 +232,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .nameIn::placeholder{color:var(--ink3)}
 .nameIn.need{border-color:var(--red);animation:shk .3s linear}
 .nameHint{margin:6px 0 0;font-size:13px;color:var(--red);text-align:center}
+.modeNote{margin:6px 0 0;font-size:13px;line-height:1.5;color:var(--ink2);text-align:center}
 #startBar{display:flex;flex-direction:column;align-items:stretch}
 .lbBox{margin-top:12px;text-align:left}
 .lbBox .lbSt{font-size:13px;color:var(--ink2);text-align:center;margin:6px 0;line-height:1.4}
@@ -316,6 +317,8 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 #btnLb{font-size:19px}
 #btnMulti .ic{font-size:17px}
 #btnMulti .lb{font-size:10px;font-weight:600}
+#btnTeacher .ic{font-size:17px}
+#btnTeacher .lb{font-size:9px;font-weight:600;white-space:nowrap}
 .setPanel{text-align:left}
 .setPanel h2{text-align:center}
 .setPanel .how{margin-top:0}
@@ -339,6 +342,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
     </div>
     <input class="nameIn" id="inName" type="text" maxlength="14" autocomplete="off" autocapitalize="off" spellcheck="false">
     <p class="nameHint" id="nameHint" hidden></p>
+    <p class="modeNote" id="modeNote" hidden></p>
     <div class="seg" id="segGender"></div>
   </div>
   <div id="holder" hidden>
@@ -352,7 +356,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
     <div id="helpBody"><div class="how" id="tHow"></div></div>
   </div>
   <div id="startBar"><button class="big" id="btnStart"></button>
-    <div id="iconRow"><button class="ib sq" id="btnMulti" type="button"></button><button class="ib sq" id="btnLb" type="button"></button><button class="ib" id="btnSet" type="button">⚙</button><button class="ib" id="btnHelp" type="button">❓</button><button class="ib" id="btnSnd" type="button"></button></div></div>
+    <div id="iconRow"><button class="ib sq" id="btnMulti" type="button"></button><button class="ib sq" id="btnLb" type="button"></button><button class="ib" id="btnSet" type="button">⚙</button><button class="ib" id="btnHelp" type="button">❓</button><button class="ib" id="btnSnd" type="button"></button><button class="ib sq" id="btnTeacher" type="button"></button></div></div>
 </section>
 
 <!-- 遊戲 -->
@@ -474,6 +478,19 @@ var TXT = {
   helpTitle:['遊戲說明','游戏说明','Cómo se juega','How to play'],
   setDone:['完成','完成','Listo','Done'],
   mpBtn:['連線','连线','En línea','Online'],
+  teachBtn:['老師中心','老师中心','Profesor','Teacher'],
+  teachTitle:['老師中心（老師專用）','老师中心（老师专用）','Centro del profesor (para profesores)','Teacher center (for teachers)'],
+  noteClass:['班級連結：成績會自動送給老師','班级连结：成绩会自动送给老师','Enlace de clase: tu resultado se envía al profesor','Class link: your result goes to your teacher'],
+  notePractice:['練習連結：不記成績、不上排行榜','练习连结：不记成绩、不上排行榜','Enlace de práctica: no guarda puntaje ni entra a la clasificación','Practice link: no scores saved, no leaderboard'],
+  noteLock:['老師已設定：','老师已设定：','El profesor eligió: ','Set by your teacher: '],
+  linkLoad:['讀取中…','读取中…','Cargando…','Loading…'],
+  maint:['維修中，請稍後再來','维修中，请稍后再来','En mantenimiento, vuelve más tarde','Under maintenance, please come back later'],
+  linkBad:['這個連結無效，或已被老師刪除','这个连结无效，或已被老师删除','Este enlace no es válido o el profesor lo eliminó','This link is invalid or was removed by the teacher'],
+  linkFail:['連線失敗，請檢查網路後重新整理','连线失败，请检查网路后重新整理','Error de conexión; revisa tu red y recarga la página','Connection failed; check your network and reload'],
+  sentOk:['成績已送給老師 ✓','成绩已送给老师 ✓','Resultado enviado al profesor ✓','Result sent to your teacher ✓'],
+  sentFail:['成績沒送出去，請稍後再玩一次','成绩没送出去，请稍后再玩一次','No se pudo enviar el resultado; inténtalo otra vez','Couldn’t send your result; please try again'],
+  sentExpired:['老師的班級已停用，這次成績沒有記錄','老师的班级已停用，这次成绩没有记录','La clase del profesor no está activa; no se guardó el resultado','Your teacher’s class is inactive; the result wasn’t saved'],
+  clsBoard:['班級排行榜','班级排行榜','Clasificación de la clase','Class leaderboard'],
   mpTitle:['連線對戰','连线对战','Partida en línea','Online match'],
   mpIntro:['最多 15 人同題比賽，一條命，打錯就出局。','最多 15 人同题比赛，一条命，打错就出局。','Hasta 15 jugadores, las mismas preguntas, una sola vida.','Up to 15 players, same questions, one life.'],
   mpNeedName:['請先輸入名字','请先输入名字','Escribe primero tu nombre','Enter a name first'],
@@ -528,7 +545,7 @@ var CFG_KEY='typingRayo.cfg';
 var NQS=[10,15,20,25];
 var cfg={kb:'pinyin',lv:'normal',n:10,g:Math.random()<.5?'m':'f'};
 try{ var c0=JSON.parse(localStorage.getItem(CFG_KEY)||'null'); if(c0){ if(c0.kb==='zhuyin'||c0.kb==='pinyin')cfg.kb=c0.kb; if(['easy','normal','hard'].indexOf(c0.lv)>=0)cfg.lv=c0.lv; if(c0.g==='m'||c0.g==='f')cfg.g=c0.g; if(NQS.indexOf(c0.n)>=0)cfg.n=c0.n; } else if(Settings.phon==='zhuyin') cfg.kb='zhuyin'; }catch(e){}
-function saveCfg(){ try{ localStorage.setItem(CFG_KEY,JSON.stringify(cfg)); }catch(e){} }
+function saveCfg(){ if(SPECIAL) return; try{ localStorage.setItem(CFG_KEY,JSON.stringify(cfg)); }catch(e){} }
 var ci=Math.floor(Math.random()*5);          // 目前選到的人物（0–4）
 
 var LEVELS={
@@ -539,8 +556,153 @@ var LEVELS={
 
 /* ---------- 狀態 ---------- */
 var S={gid:0,running:false,paused:false,over:false,phase:'ask',tLeft:10,T:10,phaseT:0,step:0,strikes:0,correct:0,locked:false,
-  q:null,buf:'',missed:[],used:[],t0:0,pool:[],timeScale:1,lastSec:0,ci:0};
+  q:null,buf:'',missed:[],used:[],t0:0,pool:[],timeScale:1,lastSec:0,ci:0,log:[]};
 var P=LEVELS.normal;
+
+/* ---------- 班級連結／練習連結（老師管理中心產生；訂閱功能）----------
+   ?class=班級碼[&b=題庫碼][&lv=easy|normal|hard][&n=10～30][&kb=pinyin|zhuyin]   班級模式：成績自動回傳給老師；網址上帶了的設定學生不能改
+   ?b=題庫碼                                                                       練習連結：用老師自訂題庫，不記成績、不上公開排行榜
+   維修開關：老師管理中心的 portalStatus/center-rayo（沒有這份文件＝維修中；off:false＝開放；?preview 老師預覽不受影響；讀不到開關就照常放行）
+   公開頁（沒有參數）完全照舊。 */
+var PHON=(function(){// 數字聲調拼音（ni3、nv3、lve4）→ 注音／帶調號拼音
+const INIT = { b:'ㄅ', p:'ㄆ', m:'ㄇ', f:'ㄈ', d:'ㄉ', t:'ㄊ', n:'ㄋ', l:'ㄌ', g:'ㄍ', k:'ㄎ', h:'ㄏ', j:'ㄐ', q:'ㄑ', x:'ㄒ', zh:'ㄓ', ch:'ㄔ', sh:'ㄕ', r:'ㄖ', z:'ㄗ', c:'ㄘ', s:'ㄙ' };
+const FIN = { a:'ㄚ', o:'ㄛ', e:'ㄜ', ai:'ㄞ', ei:'ㄟ', ao:'ㄠ', ou:'ㄡ', an:'ㄢ', en:'ㄣ', ang:'ㄤ', eng:'ㄥ', er:'ㄦ',
+  i:'ㄧ', ia:'ㄧㄚ', io:'ㄧㄛ', ie:'ㄧㄝ', iao:'ㄧㄠ', iu:'ㄧㄡ', ian:'ㄧㄢ', in:'ㄧㄣ', iang:'ㄧㄤ', ing:'ㄧㄥ', iong:'ㄩㄥ',
+  u:'ㄨ', ua:'ㄨㄚ', uo:'ㄨㄛ', uai:'ㄨㄞ', ui:'ㄨㄟ', uan:'ㄨㄢ', un:'ㄨㄣ', uang:'ㄨㄤ', ong:'ㄨㄥ',
+  v:'ㄩ', ve:'ㄩㄝ', van:'ㄩㄢ', vn:'ㄩㄣ' };
+const TONE_MARK = { 1:'', 2:'ˊ', 3:'ˇ', 4:'ˋ' };
+// y、w 開頭的零聲母寫法 → 標準韻母
+const YW = { yi:'i', ya:'ia', yo:'io', ye:'ie', yao:'iao', you:'iu', yan:'ian', yin:'in', yang:'iang', ying:'ing', yong:'iong',
+  yu:'v', yue:'ve', yuan:'van', yun:'vn', wu:'u', wa:'ua', wo:'uo', wai:'uai', wei:'ui', wan:'uan', wen:'un', wang:'uang', weng:'ong' };
+function split(syl) { // syl 不含聲調數字；回傳 [聲母, 韻母]
+  if (YW[syl]) return ['', YW[syl]];
+  if (syl === 'ye') return ['', 'ie'];
+  let ini = '';
+  for (const k of ['zh', 'ch', 'sh']) if (syl.startsWith(k)) { ini = k; break; }
+  if (!ini && INIT[syl[0]]) ini = syl[0];
+  let fin = syl.slice(ini.length);
+  if ('jqx'.includes(ini) && /^u/.test(fin)) fin = 'v' + fin.slice(1); // ju→jü
+  if (['zh', 'ch', 'sh', 'r', 'z', 'c', 's'].includes(ini) && fin === 'i') fin = ''; // zhi、zi 的 i
+  return [ini, fin];
+}
+function toZhuyin(code) {
+  const m = /^([a-z]+)([1-5])$/.exec(code); if (!m) return null;
+  const [ini, fin] = split(m[1]);
+  if (fin !== '' && !FIN[fin]) return null;
+  if (m[1] === 'er') return m[2] === '5' ? '˙ㄦ' : 'ㄦ' + TONE_MARK[m[2]];
+  const z = (ini ? INIT[ini] : '') + (fin ? FIN[fin] : '');
+  return m[2] === '5' ? '˙' + z : z + TONE_MARK[m[2]];
+}
+const MARKS = { a:'āáǎà', e:'ēéěè', i:'īíǐì', o:'ōóǒò', u:'ūúǔù', v:'ǖǘǚǜ' };
+function toPinyin(code) {
+  const m = /^([a-z]+)([1-5])$/.exec(code); if (!m) return null;
+  let s = m[1], t = +m[2];
+  if (t === 5) return s.replace(/v/g, 'ü');
+  let idx = s.search(/[ae]/); if (idx < 0) idx = s.indexOf('ou') >= 0 ? s.indexOf('o') : -1;
+  if (idx < 0) { // 沒有 a、e、ou：標在最後一個母音
+    let last = -1; for (let i = 0; i < s.length; i++) if ('aeiouv'.includes(s[i])) last = i; idx = last;
+  }
+  const ch = s[idx]; if (idx < 0 || !MARKS[ch]) return null; const rep = MARKS[ch][t - 1];
+  return (s.slice(0, idx) + rep + s.slice(idx + 1)).replace(/v/g, 'ü');
+}
+
+
+return {toZhuyin:toZhuyin,toPinyin:toPinyin};})();
+var QSP=new URLSearchParams(location.search);
+var CLASS_ID=String(QSP.get('class')||'').toLowerCase(), CLASS_MODE=/^[a-z0-9]{8,32}$/.test(CLASS_ID);
+var BANK_SID=String(QSP.get('b')||'').toLowerCase(), BANK_MODE=/^[a-z0-9]{8,32}$/.test(BANK_SID);
+var SPECIAL=CLASS_MODE||BANK_MODE, PREVIEW=QSP.has('preview');
+var LINK_READY=!SPECIAL, CLS=null, CUSTOM=null;      // CLS＝班級資料；CUSTOM＝{name,words}（老師自訂題庫）
+var LOCK={};
+(function(){
+  if(!CLASS_MODE) return;
+  var lv=QSP.get('lv'), n=+QSP.get('n'), kb=QSP.get('kb');
+  if(['easy','normal','hard'].indexOf(lv)>=0) LOCK.lv=lv;
+  if([10,15,20,25,30].indexOf(n)>=0) LOCK.n=n;
+  if(kb==='pinyin'||kb==='zhuyin') LOCK.kb=kb;
+  if(LOCK.lv) cfg.lv=LOCK.lv; if(LOCK.n) cfg.n=LOCK.n; if(LOCK.kb) cfg.kb=LOCK.kb;
+})();
+/* 題數選項：公開頁 10／15／20／25；班級、練習連結多一個 30（題庫字數不夠的選項拿掉） */
+function nList(){
+  if(!SPECIAL) return NQS;
+  var m=CUSTOM?CUSTOM.words.length:99999;
+  return [10,15,20,25,30].filter(function(n){ return n<=m; });
+}
+function levelList(){ return CUSTOM?['easy','normal']:['easy','normal','hard']; }      // 自訂題庫只有簡單、普通（沒有「進階」的字庫分級）
+function fixCfg(){
+  if(levelList().indexOf(cfg.lv)<0) cfg.lv='normal';
+  var ns=nList(); if(ns.indexOf(cfg.n)<0){ var b=10; ns.forEach(function(n){ if(n<=cfg.n) b=n; }); cfg.n=ns.indexOf(b)>=0?b:ns[0]; }
+}
+/* 把一個題庫（老師管理中心存的格式：每個字一個字串「繁\t簡\t讀音碼,讀音碼\t內建以外 1/0」）整理成題目 */
+function parseBank(d){
+  var arr=Array.isArray(d&&d.chars)?d.chars:[], seen={}, words=[];
+  arr.slice(0,400).forEach(function(str){
+    var p=String(str==null?'':str).split('\t'), c=Array.from(p[0]||'');
+    if(c.length!==1||seen[c[0]]) return;
+    var sc=Array.from(p[1]||''); sc=sc.length===1?sc[0]:c[0];
+    var codes=String(p[2]||'').split(',').filter(function(x){ return /^[a-z]+[1-5]$/.test(x)&&PHON.toZhuyin(x)&&PHON.toPinyin(x); });
+    if(!codes.length) return;
+    seen[c[0]]=1; words.push({c:c[0],s:sc,lv:'X',r:codes});
+  });
+  if(words.length<10) return null;
+  return {name:String(d.name||'').slice(0,40),words:words};
+}
+function useWords(words){          // 把題庫的字放進查詢表（讀音標籤、字→題目）
+  words.forEach(function(w){
+    w.r.forEach(function(code){ if(!LABELS[code]) LABELS[code]=[PHON.toPinyin(code),PHON.toZhuyin(code)]; });
+    BYCH[w.c]=w;
+  });
+}
+function applyBank(d){
+  var b=parseBank(d); if(!b) throw {code:'not-found'};
+  CUSTOM=b; useWords(b.words);
+}
+function waitCEN(){
+  return new Promise(function(res){
+    var n=0; (function chk(){ if(window.CEN) return res(window.CEN); if(++n>80) return res(null); setTimeout(chk,100); })();
+  });
+}
+function showFatal(key){
+  var old=$('fatal'); if(old) old.remove();
+  var d=document.createElement('div'); d.id='fatal';
+  d.style.cssText='position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;padding:18px;background:var(--paper2,#f4f0e6);text-align:center';
+  d.innerHTML='<div class="panel"><h2>'+plain(key)+'</h2></div>';
+  document.body.appendChild(d);
+}
+function modeNoteHtml(){
+  if(!SPECIAL||!LINK_READY) return '';
+  var t=plain(CLASS_MODE?'noteClass':'notePractice');
+  if(CLASS_MODE){
+    var l=[];
+    if(LOCK.lv) l.push(plain(LOCK.lv)+' '+LEVELS[LOCK.lv].T+' s');
+    if(LOCK.n) l.push(LOCK.n+' '+zh('nUnit'));
+    if(LOCK.kb) l.push(LOCK.kb==='zhuyin'?'注音':'拼音');
+    if(l.length) t+='<br>'+plain('noteLock')+l.join('・');
+  }
+  if(CUSTOM&&CUSTOM.name) t+='<br>⚡ '+esc(CUSTOM.name);
+  return t;
+}
+/* 連結啟動：先看維修開關，再讀班級、題庫；沒讀完之前不能開始 */
+function linkBoot(){
+  if(!SPECIAL) return;
+  var note=$('modeNote'); note.hidden=false; note.textContent=plain('linkLoad');
+  waitCEN().then(function(cen){
+    if(!cen) throw {code:'unavailable'};
+    var chk=PREVIEW?Promise.resolve(false):cen.maint().catch(function(e){ console.warn('maint check failed',e); return false; });
+    return chk.then(function(m){
+      if(m) throw {code:'maint'};
+      var jobs=[];
+      if(CLASS_MODE) jobs.push(cen.cls(CLASS_ID).then(function(d){ CLS=d; }));
+      if(BANK_MODE) jobs.push(cen.bank(BANK_SID).then(applyBank));
+      return Promise.all(jobs);
+    });
+  }).then(function(){
+    LINK_READY=true; fixCfg(); renderStart();
+  }).catch(function(e){
+    console.warn(e);
+    showFatal(e&&e.code==='maint'?'maint':e&&e.code==='not-found'?'linkBad':'linkFail');
+  });
+}
 
 /* ---------- 暱稱（存在這支手機，不上傳，除非上排行榜）---------- */
 var NAME_KEY='typingRayo.name';
@@ -624,6 +786,7 @@ function paintLb(){
   .catch(function(){ if(wantKey===lbTab+'/'+lbN&&$('lbBody')===body) body.innerHTML='<p class="lbSt">'+plain('lbError')+'</p>'; });
 }
 $('btnLb').addEventListener('click',showLb);
+$('btnTeacher').addEventListener('click',function(){ try{ window.open('https://wangchiapin.github.io/profesor/#/home','_blank','noopener'); }catch(e){} });
 $('btnSnd').addEventListener('click',function(){ var hm=$('hgMute'); if(hm){ hm.click(); this.textContent=hm.textContent; } });
 $('inName').addEventListener('input',function(){ setName(this.value); });
 
@@ -646,9 +809,13 @@ function renderStart(){
   seg('segScript',[{v:'trad',h:'繁體'},{v:'simp',h:'简体'}],Settings.script,function(v){ Settings.script=v; writeSettings(Settings); renderStart(); });
   seg('segLang',[{v:'zh',h:'中文'},{v:'es',h:'Español'},{v:'en',h:'English'}],Settings.lang,function(v){ Settings.lang=v; writeSettings(Settings); renderStart(); });
   seg('segKb',[{v:'pinyin',h:'拼音<span class="tl">pīnyīn</span>'},{v:'zhuyin',h:'注音<span class="tl">ㄅㄆㄇㄈ</span>'}],cfg.kb,function(v){ cfg.kb=v; saveCfg(); renderStart(); });
-  seg('segLevel',['easy','normal','hard'].map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),cfg.lv,function(v){ cfg.lv=v; saveCfg(); renderStart(); });
-  seg('segN',NQS.map(function(n){ return {v:n,h:n+'<span class="tl">'+(tl('nUnit')||zh('nUnit'))+'</span>'}; }),cfg.n,function(v){ cfg.n=v; saveCfg(); renderStart(); preloadBgs(); });
-  $('btnStart').innerHTML=H('start');
+  seg('segLevel',levelList().map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),cfg.lv,function(v){ cfg.lv=v; saveCfg(); renderStart(); });
+  seg('segN',nList().map(function(n){ return {v:n,h:n+'<span class="tl">'+(tl('nUnit')||zh('nUnit'))+'</span>'}; }),cfg.n,function(v){ cfg.n=v; saveCfg(); renderStart(); preloadBgs(); });
+  $('btnStart').innerHTML=H('start'); $('btnStart').disabled=!LINK_READY;
+  [['lKb',LOCK.kb],['lLevel',LOCK.lv],['lN',LOCK.n]].forEach(function(a){ $(a[0]).parentNode.style.display=a[1]?'none':''; });   // 老師鎖定的設定不給學生改
+  $('btnLb').style.display=SPECIAL?'none':''; $('btnMulti').style.display=CLASS_MODE?'none':''; $('btnTeacher').style.display=SPECIAL?'none':'';
+  var mn=$('modeNote'); if(SPECIAL&&LINK_READY){ mn.hidden=false; mn.innerHTML=modeNoteHtml(); }
+  $('btnTeacher').innerHTML='<span class="ic">🏫</span><span class="lb">'+zh('teachBtn')+'</span>'; $('btnTeacher').setAttribute('aria-label',plain('teachTitle'));
   $('inName').placeholder=plain('namePh'); if($('inName').value!==getName()) $('inName').value=getName();
   var hm=$('hgMute'); $('btnSnd').textContent=hm?hm.textContent:'🔊'; $('btnSnd').setAttribute('aria-label','靜音 · Silenciar');
   $('btnLb').innerHTML='🏆'; $('btnLb').setAttribute('aria-label',plain('lbTitle'));
@@ -819,6 +986,7 @@ $('spk').addEventListener('click',function(){ if(S.q) speak(S.q.c); });
 
 /* ---------- 出題（每局 10 題，不重複）---------- */
 function buildPool(){
+  if(CUSTOM){ S.pool=CUSTOM.words.slice(); return; }
   var set={}; P.pool.forEach(function(l){ set[l]=1; });
   S.pool=WORDS.filter(function(w){ return w.n ? cfg.lv==='hard' : set[w.lv]; });
 }
@@ -873,7 +1041,7 @@ function timeUp(){
 }
 function chText(q){ return Settings.script==='simp'?(q.s||q.c):q.c; }
 function reveal(ok,code,timeout){
-  var q=S.q; S.phase='reveal'; S.phaseT = ok?1.2:2.6;
+  var q=S.q; S.phase='reveal'; S.phaseT = ok?1.2:2.6; S.log.push({c:q.c,ok:ok?1:0});
   $('kb').classList.add('locked'); $('typedTxt').classList.add(ok?'done':'bad');
   if(ok){
     S.correct++; sfx('ok'); sparks(); hop();
@@ -924,7 +1092,7 @@ function renderTimer(){
 }
 /* ---------- 場景位置（整條街固定不動，人物沿著 10 階往上走）---------- */
 /* ---------- 背景（7 個台灣場景，每一局隨機換；連線時用房號＋第幾局算出來，全員一樣）---------- */
-var BGS = {"10":["bg/bg0_10-341079.webp","bg/bg1_10-560b89.webp","bg/bg2_10-6d2165.webp","bg/bg3_10-599d08.webp","bg/bg4_10-9d30f9.webp","bg/bg5_10-74056b.webp","bg/bg6_10-561204.webp"],"15":["bg/bg0_15-a5235f.webp","bg/bg1_15-d08d28.webp","bg/bg2_15-c37ffd.webp","bg/bg3_15-3f5750.webp","bg/bg4_15-eacdaa.webp","bg/bg5_15-717ddf.webp","bg/bg6_15-cb673a.webp"],"20":["bg/bg0_20-cf3384.webp","bg/bg1_20-e7706c.webp","bg/bg2_20-67f4d8.webp","bg/bg3_20-c5016c.webp","bg/bg4_20-1a327c.webp","bg/bg5_20-fad4a0.webp","bg/bg6_20-3c5db7.webp"],"25":["bg/bg0_25-599574.webp","bg/bg1_25-40963f.webp","bg/bg2_25-e3bf5a.webp","bg/bg3_25-6238b6.webp","bg/bg4_25-100ede.webp","bg/bg5_25-547570.webp","bg/bg6_25-8f396e.webp"]}, BGG = ["linear-gradient(to right,#85583A 0,#85583A 26%,#A49C8A 38%,#A49C8A 62%,#945B49 74%,#945B49 100%)","linear-gradient(to right,#4B6642 0,#4B6642 26%,#9C998B 38%,#9C998B 62%,#3F5B3D 74%,#3F5B3D 100%)","linear-gradient(to right,#D9D5C8 0,#D9D5C8 26%,#DAD6CB 38%,#DAD6CB 62%,#D9D5C8 74%,#D9D5C8 100%)","linear-gradient(to right,#858073 0,#858073 26%,#8D887C 38%,#8D887C 62%,#858073 74%,#858073 100%)","linear-gradient(to right,#784939 0,#784939 26%,#5E4330 38%,#5E4330 62%,#7C4C3C 74%,#7C4C3C 100%)","linear-gradient(to right,#938F75 0,#938F75 26%,#9B968B 38%,#9B968B 62%,#B8BDAD 74%,#B8BDAD 100%)","linear-gradient(to right,#906F65 0,#906F65 26%,#84817B 38%,#84817B 62%,#906F65 74%,#906F65 100%)"];   // BGS[題數][場景]＝背景圖；BGG[場景]＝圖片下方鋪滿用的地面漸層
+var BGS = {"10":["bg/bg0_10-341079.webp","bg/bg1_10-560b89.webp","bg/bg2_10-6d2165.webp","bg/bg3_10-599d08.webp","bg/bg4_10-9d30f9.webp","bg/bg5_10-74056b.webp","bg/bg6_10-561204.webp"],"15":["bg/bg0_15-a5235f.webp","bg/bg1_15-d08d28.webp","bg/bg2_15-c37ffd.webp","bg/bg3_15-3f5750.webp","bg/bg4_15-eacdaa.webp","bg/bg5_15-717ddf.webp","bg/bg6_15-cb673a.webp"],"20":["bg/bg0_20-cf3384.webp","bg/bg1_20-e7706c.webp","bg/bg2_20-67f4d8.webp","bg/bg3_20-c5016c.webp","bg/bg4_20-1a327c.webp","bg/bg5_20-fad4a0.webp","bg/bg6_20-3c5db7.webp"],"25":["bg/bg0_25-599574.webp","bg/bg1_25-40963f.webp","bg/bg2_25-e3bf5a.webp","bg/bg3_25-6238b6.webp","bg/bg4_25-100ede.webp","bg/bg5_25-547570.webp","bg/bg6_25-8f396e.webp"],"30":["bg/bg0_30-3cdc9b.webp","bg/bg1_30-4308ed.webp","bg/bg2_30-6a0a20.webp","bg/bg3_30-218b18.webp","bg/bg4_30-b3a4ad.webp","bg/bg5_30-2a3cee.webp","bg/bg6_30-c13189.webp"]}, BGG = ["linear-gradient(to right,#85583A 0,#85583A 26%,#A49C8A 38%,#A49C8A 62%,#945B49 74%,#945B49 100%)","linear-gradient(to right,#4B6642 0,#4B6642 26%,#9C998B 38%,#9C998B 62%,#3F5B3D 74%,#3F5B3D 100%)","linear-gradient(to right,#D9D5C8 0,#D9D5C8 26%,#DAD6CB 38%,#DAD6CB 62%,#D9D5C8 74%,#D9D5C8 100%)","linear-gradient(to right,#858073 0,#858073 26%,#8D887C 38%,#8D887C 62%,#858073 74%,#858073 100%)","linear-gradient(to right,#784939 0,#784939 26%,#5E4330 38%,#5E4330 62%,#7C4C3C 74%,#7C4C3C 100%)","linear-gradient(to right,#938F75 0,#938F75 26%,#9B968B 38%,#9B968B 62%,#B8BDAD 74%,#B8BDAD 100%)","linear-gradient(to right,#906F65 0,#906F65 26%,#84817B 38%,#84817B 62%,#906F65 74%,#906F65 100%)"];   // BGS[題數][場景]＝背景圖；BGG[場景]＝圖片下方鋪滿用的地面漸層
 var bgIdx = -1;
 function setBg(i){
   bgIdx=i; var w=$('world');
@@ -1053,14 +1221,14 @@ function advance(){
 
 /* ---------- 開始、暫停、結算 ---------- */
 function startGame(){
-  P=LEVELS[cfg.lv]; buildPool(); NSTEP=cfg.n; setBg(bgIdx);
-  S.running=true; S.paused=false; S.over=false; S.step=0; S.strikes=0; S.correct=0; S.locked=false; S.q=null; S.buf=''; S.missed=[]; S.used=[]; S.t0=Date.now(); S.ci=ci;
+  fixCfg(); P=LEVELS[cfg.lv]; buildPool(); NSTEP=cfg.n; setBg(bgIdx); $('kbSw').style.display=LOCK.kb?'none':'';
+  S.running=true; S.paused=false; S.over=false; S.step=0; S.strikes=0; S.correct=0; S.locked=false; S.q=null; S.buf=''; S.missed=[]; S.used=[]; S.log=[]; S.t0=Date.now(); S.ci=ci;
   $('start').hidden=true; $('play').hidden=false; $('play').classList.remove('sheetUp'); $('ov').hidden=true;
   $('player').innerHTML=CHARS[cfg.g][ci]; clearCheer();
   renderKb(); measure(); placePlayer(false); nextQ();
   requestAnimationFrame(function(){ measure(); placePlayer(false); last=performance.now(); requestAnimationFrame(tick); });
   S.gid=(S.gid||0)+1;
-  try{ HGPlays.start(cfg.lv+'-'+cfg.kb+(NSTEP===10?'':'-n'+NSTEP),getName()); }catch(e){}
+  try{ HGPlays.start((CLASS_MODE?'cls-':BANK_MODE?'prac-':'')+cfg.lv+'-'+cfg.kb+(NSTEP===10?'':'-n'+NSTEP),getName()); }catch(e){}
 }
 function pauseGame(){
   if(MP.on){ if(MP.inGame) mpLeaveAsk(); return; }
@@ -1086,6 +1254,7 @@ function goHome(){
 $('btnPause').addEventListener('click',pauseGame);
 document.addEventListener('visibilitychange',function(){ if(document.hidden&&!MP.on) pauseGame(); });
 $('btnStart').addEventListener('click',function(){
+  if(!LINK_READY) return;
   if(!getName()){ needName(); return; }
   ac(); startGame();
 });
@@ -1095,8 +1264,34 @@ function needName(){
 }
 $('inName').addEventListener('input',function(){ $('nameHint').hidden=true; this.classList.remove('need'); });
 
-function bestKey(){ return 'typingRayo.best.'+cfg.lv+'.'+cfg.kb+(NSTEP===10?'':'.'+NSTEP); }    // 10 題沿用舊的紀錄
+function bestKey(){ return 'typingRayo.best.'+cfg.lv+'.'+cfg.kb+(NSTEP===10?'':'.'+NSTEP)+(CUSTOM?'.b'+BANK_SID.slice(0,8):''); }    // 10 題沿用舊的紀錄
 function starsOf(n,N){ N=N||10; return n===0?3:n<=Math.floor(N*.2)?2:n<=Math.floor(N*.5)?1:0; }   // 10 題：0 劈＝3 星、≤2＝2 星、≤5＝1 星，其他題數照比例
+function classKey(){ return cfg.lv+'_'+NSTEP+'_'+cfg.kb+(CUSTOM?'_'+BANK_SID.slice(0,8):''); }
+/* 班級模式結算：成績送給老師（class_scores 每人每個設定一筆最好成績＋class_plays 逐題紀錄）；老師開了班級排行榜就顯示同設定的前 10 名 */
+function classFinish(secs,gid){
+  var area=$('lbArea'); if(!area) return;
+  var here=function(){ return gid===S.gid && $('lbArea')===area; };
+  var say=function(k){ if(here()) area.innerHTML='<p class="lbSt"><b>'+plain(k)+'</b></p>'; };
+  var strikes=S.strikes, n=NSTEP, k=classKey(), name=getName(), log=S.log.slice();
+  var o={cid:CLASS_ID,owner:CLS&&CLS.owner,k:k,nick:name,n:n,s:strikes,c:S.correct,t:Math.max(1,Math.min(3600,secs)),st:starsOf(strikes,n),log:log};
+  area.innerHTML='<p class="lbSt">'+plain('lbLoading')+'</p>';
+  waitCEN().then(function(cen){
+    if(!cen||!CLS) throw 0;
+    return cen.submit(o).then(function(r){
+      if(!here()) return;
+      var head='<p class="lbSt"><b>'+plain('sentOk')+'</b></p>';
+      if(!CLS.showBoard){ area.innerHTML=head; return; }
+      area.innerHTML=head;
+      return cen.board(CLASS_ID,k).then(function(list){
+        if(!here()||!list.length) return;
+        area.innerHTML=head+'<p class="lbNote">'+plain('clsBoard')+'</p>'+lbTable(list.map(function(e){ var x=e.extra||{}; return {uid:e.h,name:e.nick,strikes:x.s,secs:x.t}; }),r.h);
+      }).catch(function(e){ console.warn(e); });
+    });
+  }).catch(function(e){
+    console.warn(e);
+    say(e&&e.code==='permission-denied'?'sentExpired':'sentFail');
+  });
+}
 function finish(){
   S.over=true; clearCheer();
   var secs=Math.round((Date.now()-S.t0)/1000), prev=null;
@@ -1111,16 +1306,16 @@ function finish(){
   ov.innerHTML='<div class="panel"><h2>'+H(S.strikes===0?'perfect':'done')+'</h2><div class="stars">'+stars+'</div>'+
     '<div class="stats"><div><b>'+S.correct+'/'+NSTEP+'</b>'+H('sCorrect')+'</div><div><b>⚡'+S.strikes+'</b>'+H('sStrike')+'</div></div>'+
     (isBest?'<div class="newbest">'+plain('best')+'</div>':'')+
-    '<div class="lbBox" id="lbArea"></div>'+
+    (!SPECIAL||CLASS_MODE?'<div class="lbBox" id="lbArea"></div>':'')+
     (chips?'<div class="rev"><div class="lab">'+plain('review')+'</div><div class="chips">'+chips+'</div></div>':'')+
     '<div class="btns"><button class="big" id="bAgain">'+H('again')+'</button><button class="ghost" id="bHome">'+H('home')+'</button></div></div>';
-  lbAfterGame(S.strikes,secs,S.gid);
+  if(CLASS_MODE) classFinish(secs,S.gid); else if(!SPECIAL) lbAfterGame(S.strikes,secs,S.gid);
   $('bAgain').addEventListener('click',function(){ ci=Math.floor(Math.random()*5); pickBg(); startGame(); }); $('bHome').addEventListener('click',goHome);
 }
 
 /* ====================== 連線模式（最多 15 人，一條命）======================
    流程：首頁 👥 → 開房（房主選難度）或輸入 4 位數房號加入 → 等人 → 房主按開始
-   → 全部人同題、同時作答、同時揭曉：打錯或時間到就被雷劈、出局（可留下觀賽）→ 爬完 N 階（房主選 10／15／20／25 題）或全部出局就結算。
+   → 全部人同題、同時作答、同時揭曉：打錯或時間到就被雷劈、出局（可留下觀賽）→ 爬完 N 階（房主選 10／15／20／25 題；用老師題庫的練習連結開房可選到 30 題）或全部出局就結算。
    資料在 Firebase（下面 module 的 window.RM）：房主負責推進回合，每個人只寫自己的答題結果。 */
 var MP={on:false};
 function mpFresh(){
@@ -1129,6 +1324,20 @@ function mpFresh(){
 }
 MP=mpFresh();
 var mpLv="normal", mpN=10, MAXP=15;
+/* 用老師題庫（練習連結 ?b=）開房：題數可選 10～30（不超過題庫字數）、難度只有簡單／普通；房間裡多存 bn（題庫名稱）和 bk（這一局題目的字＋讀音，大家都用房間裡的，不用自己有題庫） */
+function mpNList(){ return CUSTOM?nList():NQS; }
+function mpLvList(r){ return (CUSTOM||(r&&r.bn))?['easy','normal']:['easy','normal','hard']; }
+function mpWordStr(c){ var w=BYCH[c]; return w?[w.c,w.s||w.c,w.r.join(',')].join('\t'):c; }
+function mpBank(r){      // 房間裡有自訂題目（bk）→ 加進查詢表，大家同一份讀音
+  if(!r||!r.bk||!r.bk.length) return;
+  var key=r.n+':'+r.bk.join('|'); if(MP.bkKey===key) return; MP.bkKey=key;
+  var b=parseBank({chars:r.bk}); if(b) useWords(b.words);
+}
+function mpRestoreWords(){   // 離開房間後，把查詢表還原（房間裡的讀音不留在單人遊戲）
+  Object.keys(BYCH).forEach(function(k){ delete BYCH[k]; });
+  WORDS.forEach(function(w){ BYCH[w.c]=w; });
+  if(CUSTOM) CUSTOM.words.forEach(function(w){ BYCH[w.c]=w; });
+}
 function waitRM(){
   return new Promise(function(res){
     var n=0; (function chk(){ if(window.RM) return res(window.RM); if(++n>50) return res(null); setTimeout(chk,100); })();
@@ -1150,9 +1359,9 @@ function mpTs(t){ return t&&typeof t.toMillis==='function'?t.toMillis():(+t||0);
 
 /* ---------- 首頁入口 ---------- */
 function mpOpen(prefill){
-  var ov=$('ov'); ov.hidden=false; if(!mpLv||!LEVELS[mpLv]) mpLv=cfg.lv; if(NQS.indexOf(mpN)<0) mpN=cfg.n;
+  var ov=$('ov'); ov.hidden=false; if(!mpLv||!LEVELS[mpLv]||mpLvList().indexOf(mpLv)<0) mpLv=mpLvList().indexOf(cfg.lv)>=0?cfg.lv:'normal'; if(mpNList().indexOf(mpN)<0) mpN=mpNList().indexOf(cfg.n)>=0?cfg.n:10;
   ov.innerHTML='<div class="panel mpP"><h2>👥 '+zh('mpTitle')+(tl('mpTitle')?'<span class="tl">'+tl('mpTitle')+'</span>':'')+'</h2>'+
-    '<p class="lbNote">'+plain('mpIntro')+'</p>'+
+    '<p class="lbNote">'+plain('mpIntro')+'</p>'+(CUSTOM?'<p class="lbNote">⚡ '+esc(CUSTOM.name||'')+'</p>':'')+
     '<div class="grp"><div class="lab">'+plain('secName')+'</div><input class="nameIn" id="mpName" type="text" maxlength="14" autocomplete="off" spellcheck="false"></div>'+
     '<div class="mpBox"><h3>'+plain('mpMake')+'</h3><div class="seg" id="mpSegLv"></div><div class="lab" style="margin:6px 0 3px">'+plain('mpNIs')+'</div><div class="seg" id="mpSegN"></div><div class="btns"><button class="big" id="mpMake" type="button">'+H('mpMakeGo')+'</button></div></div>'+
     '<div class="mpBox"><h3>'+plain('mpJoinT')+'</h3><div class="mpRow"><input class="nameIn" id="mpCode" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="'+zh('mpCodePh')+'"><button class="big" id="mpGo" type="button">'+H('mpJoinGo')+'</button></div>'+
@@ -1161,8 +1370,8 @@ function mpOpen(prefill){
     '<div class="btns"><button class="ghost" id="mpBack" type="button">'+H('lbBack')+'</button></div></div>';
   $('mpName').value=getName();
   if(prefill) $('mpCode').value=String(prefill).replace(/\D/g,'').slice(0,4);
-  seg('mpSegLv',['easy','normal','hard'].map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),mpLv,function(v){ mpLv=v; mpOpen($('mpCode').value); });
-  seg('mpSegN',NQS.map(function(n){ return {v:n,h:String(n)}; }),mpN,function(v){ mpN=v; mpOpen($('mpCode').value); });
+  seg('mpSegLv',mpLvList().map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),mpLv,function(v){ mpLv=v; mpOpen($('mpCode').value); });
+  seg('mpSegN',mpNList().map(function(n){ return {v:n,h:String(n)}; }),mpN,function(v){ mpN=v; mpOpen($('mpCode').value); });
   $('mpName').addEventListener('input',function(){ setName(this.value); if($('inName')) $('inName').value=getName(); });
   $('mpCode').addEventListener('input',function(){ this.value=this.value.replace(/\D/g,'').slice(0,4); });
   $('mpBack').addEventListener('click',function(){ ov.hidden=true; ov.innerHTML=''; });
@@ -1177,7 +1386,7 @@ function mpMake(){
   mpBusy(true); mpMsg('lbLoading');
   waitRM().then(function(rm){
     if(!rm) throw 0;
-    var me=mpMe(false); me.level=mpLv; me.nq=mpN;
+    var me=mpMe(false); me.level=mpLv; me.nq=mpN; if(CUSTOM) me.bn=CUSTOM.name||'自訂題庫';
     return rm.create(me).then(function(code){ mpEnter(code,true); });
   }).catch(function(){ mpBusy(false); mpMsg('mpErr'); });
 }
@@ -1199,7 +1408,7 @@ function mpEnter(code,host){
   waitRM().then(function(rm){
     return rm.uid().then(function(uid){
       MP=mpFresh(); MP.on=true; MP.code=code; MP.host=host; MP.uid=uid; MP.t0=Date.now();
-      MP.unsub=rm.listen(code,function(r){ if(MP.code!==code) return; MP.room=r; MP.gotRoom=true; mpSync(); },
+      MP.unsub=rm.listen(code,function(r){ if(MP.code!==code) return; MP.room=r; MP.gotRoom=true; mpBank(r); mpSync(); },
         function(list){ if(MP.code!==code) return; MP.pl={}; list.forEach(function(p){ p.joinedAt=mpTs(p.joinedAt); MP.pl[p.uid]=p; }); MP.gotPl=true; mpSync(); },
         function(){ if(MP.code===code) mpExit('mpErr'); });
       $('ov').hidden=false; $('ov').innerHTML='<div class="panel"><p class="lbSt">'+plain('lbLoading')+'</p></div>';
@@ -1209,7 +1418,7 @@ function mpEnter(code,host){
 function mpExit(msgKey){
   var was=MP.on; try{ if(MP.unsub) MP.unsub(); }catch(e){}
   S.running=false; S.over=true;
-  MP=mpFresh();
+  MP=mpFresh(); mpRestoreWords();
   $('crowd').innerHTML=''; $('mpStrip').hidden=true; $('player').hidden=false; $('btnPause').textContent='❚❚';
   $('scene').classList.remove('mp'); $('play').hidden=true; $('start').hidden=false; $('kb').classList.remove('locked'); setStorm(0);
   try{ history.replaceState(null,'',location.pathname+location.hash); }catch(e){}
@@ -1255,7 +1464,7 @@ function mpLobby(){
   var r=MP.room, ov=$('ov'); ov.hidden=false; $('start').hidden=false; $('play').hidden=true;
   var list=mpPlayersSorted(), n=list.length, roster=list.filter(function(p){ return !p.spec; }).length;
   var nq=r.nq||10;
-  var key=JSON.stringify([r.level,nq,list.map(function(p){ return [p.uid,p.name,p.spec]; }),cfg.kb,Settings.script,Settings.lang,roster]);
+  var key=JSON.stringify([r.level,nq,r.bn||'',list.map(function(p){ return [p.uid,p.name,p.spec]; }),cfg.kb,Settings.script,Settings.lang,roster]);
   if(MP.lobbyKey===key&&$('mpLobby')) return; MP.lobbyKey=key;
   var rows=list.map(function(p){
     var tag=p.uid===r.hostUid?'<span class="plTag">'+zh('mpHostTag')+'</span>':'';
@@ -1266,17 +1475,17 @@ function mpLobby(){
   var nsel=MP.host?'<div class="seg" id="mpSegN2"></div>':'<div class="lbSt">'+plain('mpNIs')+'：<b>'+nq+'</b></div>';
   var act=MP.host?(roster>=2?'<button class="big" id="mpStart" type="button">'+H('mpStartGo')+'</button>':'<button class="big" id="mpStart" type="button" disabled>'+H('mpStartGo')+'</button><p class="lbNote">'+plain('mpNeed2')+'</p>'):'<p class="lbSt">'+plain('mpWaitHost')+'</p>';
   ov.innerHTML='<div class="panel" id="mpLobby"><div class="lab">'+plain('mpRoom')+'</div><div class="codeBig">'+esc(MP.code)+'</div>'+
-    '<button class="ghost" id="mpCopy" type="button">'+zh('mpCopy')+(tl('mpCopy')?' · '+tl('mpCopy'):'')+'</button>'+
+    '<button class="ghost" id="mpCopy" type="button">'+zh('mpCopy')+(tl('mpCopy')?' · '+tl('mpCopy'):'')+'</button>'+(r.bn?'<p class="lbNote">⚡ '+esc(r.bn)+'</p>':'')+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpLevelIs')+'</div>'+lvl+'</div>'+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpNIs')+'</div>'+nsel+'</div>'+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpKb')+'</div><div class="seg" id="mpSegKb"></div></div>'+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpPlayers')+' '+n+'/'+MAXP+'</div><div class="plList">'+rows+'</div></div>'+
     '<div class="btns">'+act+'<button class="ghost" id="mpLeaveBtn" type="button">'+H('mpLeave')+'</button></div></div>';
   seg('mpSegKb',[{v:'pinyin',h:'拼音<span class="tl">pīnyīn</span>'},{v:'zhuyin',h:'注音<span class="tl">ㄅㄆㄇㄈ</span>'}],cfg.kb,function(v){ cfg.kb=v; saveCfg(); MP.lobbyKey=''; mpLobby(); });
-  if(MP.host) seg('mpSegLv2',['easy','normal','hard'].map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),r.level,function(v){
+  if(MP.host) seg('mpSegLv2',mpLvList(r).map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),r.level,function(v){
     if(v!==r.level) waitRM().then(function(rm){ return rm.hostSet(MP.code,{level:v}); }).catch(function(){});
   });
-  if(MP.host) seg('mpSegN2',NQS.map(function(n){ return {v:n,h:String(n)}; }),nq,function(v){
+  if(MP.host) seg('mpSegN2',mpNList().map(function(n){ return {v:n,h:String(n)}; }),nq,function(v){
     if(v!==nq) waitRM().then(function(rm){ return rm.hostSet(MP.code,{nq:v}); }).catch(function(){});
   });
   $('mpCopy').addEventListener('click',function(){
@@ -1287,9 +1496,9 @@ function mpLobby(){
   $('mpLeaveBtn').addEventListener('click',mpLeaveAsk);
   if(MP.host&&$('mpStart')) $('mpStart').addEventListener('click',mpStart);
 }
-function mpPick(level,n){
+function mpPick(level,n,custom){
   var set={}; LEVELS[level].pool.forEach(function(l){ set[l]=1; });
-  var pool=WORDS.filter(function(w){ return w.n ? level==='hard' : set[w.lv]; }), out=[];
+  var pool=custom&&CUSTOM?CUSTOM.words:WORDS.filter(function(w){ return w.n ? level==='hard' : set[w.lv]; }), out=[];
   while(out.length<n&&pool.length>out.length){ var w=pool[Math.floor(Math.random()*pool.length)]; if(out.indexOf(w.c)<0) out.push(w.c); }
   return out;
 }
@@ -1299,7 +1508,9 @@ function mpStart(){
   if(ro.length<2) return;
   $('mpStart').disabled=true;
   waitRM().then(function(rm){
-    return rm.hostSet(MP.code,{status:'playing',ph:'ready',rd:0,qs:mpPick(r.level,r.nq||10),ro:ro,elim:{},final:[]});
+    var cu=!!(r.bn&&CUSTOM), qs=mpPick(r.level,r.nq||10,cu);
+    var patch={status:'playing',ph:'ready',rd:0,qs:qs,ro:ro,elim:{},final:[]}; if(cu) patch.bk=qs.map(mpWordStr);   // 公開房間不帶 bk（跟舊規則也相容）
+    return rm.hostSet(MP.code,patch);
   }).catch(function(){ if($('mpStart')) $('mpStart').disabled=false; });
 }
 
@@ -1477,7 +1688,7 @@ function mpResults(){
     '<button class="ghost" id="mpLeaveBtn" type="button">'+H('mpLeave')+'</button></div></div>';
   if(MP.host) $('mpAgain').addEventListener('click',function(){
     this.disabled=true;
-    waitRM().then(function(rm){ return rm.hostSet(MP.code,{status:'waiting',ph:'',rd:0,qs:[],ro:[],elim:{},final:[],n:r.n+1}); }).catch(function(){ if($('mpAgain')) $('mpAgain').disabled=false; });
+    waitRM().then(function(rm){ var pt={status:'waiting',ph:'',rd:0,qs:[],ro:[],elim:{},final:[],n:r.n+1}; if(r.bk) pt.bk=[]; return rm.hostSet(MP.code,pt); }).catch(function(){ if($('mpAgain')) $('mpAgain').disabled=false; });
   });
   $('mpLeaveBtn').addEventListener('click',mpLeave);
 }
@@ -1536,6 +1747,7 @@ function mpHostFrame(dt){
 /* ---------- 啟動 ---------- */
 pickBg();
 renderStart();
+linkBoot();
 $('btnMulti').addEventListener('click',function(){ mpOpen(); });
 (function(){ var m=/[?&]room=(\d{4})/.exec(location.search); if(m) mpOpen(m[1]); })();
 if(TEST){ window.__nian={BG:BG,S:S,LABELS:LABELS,cfg:cfg,BYCH:BYCH,geo:geo,placePlayer:placePlayer,footPos:footPos,startGame:startGame,setBg:setBg,BGS:BGS,NSTEP:function(){ return NSTEP; },boardId:boardId,bgIdx:function(){ return bgIdx; },timeUp:timeUp,keyPress:keyPress,advance:advance,MP:function(){ return MP; }}; }
@@ -1621,8 +1833,9 @@ try{
           if(tsMs(d.expireAt) > Date.now() && d.status !== 'closed') continue;
           // 舊房間留下的玩家資料清掉（房主才能刪，所以要等新房間建好再清）
         }
-        const data = { code, hostUid: uid, hostName: name, level: o.level, nq: [10,15,20,25].includes(o.nq) ? o.nq : 10, status: 'waiting', ph: '', rd: 0, n: 0,
+        const data = { code, hostUid: uid, hostName: name, level: o.level, nq: [10,15,20,25,30].includes(o.nq) ? o.nq : 10, status: 'waiting', ph: '', rd: 0, n: 0,
           qs: [], ro: [], elim: {}, final: [], createdAt: serverTimestamp(), expireAt: Timestamp.fromMillis(Date.now() + ROOM_MS) };
+        if(o.bn) data.bn = String(o.bn).slice(0, 40);   // 用老師題庫開的房間：題庫名稱（開始時房主再把這一局的題目字與讀音寫進 bk）
         await setDoc(roomRef(code), data);
         if(snap.exists()){
           try{ const old = await getDocs(collection(db, 'rayo_rooms', code, 'players'));
@@ -1667,6 +1880,72 @@ try{
   };
 
 }catch(e){ console.error('Firebase 初始化失敗', e); }
+</script>
+<script type="module">
+// 老師管理中心連線（班級連結、練習連結用）：Firebase 專案 subscription-48d3c，匿名登入。公開頁用不到，只有網址帶 ?class= 或 ?b= 才會連。
+// 讀：portalStatus/center-rayo（維修開關）、classes/{班級碼}、shared_rayo/{題庫碼}
+// 寫：class_scores/{班級碼}_rayo_{設定}_{暱稱雜湊}（每人每個設定一筆最好成績）、class_plays（每局逐題紀錄）。規則見 game-kit 的 firebase-rules/subscription-48d3c.rules.txt
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,collection,query,where,limit,getDocs,getDoc,doc,setDoc,updateDoc,addDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const CENTRAL_CONFIG = {
+  apiKey: "AIzaSyCHZz8Hh7m45bJfZC9aK_f_NvUD-aUeuzU",
+  authDomain: "subscription-48d3c.firebaseapp.com",
+  projectId: "subscription-48d3c",
+  storageBucket: "subscription-48d3c.firebasestorage.app",
+  messagingSenderId: "276281656991",
+  appId: "1:276281656991:web:de242ba22373816c3044aa"
+};
+try{
+  let dbp = null;
+  const central = () => dbp || (dbp = (async () => {
+    const app = initializeApp(CENTRAL_CONFIG, 'central');
+    const auth = getAuth(app);
+    await auth.authStateReady();
+    if(!auth.currentUser) await signInAnonymously(auth);
+    return getFirestore(app);
+  })());
+  // 暱稱 → 16 個十六進位字（SHA-256 前 8 bytes），跟其他遊戲同一個算法，老師管理中心用它對同一個學生
+  async function nickHash(nick){
+    const norm = String(nick).normalize('NFKC').trim().toLowerCase().replace(/\s+/g, ' ');
+    try{
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(norm));
+      return Array.from(new Uint8Array(buf)).slice(0, 8).map(b => b.toString(16).padStart(2, '0')).join('');
+    }catch(e){
+      let h1 = 0x811c9dc5, h2 = 0x01000193;
+      for(const ch of norm){ const c = ch.codePointAt(0); h1 = Math.imul(h1 ^ c, 16777619) >>> 0; h2 = Math.imul(h2 + c, 2246822519) >>> 0; }
+      return h1.toString(16).padStart(8, '0') + h2.toString(16).padStart(8, '0');
+    }
+  }
+  window.CEN = {
+    // 維修中？沒有開關文件＝維修中（預設）；off:false＝開放。讀不到會丟錯，由遊戲決定照常放行
+    async maint(){ const m = await getDoc(doc(await central(), 'portalStatus', 'center-rayo')); return !m.exists() || m.data().off !== false; },
+    async cls(cid){ const s = await getDoc(doc(await central(), 'classes', cid)); if(!s.exists()) throw { code: 'not-found' }; return s.data(); },
+    async bank(sid){ const s = await getDoc(doc(await central(), 'shared_rayo', sid)); if(!s.exists()) throw { code: 'not-found' }; return s.data(); },
+    // 送成績：best = (題數 − 被劈) × 100000 + (99999 − 秒數)；只保留最好的一筆，extra 記那一局的細節（s 被劈、c 答對、t 秒、st 星、n 題數）
+    async submit(o){
+      const db = await central(), h = await nickHash(o.nick), ts = serverTimestamp();
+      const ref = doc(db, 'class_scores', o.cid + '_rayo_' + o.k + '_' + h);
+      const best = (o.n - o.s) * 100000 + (99999 - o.t), extra = { s: o.s, c: o.c, t: o.t, st: o.st, n: o.n };
+      const old = await getDoc(ref);
+      if(!old.exists()){
+        await setDoc(ref, { cid: o.cid, owner: o.owner, game: 'rayo', k: o.k, h, nick: o.nick, best, plays: 1, lastAt: ts, extra });
+      }else{
+        const d = old.data(), upd = { nick: o.nick, plays: (d.plays || 0) + 1, lastAt: ts, best: Math.max(d.best || 0, best) };
+        if(best > (d.best || 0)) upd.extra = extra;
+        await updateDoc(ref, upd);
+      }
+      try{ await addDoc(collection(db, 'class_plays'), { cid: o.cid, owner: o.owner, game: 'rayo', h, nick: o.nick, at: ts, k: o.k, score: o.c, qs: o.log.slice(0, 30) }); }
+      catch(e){ console.warn('class_plays failed', e); }
+      return { h };
+    },
+    // 班級排行榜（老師開了才讀得到）：同設定、前 10 名
+    async board(cid, k){
+      const snap = await getDocs(query(collection(await central(), 'class_scores'), where('cid', '==', cid), limit(300)));
+      return snap.docs.map(d => d.data()).filter(r => r.game === 'rayo' && r.k === k).sort((a, b) => b.best - a.best).slice(0, 10);
+    }
+  };
+}catch(e){ console.error('老師管理中心連線初始化失敗', e); }
 </script>
 <script>/* ===== 一鍵靜音（只關音樂和音效，不影響念字的語音）— 每天一分鐘遊戲統一做法 ===== */
 (function(){

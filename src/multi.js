@@ -1,6 +1,6 @@
 /* ====================== 連線模式（最多 15 人，一條命）======================
    流程：首頁 👥 → 開房（房主選難度）或輸入 4 位數房號加入 → 等人 → 房主按開始
-   → 全部人同題、同時作答、同時揭曉：打錯或時間到就被雷劈、出局（可留下觀賽）→ 爬完 N 階（房主選 10／15／20／25 題）或全部出局就結算。
+   → 全部人同題、同時作答、同時揭曉：打錯或時間到就被雷劈、出局（可留下觀賽）→ 爬完 N 階（房主選 10／15／20／25 題；用老師題庫的練習連結開房可選到 30 題）或全部出局就結算。
    資料在 Firebase（下面 module 的 window.RM）：房主負責推進回合，每個人只寫自己的答題結果。 */
 var MP={on:false};
 function mpFresh(){
@@ -9,6 +9,20 @@ function mpFresh(){
 }
 MP=mpFresh();
 var mpLv="normal", mpN=10, MAXP=15;
+/* 用老師題庫（練習連結 ?b=）開房：題數可選 10～30（不超過題庫字數）、難度只有簡單／普通；房間裡多存 bn（題庫名稱）和 bk（這一局題目的字＋讀音，大家都用房間裡的，不用自己有題庫） */
+function mpNList(){ return CUSTOM?nList():NQS; }
+function mpLvList(r){ return (CUSTOM||(r&&r.bn))?['easy','normal']:['easy','normal','hard']; }
+function mpWordStr(c){ var w=BYCH[c]; return w?[w.c,w.s||w.c,w.r.join(',')].join('\t'):c; }
+function mpBank(r){      // 房間裡有自訂題目（bk）→ 加進查詢表，大家同一份讀音
+  if(!r||!r.bk||!r.bk.length) return;
+  var key=r.n+':'+r.bk.join('|'); if(MP.bkKey===key) return; MP.bkKey=key;
+  var b=parseBank({chars:r.bk}); if(b) useWords(b.words);
+}
+function mpRestoreWords(){   // 離開房間後，把查詢表還原（房間裡的讀音不留在單人遊戲）
+  Object.keys(BYCH).forEach(function(k){ delete BYCH[k]; });
+  WORDS.forEach(function(w){ BYCH[w.c]=w; });
+  if(CUSTOM) CUSTOM.words.forEach(function(w){ BYCH[w.c]=w; });
+}
 function waitRM(){
   return new Promise(function(res){
     var n=0; (function chk(){ if(window.RM) return res(window.RM); if(++n>50) return res(null); setTimeout(chk,100); })();
@@ -30,9 +44,9 @@ function mpTs(t){ return t&&typeof t.toMillis==='function'?t.toMillis():(+t||0);
 
 /* ---------- 首頁入口 ---------- */
 function mpOpen(prefill){
-  var ov=$('ov'); ov.hidden=false; if(!mpLv||!LEVELS[mpLv]) mpLv=cfg.lv; if(NQS.indexOf(mpN)<0) mpN=cfg.n;
+  var ov=$('ov'); ov.hidden=false; if(!mpLv||!LEVELS[mpLv]||mpLvList().indexOf(mpLv)<0) mpLv=mpLvList().indexOf(cfg.lv)>=0?cfg.lv:'normal'; if(mpNList().indexOf(mpN)<0) mpN=mpNList().indexOf(cfg.n)>=0?cfg.n:10;
   ov.innerHTML='<div class="panel mpP"><h2>👥 '+zh('mpTitle')+(tl('mpTitle')?'<span class="tl">'+tl('mpTitle')+'</span>':'')+'</h2>'+
-    '<p class="lbNote">'+plain('mpIntro')+'</p>'+
+    '<p class="lbNote">'+plain('mpIntro')+'</p>'+(CUSTOM?'<p class="lbNote">⚡ '+esc(CUSTOM.name||'')+'</p>':'')+
     '<div class="grp"><div class="lab">'+plain('secName')+'</div><input class="nameIn" id="mpName" type="text" maxlength="14" autocomplete="off" spellcheck="false"></div>'+
     '<div class="mpBox"><h3>'+plain('mpMake')+'</h3><div class="seg" id="mpSegLv"></div><div class="lab" style="margin:6px 0 3px">'+plain('mpNIs')+'</div><div class="seg" id="mpSegN"></div><div class="btns"><button class="big" id="mpMake" type="button">'+H('mpMakeGo')+'</button></div></div>'+
     '<div class="mpBox"><h3>'+plain('mpJoinT')+'</h3><div class="mpRow"><input class="nameIn" id="mpCode" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="'+zh('mpCodePh')+'"><button class="big" id="mpGo" type="button">'+H('mpJoinGo')+'</button></div>'+
@@ -41,8 +55,8 @@ function mpOpen(prefill){
     '<div class="btns"><button class="ghost" id="mpBack" type="button">'+H('lbBack')+'</button></div></div>';
   $('mpName').value=getName();
   if(prefill) $('mpCode').value=String(prefill).replace(/\D/g,'').slice(0,4);
-  seg('mpSegLv',['easy','normal','hard'].map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),mpLv,function(v){ mpLv=v; mpOpen($('mpCode').value); });
-  seg('mpSegN',NQS.map(function(n){ return {v:n,h:String(n)}; }),mpN,function(v){ mpN=v; mpOpen($('mpCode').value); });
+  seg('mpSegLv',mpLvList().map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),mpLv,function(v){ mpLv=v; mpOpen($('mpCode').value); });
+  seg('mpSegN',mpNList().map(function(n){ return {v:n,h:String(n)}; }),mpN,function(v){ mpN=v; mpOpen($('mpCode').value); });
   $('mpName').addEventListener('input',function(){ setName(this.value); if($('inName')) $('inName').value=getName(); });
   $('mpCode').addEventListener('input',function(){ this.value=this.value.replace(/\D/g,'').slice(0,4); });
   $('mpBack').addEventListener('click',function(){ ov.hidden=true; ov.innerHTML=''; });
@@ -57,7 +71,7 @@ function mpMake(){
   mpBusy(true); mpMsg('lbLoading');
   waitRM().then(function(rm){
     if(!rm) throw 0;
-    var me=mpMe(false); me.level=mpLv; me.nq=mpN;
+    var me=mpMe(false); me.level=mpLv; me.nq=mpN; if(CUSTOM) me.bn=CUSTOM.name||'自訂題庫';
     return rm.create(me).then(function(code){ mpEnter(code,true); });
   }).catch(function(){ mpBusy(false); mpMsg('mpErr'); });
 }
@@ -79,7 +93,7 @@ function mpEnter(code,host){
   waitRM().then(function(rm){
     return rm.uid().then(function(uid){
       MP=mpFresh(); MP.on=true; MP.code=code; MP.host=host; MP.uid=uid; MP.t0=Date.now();
-      MP.unsub=rm.listen(code,function(r){ if(MP.code!==code) return; MP.room=r; MP.gotRoom=true; mpSync(); },
+      MP.unsub=rm.listen(code,function(r){ if(MP.code!==code) return; MP.room=r; MP.gotRoom=true; mpBank(r); mpSync(); },
         function(list){ if(MP.code!==code) return; MP.pl={}; list.forEach(function(p){ p.joinedAt=mpTs(p.joinedAt); MP.pl[p.uid]=p; }); MP.gotPl=true; mpSync(); },
         function(){ if(MP.code===code) mpExit('mpErr'); });
       $('ov').hidden=false; $('ov').innerHTML='<div class="panel"><p class="lbSt">'+plain('lbLoading')+'</p></div>';
@@ -89,7 +103,7 @@ function mpEnter(code,host){
 function mpExit(msgKey){
   var was=MP.on; try{ if(MP.unsub) MP.unsub(); }catch(e){}
   S.running=false; S.over=true;
-  MP=mpFresh();
+  MP=mpFresh(); mpRestoreWords();
   $('crowd').innerHTML=''; $('mpStrip').hidden=true; $('player').hidden=false; $('btnPause').textContent='❚❚';
   $('scene').classList.remove('mp'); $('play').hidden=true; $('start').hidden=false; $('kb').classList.remove('locked'); setStorm(0);
   try{ history.replaceState(null,'',location.pathname+location.hash); }catch(e){}
@@ -135,7 +149,7 @@ function mpLobby(){
   var r=MP.room, ov=$('ov'); ov.hidden=false; $('start').hidden=false; $('play').hidden=true;
   var list=mpPlayersSorted(), n=list.length, roster=list.filter(function(p){ return !p.spec; }).length;
   var nq=r.nq||10;
-  var key=JSON.stringify([r.level,nq,list.map(function(p){ return [p.uid,p.name,p.spec]; }),cfg.kb,Settings.script,Settings.lang,roster]);
+  var key=JSON.stringify([r.level,nq,r.bn||'',list.map(function(p){ return [p.uid,p.name,p.spec]; }),cfg.kb,Settings.script,Settings.lang,roster]);
   if(MP.lobbyKey===key&&$('mpLobby')) return; MP.lobbyKey=key;
   var rows=list.map(function(p){
     var tag=p.uid===r.hostUid?'<span class="plTag">'+zh('mpHostTag')+'</span>':'';
@@ -146,17 +160,17 @@ function mpLobby(){
   var nsel=MP.host?'<div class="seg" id="mpSegN2"></div>':'<div class="lbSt">'+plain('mpNIs')+'：<b>'+nq+'</b></div>';
   var act=MP.host?(roster>=2?'<button class="big" id="mpStart" type="button">'+H('mpStartGo')+'</button>':'<button class="big" id="mpStart" type="button" disabled>'+H('mpStartGo')+'</button><p class="lbNote">'+plain('mpNeed2')+'</p>'):'<p class="lbSt">'+plain('mpWaitHost')+'</p>';
   ov.innerHTML='<div class="panel" id="mpLobby"><div class="lab">'+plain('mpRoom')+'</div><div class="codeBig">'+esc(MP.code)+'</div>'+
-    '<button class="ghost" id="mpCopy" type="button">'+zh('mpCopy')+(tl('mpCopy')?' · '+tl('mpCopy'):'')+'</button>'+
+    '<button class="ghost" id="mpCopy" type="button">'+zh('mpCopy')+(tl('mpCopy')?' · '+tl('mpCopy'):'')+'</button>'+(r.bn?'<p class="lbNote">⚡ '+esc(r.bn)+'</p>':'')+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpLevelIs')+'</div>'+lvl+'</div>'+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpNIs')+'</div>'+nsel+'</div>'+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpKb')+'</div><div class="seg" id="mpSegKb"></div></div>'+
     '<div class="grp" style="text-align:left"><div class="lab">'+plain('mpPlayers')+' '+n+'/'+MAXP+'</div><div class="plList">'+rows+'</div></div>'+
     '<div class="btns">'+act+'<button class="ghost" id="mpLeaveBtn" type="button">'+H('mpLeave')+'</button></div></div>';
   seg('mpSegKb',[{v:'pinyin',h:'拼音<span class="tl">pīnyīn</span>'},{v:'zhuyin',h:'注音<span class="tl">ㄅㄆㄇㄈ</span>'}],cfg.kb,function(v){ cfg.kb=v; saveCfg(); MP.lobbyKey=''; mpLobby(); });
-  if(MP.host) seg('mpSegLv2',['easy','normal','hard'].map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),r.level,function(v){
+  if(MP.host) seg('mpSegLv2',mpLvList(r).map(function(k){ return {v:k,h:secLabel(k,LEVELS[k].T)}; }),r.level,function(v){
     if(v!==r.level) waitRM().then(function(rm){ return rm.hostSet(MP.code,{level:v}); }).catch(function(){});
   });
-  if(MP.host) seg('mpSegN2',NQS.map(function(n){ return {v:n,h:String(n)}; }),nq,function(v){
+  if(MP.host) seg('mpSegN2',mpNList().map(function(n){ return {v:n,h:String(n)}; }),nq,function(v){
     if(v!==nq) waitRM().then(function(rm){ return rm.hostSet(MP.code,{nq:v}); }).catch(function(){});
   });
   $('mpCopy').addEventListener('click',function(){
@@ -167,9 +181,9 @@ function mpLobby(){
   $('mpLeaveBtn').addEventListener('click',mpLeaveAsk);
   if(MP.host&&$('mpStart')) $('mpStart').addEventListener('click',mpStart);
 }
-function mpPick(level,n){
+function mpPick(level,n,custom){
   var set={}; LEVELS[level].pool.forEach(function(l){ set[l]=1; });
-  var pool=WORDS.filter(function(w){ return w.n ? level==='hard' : set[w.lv]; }), out=[];
+  var pool=custom&&CUSTOM?CUSTOM.words:WORDS.filter(function(w){ return w.n ? level==='hard' : set[w.lv]; }), out=[];
   while(out.length<n&&pool.length>out.length){ var w=pool[Math.floor(Math.random()*pool.length)]; if(out.indexOf(w.c)<0) out.push(w.c); }
   return out;
 }
@@ -179,7 +193,9 @@ function mpStart(){
   if(ro.length<2) return;
   $('mpStart').disabled=true;
   waitRM().then(function(rm){
-    return rm.hostSet(MP.code,{status:'playing',ph:'ready',rd:0,qs:mpPick(r.level,r.nq||10),ro:ro,elim:{},final:[]});
+    var cu=!!(r.bn&&CUSTOM), qs=mpPick(r.level,r.nq||10,cu);
+    var patch={status:'playing',ph:'ready',rd:0,qs:qs,ro:ro,elim:{},final:[]}; if(cu) patch.bk=qs.map(mpWordStr);   // 公開房間不帶 bk（跟舊規則也相容）
+    return rm.hostSet(MP.code,patch);
   }).catch(function(){ if($('mpStart')) $('mpStart').disabled=false; });
 }
 
@@ -357,7 +373,7 @@ function mpResults(){
     '<button class="ghost" id="mpLeaveBtn" type="button">'+H('mpLeave')+'</button></div></div>';
   if(MP.host) $('mpAgain').addEventListener('click',function(){
     this.disabled=true;
-    waitRM().then(function(rm){ return rm.hostSet(MP.code,{status:'waiting',ph:'',rd:0,qs:[],ro:[],elim:{},final:[],n:r.n+1}); }).catch(function(){ if($('mpAgain')) $('mpAgain').disabled=false; });
+    waitRM().then(function(rm){ var pt={status:'waiting',ph:'',rd:0,qs:[],ro:[],elim:{},final:[],n:r.n+1}; if(r.bk) pt.bk=[]; return rm.hostSet(MP.code,pt); }).catch(function(){ if($('mpAgain')) $('mpAgain').disabled=false; });
   });
   $('mpLeaveBtn').addEventListener('click',mpLeave);
 }

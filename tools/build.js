@@ -112,11 +112,12 @@ const part = n => rd(path.join(GK, 'parts', n));
 html = html.replace('/*__WORDS__*/', () => words)
   .replace('/*__CHARS__*/', () => JSON.stringify(CHARS))
   .replace('/*__SETTINGS__*/', () => part('settings.js'))
+  .replace('/*__PHON__*/', () => '(function(){' + rd(path.join(__dirname, 'phon.js')).replace(/module\.exports\s*=.*$/m, '') + '\nreturn {toZhuyin:toZhuyin,toPinyin:toPinyin};})()')   // 讀音碼→注音／拼音（自訂題庫用）
   .replace('/*__MULTI__*/', () => rd(path.join(root, 'src/multi.js')))
   .replace('/*__MULTIFB__*/', () => rd(path.join(root, 'src/multi_fb.js')))
   .replace('/*__MUTE__*/', () => part('mute.js').replace(/__GAME__/g, GAME).replace(/__POS__/g, 'right:10px;top:10px').replace(/__MOUNT__/g, ''))
   .replace('/*__COPY__*/', () => part('copyright.js'))
-  .replace('/*__VOICEHINT__*/', () => part('voicehint.js'))
+  .replace('/*__VOICEHINT__*/', () => part('voicehint.js').replace('手机设置','手机设定').replace('不支持语音','不支援语音'))   // game-kit 的共用句還是中國用語，這裡先換成台灣用字
   .replace('/*__PLAYS__*/', () => part('plays.js').replace(/REPLACE_GAME_ID/g, GAME));   // 遊玩紀錄（寫到 memorma 的 plays／visits）
 
 fs.writeFileSync(path.join(root, 'index.html'), html);

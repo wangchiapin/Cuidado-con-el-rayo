@@ -35,7 +35,7 @@ export function getFirestore(app){return {app}}
 export const collection=(db,...p)=>({db,path:p.join('/')});
 export const doc=(db,...p)=>({db,path:p.join('/')});
 export const serverTimestamp=()=>'SERVER_TS';
-export const orderBy=(f,d)=>({orderBy:[f,d]}), limit=n=>({limit:n});
+export const orderBy=(f,d)=>({orderBy:[f,d]}), limit=n=>({limit:n}), where=(f,o,v)=>({where:[f,o,v]});
 export const query=(c,...m)=>({...c,m});
 export async function setDoc(r,d){op('set',r.path,JSON.parse(JSON.stringify(d)));W().__store[r.path]=d}
 export async function addDoc(c,d){op('add',c.path,d);return {id:'P'+W().__ops.length}}

@@ -314,9 +314,9 @@ with sync_playwright() as p:
     check(same, '首頁預覽的背景 = 接著開始的那一局的背景')
     check(all(seq[i] != seq[i+1] for i in range(len(seq)-1)) and len(set(seq)) >= 3, f'每一局都換背景（連兩局不會一樣）：{seq}')
     allb = pg.evaluate("()=>window.__nian.BGS")
-    check(sorted(allb.keys()) == ['10', '15', '20', '25'] and all(len(v) == 7 for v in allb.values()), '10／15／20／25 題各有 7 個背景（共 28 張）')
-    urls = [u for k in ['10', '15', '20', '25'] for u in allb[k]]
-    check(all(u.startswith('bg/') and u.endswith('.webp') and os.path.isfile(os.path.join(ROOT, u)) for u in urls), '28 個背景都是 bg/ 資料夾裡真的存在的 webp 圖片檔')
+    check(sorted(allb.keys()) == ['10', '15', '20', '25', '30'] and all(len(v) == 7 for v in allb.values()), '10／15／20／25／30 題各有 7 個背景（共 35 張）')
+    urls = [u for k in ['10', '15', '20', '25', '30'] for u in allb[k]]
+    check(all(u.startswith('bg/') and u.endswith('.webp') and os.path.isfile(os.path.join(ROOT, u)) for u in urls), '35 個背景都是 bg/ 資料夾裡真的存在的 webp 圖片檔')
     check(all(os.path.getsize(os.path.join(ROOT, u)) > 10000 for u in urls), '圖片檔都不是空的')
     def loads(i):
         return pg.evaluate("""(i)=>new Promise(res=>{window.__nian.setBg(i);var im=new Image();im.onload=()=>res(im.naturalWidth===840&&im.naturalHeight>600);im.onerror=()=>res(false);im.src=window.__nian.BGS[10][i];})""", i)
