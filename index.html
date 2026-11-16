@@ -100,6 +100,7 @@ h1 .tl{font-size:.46em;letter-spacing:0;margin-top:3px}
 .big{width:100%;min-height:54px;border-radius:10px;border:0;background:var(--red);color:#fff;font-size:20px;font-weight:700;letter-spacing:.2em;cursor:pointer}
 .big .tl{color:#F5DDD6;letter-spacing:0;font-size:.6em}
 .big:active{transform:scale(.985)}
+#bShare,#mpShare{background:#fff;border:2px solid var(--keyb)}
 .ghost{min-height:46px;padding:8px 14px;border-radius:10px;border:1px solid var(--keyb);background:var(--key);font-size:16px;cursor:pointer}
 
 /* ---------- 遊戲畫面 ---------- */
@@ -451,6 +452,7 @@ var TXT = {
   pause:['暫停','暂停','Pausa','Paused'], resume:['繼續','继续','Continuar','Resume'], home:['主選單','主选单','Menú principal','Main menu'],
   homeAsk:['要回主選單嗎？目前的進度不會保留。','要回主选单吗？目前的进度不会保留。','¿Volver al menú principal? Se perderá el progreso actual.','Go back to the main menu? Your current progress will be lost.'],
   homeYes:['回主選單','回主选单','Ir al menú','Main menu'], homeStay:['繼續留下','继续留下','Quedarme','Stay'], again:['再玩一次','再玩一次','Jugar otra vez','Play again'],
+  share:['分享成績','分享成绩','Compartir resultado','Share result'], shareCopied:['已複製','已复制','Copiado','Copied'], shareFail:['複製失敗','复制失败','No se pudo copiar','Copy failed'],
   qLab:['題','题','Pregunta','Question'], sStrike:['被雷劈','被雷劈','Rayos','Strikes'],
   done:['爬上來了！','爬上来了！','¡Llegaste arriba!','You made it up!'],
   perfect:['全部答對！','全部答对！','¡Todo correcto!','All correct!'],
@@ -1298,6 +1300,53 @@ function classFinish(secs,gid){
     say(e&&e.code==='permission-denied'?'sentExpired':'sentFail');
   });
 }
+/* SHARE-BEGIN（來自 game-kit/parts/share.js） */
+const HGShare = (() => {
+  async function copyText(s) {
+    try { if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(s); return true; } } catch (e) {}
+    try {
+      const ta = document.createElement('textarea'); ta.value = s; ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      const r = document.execCommand('copy'); ta.remove(); return !!r;
+    } catch (e) { return false; }
+  }
+  async function send({ title, text, url }) {
+    if (navigator.share) {
+      try { await navigator.share({ title, text, url }); return 'shared'; }
+      catch (e) { if (e && e.name === 'AbortError') return 'aborted'; }   // 其他錯誤改走複製
+    }
+    return (await copyText(text + '\n' + url)) ? 'copied' : 'failed';
+  }
+  return { copyText, send };
+})();
+/* SHARE-END */
+var SHARE_URL='https://wangchiapin.github.io/Cuidado-con-el-rayo/?ref=share';   // 公開頁＋分享記號（不帶班級碼、練習碼）
+function shareLang(){ return Settings.lang==='es'?'es':Settings.lang==='en'?'en':(Settings.script==='simp'?'cn':'tw'); }
+function shareMsgSolo(n,N,x){
+  var L=shareLang();
+  if(x===0&&n===N) return {tw:'我在「天打雷劈」全部答對，一次都沒被雷劈！你也來試試',cn:'我在「天打雷劈」全部答对，一次都没被雷劈！你也来试试',es:'¡En «¡Cuidado con el rayo!» acerté todo y no me cayó ni un rayo! Inténtalo tú también',en:'I got everything right in "Don’t get struck!" and wasn’t struck once! Try it too'}[L];
+  return {tw:'我在「天打雷劈」答對 '+n+'/'+N+' 題，被雷劈 '+x+' 次！你也來試試',cn:'我在「天打雷劈」答对 '+n+'/'+N+' 题，被雷劈 '+x+' 次！你也来试试',es:'¡En «¡Cuidado con el rayo!» acerté '+n+'/'+N+' y me cayeron '+x+' rayos! Inténtalo tú también',en:'I got '+n+'/'+N+' right in "Don’t get struck!" and was struck '+x+' times! Try it too'}[L];
+}
+function shareMsgMulti(r,N){
+  var L=shareLang();
+  if(r>=N) return {tw:'我在「天打雷劈」連線模式爬到山頂了！你也來試試',cn:'我在「天打雷劈」连线模式爬到山顶了！你也来试试',es:'¡Llegué a la cima en el modo multijugador de «¡Cuidado con el rayo!»! Inténtalo tú también',en:'I reached the top in multiplayer mode of "Don’t get struck!"! Try it too'}[L];
+  return {tw:'我在「天打雷劈」連線模式爬了 '+r+'/'+N+' 階！你也來試試',cn:'我在「天打雷劈」连线模式爬了 '+r+'/'+N+' 阶！你也来试试',es:'¡Escalé '+r+'/'+N+' escalones en el modo multijugador de «¡Cuidado con el rayo!»! Inténtalo tú también',en:'I climbed '+r+'/'+N+' steps in multiplayer mode of "Don’t get struck!"! Try it too'}[L];
+}
+/* 把分享鈕接上：getText 回傳一句話；按下去走系統分享，不行就複製；複製結果在鈕上顯示 2.2 秒 */
+function wireShare(id,getText){
+  var b=$(id); if(!b) return; var busy=false, tm=0;
+  b.addEventListener('click',async function(){
+    if(busy) return; busy=true;
+    try{
+      var r=await HGShare.send({title:zh('title')+' · ¡Cuidado con el rayo!',text:getText(),url:SHARE_URL});
+      if(r==='copied'||r==='failed'){
+        b.innerHTML=H(r==='copied'?'shareCopied':'shareFail');
+        clearTimeout(tm); tm=setTimeout(function(){ tm=0; b.innerHTML=H('share'); },2200);
+      }
+    } finally { busy=false; }
+  });
+}
 function finish(){
   S.over=true; clearCheer();
   var secs=Math.round((Date.now()-S.t0)/1000), prev=null;
@@ -1314,9 +1363,10 @@ function finish(){
     (isBest?'<div class="newbest">'+plain('best')+'</div>':'')+
     (!SPECIAL||CLASS_MODE?'<div class="lbBox" id="lbArea"></div>':'')+
     (chips?'<div class="rev"><div class="lab">'+plain('review')+'</div><div class="chips">'+chips+'</div></div>':'')+
-    '<div class="btns"><button class="big" id="bAgain">'+H('again')+'</button><button class="ghost" id="bHome">'+H('home')+'</button></div><div class="cpr">© 2026 @cadadiaunosminutos_ben_chino<br>保留所有權利 / Todos los derechos reservados</div></div>';
+    '<div class="btns"><button class="big" id="bAgain">'+H('again')+'</button>'+(S.correct>0?'<button class="ghost" id="bShare" type="button">'+H('share')+'</button>':'')+'<button class="ghost" id="bHome">'+H('home')+'</button></div><div class="cpr">© 2026 @cadadiaunosminutos_ben_chino<br>保留所有權利 / Todos los derechos reservados</div></div>';
   if(CLASS_MODE) classFinish(secs,S.gid); else if(!SPECIAL) lbAfterGame(S.strikes,secs,S.gid);
   $('bAgain').addEventListener('click',function(){ ci=Math.floor(Math.random()*5); pickBg(); startGame(); }); $('bHome').addEventListener('click',goHome);
+  var sn=S.correct, sx=S.strikes, sN=NSTEP; wireShare('bShare',function(){ return shareMsgSolo(sn,sN,sx); });
 }
 
 /* ====================== 連線模式（最多 15 人，一條命）======================
@@ -1700,6 +1750,7 @@ function mpClassSubmit(r,mineR){
 function mpSentTxt(){ return MP.sent==='ok'?plain('sentOk'):MP.sent==='exp'?plain('sentExpired'):MP.sent==='fail'?plain('sentFail'):plain('lbLoading'); }
 function mpResults(){
   var r=MP.room, fin=(r.final||[]).slice().sort(function(a,b){ return b.r-a.r; });
+  var me=fin.filter(function(x){ return x.uid===MP.uid; })[0], canShare=!!(me&&mpAmIn()&&me.r>0);
   var ov=$('ov'); ov.hidden=false; MP.resultsUp=true;
   mpClearCorpses();
   var medals=['🥇','🥈','🥉'];
@@ -1709,12 +1760,14 @@ function mpResults(){
   }).join('');
   ov.innerHTML='<div class="panel mpP"><h2>'+plain('mpResult')+'</h2><div class="lbBox"><div class="lbList">'+rows+'</div></div>'+(r.cid&&mpAmIn()?'<p class="lbNote" id="mpSent">'+mpSentTxt()+'</p>':'')+'<div class="btns">'+
     (MP.host?'<button class="big" id="mpAgain" type="button">'+H('mpAgain')+'</button>':'<p class="lbSt">'+plain('mpWaitAgain')+'</p>')+
+    (canShare?'<button class="ghost" id="mpShare" type="button">'+H('share')+'</button>':'')+
     '<button class="ghost" id="mpLeaveBtn" type="button">'+H('mpLeave')+'</button></div></div>';
   if(MP.host) $('mpAgain').addEventListener('click',function(){
     this.disabled=true;
     waitRM().then(function(rm){ var pt={status:'waiting',ph:'',rd:0,qs:[],ro:[],elim:{},final:[],n:r.n+1}; if(r.bk) pt.bk=[]; return rm.hostSet(MP.code,pt); }).catch(function(){ if($('mpAgain')) $('mpAgain').disabled=false; });
   });
   $('mpLeaveBtn').addEventListener('click',mpLeave);
+  if(canShare) wireShare('mpShare',function(){ return shareMsgMulti(me.r,NSTEP); });
 }
 /* 「繼續留下」之後，把原本該顯示的浮層補回去（比賽結果） */
 function mpSyncOverlay(){ if(MP.on&&MP.room&&MP.room.status==='finished'&&MP.shown==='res'+MP.room.n) mpResults(); }
@@ -1774,7 +1827,7 @@ renderStart();
 linkBoot();
 $('btnMulti').addEventListener('click',function(){ mpOpen(); });
 (function(){ var m=/[?&]room=(\d{4})/.exec(location.search); if(m) mpOpen(m[1]); })();
-if(TEST){ window.__nian={BG:BG,S:S,LABELS:LABELS,cfg:cfg,BYCH:BYCH,geo:geo,placePlayer:placePlayer,footPos:footPos,startGame:startGame,setBg:setBg,BGS:BGS,NSTEP:function(){ return NSTEP; },boardId:boardId,bgIdx:function(){ return bgIdx; },timeUp:timeUp,keyPress:keyPress,advance:advance,MP:function(){ return MP; }}; }
+if(TEST){ window.__nian={BG:BG,S:S,LABELS:LABELS,cfg:cfg,BYCH:BYCH,geo:geo,placePlayer:placePlayer,footPos:footPos,startGame:startGame,setBg:setBg,BGS:BGS,NSTEP:function(){ return NSTEP; },boardId:boardId,bgIdx:function(){ return bgIdx; },timeUp:timeUp,keyPress:keyPress,advance:advance,MP:function(){ return MP; },finish:finish,mpResults:mpResults}; }
 })();
 </script>
 <script type="module">
@@ -2109,6 +2162,19 @@ try{
   }
   var TZ = tzName();
 
+  /* ref：這個訪客是從哪裡進來的記號（例如 ?ref=share＝朋友分享的連結）。
+     只收英數字、底線、連字號，最長 16 字，統一小寫；其他一律忽略（規則也限制 1～16 字串）。
+     網址有 ?ref= 就記下並暫存在這個分頁（sessionStorage，同分頁的 iframe 讀得到、分頁關掉就消失）；
+     沒有就讀暫存。所以「首頁收到記號、遊戲頁（iframe）才寫紀錄」也記得到。 */
+  function cleanRef(x) { x = String(x == null ? '' : x).trim().toLowerCase(); return /^[a-z0-9_-]{1,16}$/.test(x) ? x : ''; }
+  function refName() {
+    var r = '';
+    try { r = cleanRef(new URLSearchParams(location.search).get('ref')); } catch (e) {}
+    try { if (r) sessionStorage.setItem('hg.ref', r); else r = cleanRef(sessionStorage.getItem('hg.ref')); } catch (e) {}
+    return r;
+  }
+  var REF = refName();
+
   function gid() { try { return (HG.gameFn ? HG.gameFn() : GAME) || GAME; } catch (e) { return GAME; } } // taiwan-life 這類共用引擎的遊戲可改寫 HGPlays.gameFn
   function day() { // 以台灣時間（UTC+8）算「哪一天」，方便老師對帳
     var d = new Date(Date.now() + 8 * 3600e3);
@@ -2149,6 +2215,7 @@ try{
         var id = d + '_' + g + '_' + L.uid;
         var v = { game: g, day: d, uid: L.uid, at: L.F.serverTimestamp() };
         if (TZ) v.tz = TZ;
+        if (REF) v.ref = REF;
         return L.F.setDoc(L.F.doc(L.db, 'visits', id), v)
           .then(function () { ls(key, d); });
       }).catch(function () {});
@@ -2161,6 +2228,7 @@ try{
         var data = { game: gid(), level: mine.level, uid: L.uid, name: getName(name), day: day(),
                      startedAt: L.F.serverTimestamp(), done: false };
         if (TZ) data.tz = TZ;
+        if (REF) data.ref = REF;
         return L.F.addDoc(L.F.collection(L.db, 'plays'), data).then(function (ref) {
           mine.id = ref.id; if (mine.pendingEnd) HG._finish(mine, mine.pendingEnd);
         });

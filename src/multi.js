@@ -379,6 +379,7 @@ function mpClassSubmit(r,mineR){
 function mpSentTxt(){ return MP.sent==='ok'?plain('sentOk'):MP.sent==='exp'?plain('sentExpired'):MP.sent==='fail'?plain('sentFail'):plain('lbLoading'); }
 function mpResults(){
   var r=MP.room, fin=(r.final||[]).slice().sort(function(a,b){ return b.r-a.r; });
+  var me=fin.filter(function(x){ return x.uid===MP.uid; })[0], canShare=!!(me&&mpAmIn()&&me.r>0);
   var ov=$('ov'); ov.hidden=false; MP.resultsUp=true;
   mpClearCorpses();
   var medals=['🥇','🥈','🥉'];
@@ -388,12 +389,14 @@ function mpResults(){
   }).join('');
   ov.innerHTML='<div class="panel mpP"><h2>'+plain('mpResult')+'</h2><div class="lbBox"><div class="lbList">'+rows+'</div></div>'+(r.cid&&mpAmIn()?'<p class="lbNote" id="mpSent">'+mpSentTxt()+'</p>':'')+'<div class="btns">'+
     (MP.host?'<button class="big" id="mpAgain" type="button">'+H('mpAgain')+'</button>':'<p class="lbSt">'+plain('mpWaitAgain')+'</p>')+
+    (canShare?'<button class="ghost" id="mpShare" type="button">'+H('share')+'</button>':'')+
     '<button class="ghost" id="mpLeaveBtn" type="button">'+H('mpLeave')+'</button></div></div>';
   if(MP.host) $('mpAgain').addEventListener('click',function(){
     this.disabled=true;
     waitRM().then(function(rm){ var pt={status:'waiting',ph:'',rd:0,qs:[],ro:[],elim:{},final:[],n:r.n+1}; if(r.bk) pt.bk=[]; return rm.hostSet(MP.code,pt); }).catch(function(){ if($('mpAgain')) $('mpAgain').disabled=false; });
   });
   $('mpLeaveBtn').addEventListener('click',mpLeave);
+  if(canShare) wireShare('mpShare',function(){ return shareMsgMulti(me.r,NSTEP); });
 }
 /* 「繼續留下」之後，把原本該顯示的浮層補回去（比賽結果） */
 function mpSyncOverlay(){ if(MP.on&&MP.room&&MP.room.status==='finished'&&MP.shown==='res'+MP.room.n) mpResults(); }
